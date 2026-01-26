@@ -46,6 +46,74 @@
             padding: 0 1rem;
         }
 
+        /* Favorites Menu */
+        .favorites-menu {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+
+        .favorites-menu.hidden {
+            display: none;
+        }
+
+        .favorites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .favorites-header h2 {
+            font-size: 1.3rem;
+            color: #1a1a1a;
+            margin: 0;
+        }
+
+        .clear-favorites-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .clear-favorites-btn:hover {
+            background-color: #c82333;
+        }
+
+        .favorites-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .favorite-chip {
+            background-color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .favorite-chip:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
         /* Prompt Cards Grid */
         .prompt-grid {
             display: grid;
@@ -274,6 +342,16 @@
     </header>
 
     <main>
+        <div class="favorites-menu hidden" id="favorites-menu">
+            <div class="favorites-header">
+                <h2>⭐ Mina Favoriter</h2>
+                <button class="clear-favorites-btn" id="clear-favorites-btn">🗑️ Rensa favoriter</button>
+            </div>
+            <div class="favorites-list" id="favorites-list">
+                <!-- Favorite chips will be added here dynamically -->
+            </div>
+        </div>
+
         <section class="prompt-grid" id="prompt-grid">
             <div class="loading-message">Laddar promptmallar...</div>
         </section>
@@ -300,6 +378,10 @@
         // Step 19: Dynamic JavaScript loading from prompts.json
         
         const grid = document.getElementById('prompt-grid');
+        const favoritesMenu = document.getElementById('favorites-menu');
+        const favoritesList = document.getElementById('favorites-list');
+        const clearFavoritesBtn = document.getElementById('clear-favorites-btn');
+        let allPrompts = []; // Store all loaded prompts for favorites menu
 
         // Load prompts configuration and build UI dynamically
         async function loadPrompts() {
@@ -338,11 +420,17 @@
                     }
                 }
 
+                // Store prompts globally for favorites menu
+                allPrompts = prompts;
+
                 // Set up event delegation for all cards
                 setupEventDelegation();
 
                 // Load favorite states from localStorage
                 loadFavoriteStates();
+
+                // Update favorites menu
+                updateFavoritesMenu();
 
                 grid.classList.remove('loading');
             } catch (error) {
@@ -440,6 +528,9 @@
             // Update UI
             button.textContent = isFavorite ? '★' : '☆';
             button.classList.toggle('active', isFavorite);
+
+            // Update favorites menu
+            updateFavoritesMenu();
         }
 
         function loadFavoriteStates() {
@@ -452,6 +543,68 @@
                 }
             });
         }
+
+        function updateFavoritesMenu() {
+            const favorites = getFavorites();
+
+            if (favorites.length === 0) {
+                // Hide menu if no favorites
+                favoritesMenu.classList.add('hidden');
+                return;
+            }
+
+            // Show menu
+            favoritesMenu.classList.remove('hidden');
+
+            // Clear existing chips
+            favoritesList.innerHTML = '';
+
+            // Create chip for each favorite
+            favorites.forEach(promptId => {
+                const prompt = allPrompts.find(p => p.id === promptId);
+                if (prompt) {
+                    const chip = document.createElement('div');
+                    chip.className = 'favorite-chip';
+                    chip.setAttribute('data-scroll-to', promptId);
+                    chip.innerHTML = `<span>${prompt.title}</span>`;
+                    chip.addEventListener('click', () => scrollToPrompt(promptId));
+                    favoritesList.appendChild(chip);
+                }
+            });
+        }
+
+        function scrollToPrompt(promptId) {
+            const card = grid.querySelector(`[data-prompt-id="${promptId}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Flash effect
+                card.style.transition = 'box-shadow 0.3s ease';
+                card.style.boxShadow = '0 0 20px rgba(255, 193, 7, 0.6)';
+                setTimeout(() => {
+                    card.style.boxShadow = '';
+                }, 1000);
+            }
+        }
+
+        function clearAllFavorites() {
+            if (confirm('Är du säker på att du vill rensa alla favoriter?')) {
+                // Clear localStorage
+                localStorage.removeItem('favoritePrompts');
+
+                // Update all star buttons
+                const allStarButtons = grid.querySelectorAll('.favorite-btn');
+                allStarButtons.forEach(button => {
+                    button.textContent = '☆';
+                    button.classList.remove('active');
+                });
+
+                // Update favorites menu
+                updateFavoritesMenu();
+            }
+        }
+
+        // Set up clear favorites button
+        clearFavoritesBtn.addEventListener('click', clearAllFavorites);
 
         function updateButtonState(promptId) {
             const checkbox = document.querySelector(`#anon-${promptId}`);

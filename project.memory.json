@@ -7,7 +7,7 @@
   },
   "now": {
     "current_step": "engineer",
-    "current_goal": "Batch: Steg 29-31: Checkbox bort + Favoriter grundfunktion",
+    "current_goal": "Batch: Steg 32-33: Snabb-meny med favoriter + Rensa-knapp",
     "status": "completed"
   },
   "backlog": [
@@ -366,10 +366,10 @@
     {
       "id": 32,
       "title": "Steg 32: Skapa 'Snabb-meny' med favoritprompts",
-      "status": "not-started",
+      "status": "completed",
       "verification": "Ny sektion '⭐ Mina Favoriter' visas ovanför huvudgridet, Sektion döljs om inga favoriter, Klick scrollar till original-kortet",
       "dependencies": [31],
-      "completed_by": null,
+      "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
       "notes": "Visa favoriter i egen sektion överst på sidan. Ska uppdateras dynamiskt när favoriter läggs till/tas bort. Tid: 45min"
@@ -377,10 +377,10 @@
     {
       "id": 33,
       "title": "Steg 33: Lägg till 'Rensa alla favoriter'-knapp",
-      "status": "not-started",
+      "status": "completed",
       "verification": "Knapp 'Rensa favoriter' visas i snabb-menyn, Bekräftelsedialog vid klick, Alla favoriter rensas från localStorage + UI uppdateras",
       "dependencies": [32],
-      "completed_by": null,
+      "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
       "notes": "Låt användaren rensa alla favoriter med ett klick. Använd JavaScript confirm() för bekräftelse. Tid: 20min"
@@ -593,6 +593,12 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "BATCH STEG 29–31 KLART: Implementerade tre sammanhängande funktioner. (Steg 29) Tog bort anonymiserings-checkbox: Raderade .anonymization-check CSS, tog bort checkbox-HTML från createPromptCard(), raderade updateButtonState() + checkbox-lyssnare, copy-knapp nu alltid aktiverad (ingen disabled-state). (Steg 30) Lade till favoritmarkering: CSS för .favorite-btn (position: absolute top-right, hover-effekt), stjärn-knapp (☆/★) i varje kort, handleFavoriteClick() togglerar status, visuell feedback när favorit markeras. (Steg 31) Implementerade localStorage: Funktioner getFavorites()/saveFavorites()/toggleFavorite() sparar i localStorage (nyckel: 'favoritePrompts'), loadFavoriteStates() läser cache vid sidladdning, favoriter kvarstår efter refresh/stänga webbläsare. Verifiering: Testad på localhost:8000, alla 14 prompts laddar, copy fungerar direkt, favoriter sparas/läses korrekt. Tid: 1h 20min ✅. Nästa: Steg 32-33 (snabb-meny + rensa-knapp)."
+    },
+    {
+      "date": "2026-01-27T08:00:00Z",
+      "role": "engineer",
+      "step": "implementation",
+      "summary": "BATCH STEG 32–33 KLART: Implementerade favorit-meny med rensa-funktion. (Steg 32) Skapade snabb-meny '⭐ Mina Favoriter': CSS för .favorites-menu med gradient-bakgrund (gul), .favorite-chip för varje favorit-prompt, updateFavoritesMenu() bygger dynamisk lista av favoriter, scrollToPrompt() scrollar till + flashar originalkort vid klick, meny döljs automatiskt när inga favoriter finns. (Steg 33) Lade till 'Rensa favoriter'-knapp: clearAllFavorites() med confirm-dialog, rensar localStorage + uppdaterar alla stjärn-knappar + dold meny, knapp synlig i favorit-menyn (🗑️ Rensa favoriter). Verifiering: Testad på localhost:8000, favorit-meny visas/döljs dynamiskt, klick på chip scrollar till kort, rensa-knapp fungerar med bekräftelse. Tid: 1h 5min ✅. Nästa: Steg 34 ('Se hela prompt' modal)."
     }
   ],
       "date": "2026-01-26T17:00:00Z",

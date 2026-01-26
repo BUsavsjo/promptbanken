@@ -42,6 +42,17 @@ http://localhost:8000
 
 ---
 
+## 🌐 Deploy (GitHub Pages via Actions)
+
+- Workflow: .github/workflows/pages.yml (triggas på push till main eller manuellt via Actions → pages).
+- Första körning sätter Pages-källa till GitHub Actions och publicerar hela root-katalogen.
+- Så verifierar du efter deploy:
+  1. Öppna senaste körningen under Actions → pages → Deploy to GitHub Pages och kontrollera att den är grön.
+  2. Följ `page_url` i körloggarna (ex. https://username.github.io/promptbanken).
+  3. Ladda sidan: säkerställ att prompts renderas, copy/ℹ️-modal/favoriter fungerar, samt att footer-länkar (GDPR, AI-compliance, MIT-licens) öppnas.
+
+---
+
 ## ✨ Nya funktioner
 
 - Kopiera utan anonymiserings-checkbox (snabbare flöde)

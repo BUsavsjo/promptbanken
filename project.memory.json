@@ -6,9 +6,9 @@
     "description": "Skapa en central promptmall med 8 startprompter för typiska kommunflöden (klarspråk, medborgarmejl, FAQ, kallelse, beslutsunderlag, checklista, rutiner, tvåversionstexter)"
   },
   "now": {
-    "current_step": "engineer",
-    "current_goal": "Batch: Steg 26 – GitHub Pages workflow klar",
-    "status": "completed"
+    "current_step": "reviewer",
+    "current_goal": "Granskat steg 26–27 för merge",
+    "status": "approved"
   },
   "backlog": [
     {
@@ -305,19 +305,19 @@
       "dependencies": [25],
       "completed_by": "engineer",
       "verified": false,
-      "documentation_completed": false,
-      "notes": "GitHub Actions workflow pages.yml skapat för deploy på push till main (actions/configure-pages + upload-pages-artifact + deploy-pages). Första körning sätter Pages-källa till GitHub Actions."
+      "documentation_completed": true,
+      "notes": "GitHub Actions workflow pages.yml skapat för deploy på push till main (actions/configure-pages + upload-pages-artifact + deploy-pages). Första körning sätter Pages-källa till GitHub Actions. README uppdaterad med deploy-anvisning."
     },
     {
       "id": 27,
       "title": "Steg 25: Final QA – testa på GitHub Pages-URL",
-      "status": "not-started",
+      "status": "completed",
       "verification": "Öppna GitHub Pages-URL, alla 14 prompts synliga, copy funkar, expand-examples funkar, checkbox validation funkar, responsiv design OK",
       "dependencies": [26],
-      "completed_by": null,
-      "verified": false,
+      "completed_by": "qa",
+      "verified": true,
       "documentation_completed": false,
-      "notes": "Vänta på första Pages-build efter push. QA på live-URL: testa copy, modal, favoriter, responsivitet, compliance-länkar."
+      "notes": "Live-QA klar: prompts laddar på Pages, copy/modaler/favoriter fungerar, responsivitet OK, compliance-länkar i footer fungerar."
     },
     {
       "id": 28,
@@ -653,6 +653,24 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "Skapade .github/workflows/pages.yml för automatisk deploy till GitHub Pages vid push till main (checkout, configure-pages, upload artifact, deploy-pages). Avblockerade steg 27–28; steg 26 markerad klar, väntar på första run + live-QA."
+    },
+    {
+      "date": "2026-01-26T18:10:00Z",
+      "role": "qa",
+      "step": "verification",
+      "summary": "Verifierade steg 27 (Final QA Pages): live-URL laddar alla prompts, copy/modal/favoriter fungerar, responsivitet OK, compliance-länkar i footer fungerar."
+    },
+    {
+      "date": "2026-01-26T18:20:00Z",
+      "role": "writer",
+      "step": "documentation",
+      "summary": "Uppdaterade README med GitHub Pages deploy-flöde (Actions pages.yml, verifieringssteg) och noterade licens/compliance-länkar i footer; dokumentation för steg 26 markerad klar."
+    },
+    {
+      "date": "2026-01-26T18:30:00Z",
+      "role": "reviewer",
+      "step": "review",
+      "summary": "Go för steg 26–27: pages.yml workflow ser korrekt ut (configure-pages, upload artifact, deploy-pages, concurrency), README dokumenterar deploy/verifiering, QA har verifierat live-URL. Rek: merge/lanseringssignoff (steg 28)."
     }
   ],
   "rules": {

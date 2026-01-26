@@ -114,6 +114,122 @@
             transform: translateY(-1px);
         }
 
+        /* Info Button */
+        .info-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #0066cc;
+            padding: 0.25rem 0.5rem;
+            transition: transform 0.2s ease;
+            margin-left: 0.5rem;
+        }
+
+        .info-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #0066cc;
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background-color: #f0f0f0;
+            color: #1a1a1a;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .modal-body pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid #0066cc;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #1a1a1a;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                max-height: 90vh;
+            }
+
+            .modal-header {
+                padding: 1rem;
+            }
+
+            .modal-body {
+                padding: 1rem;
+            }
+        }
+
         /* Prompt Cards Grid */
         .prompt-grid {
             display: grid;
@@ -357,6 +473,19 @@
         </section>
     </main>
 
+    <!-- Modal for full prompt view -->
+    <div class="modal-overlay" id="prompt-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Prompt</h3>
+                <button class="modal-close" id="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <pre id="modal-text"></pre>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div style="margin-bottom: 1rem; padding: 1rem; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #0066cc;">
             <strong style="color: #0066cc;">ℹ️ Viktigt:</strong>
@@ -465,6 +594,7 @@
                 </div>
 
                 <button class="copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
+                <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 <textarea id="textarea-${prompt.id}">${promptText}</textarea>
             `;
 
@@ -491,6 +621,11 @@
                 // Favorite button click
                 if (event.target.classList.contains('favorite-btn')) {
                     handleFavoriteClick(event.target);
+                }
+
+                // Info button click
+                if (event.target.classList.contains('info-btn')) {
+                    handleInfoClick(event.target);
                 }
             });
         }
@@ -605,6 +740,45 @@
 
         // Set up clear favorites button
         clearFavoritesBtn.addEventListener('click', clearAllFavorites);
+
+        // Modal functionality
+        const modal = document.getElementById('prompt-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const modalClose = document.getElementById('modal-close');
+
+        function handleInfoClick(button) {
+            const promptId = button.getAttribute('data-show-full');
+            const textArea = document.getElementById(`textarea-${promptId}`);
+            const prompt = allPrompts.find(p => p.id === promptId);
+
+            if (textArea && prompt) {
+                modalTitle.textContent = prompt.title;
+                modalText.textContent = textArea.value;
+                modal.classList.add('active');
+            }
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        // Close button
+        modalClose.addEventListener('click', closeModal);
+
+        // Click outside to close
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // ESC key to close
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
 
         function updateButtonState(promptId) {
             const checkbox = document.querySelector(`#anon-${promptId}`);

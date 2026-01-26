@@ -7,7 +7,7 @@
   },
   "now": {
     "current_step": "engineer",
-    "current_goal": "Batch: Steg 32-33: Snabb-meny med favoriter + Rensa-knapp",
+    "current_goal": "Batch: Steg 34: Se hela prompt modal",
     "status": "completed"
   },
   "backlog": [
@@ -388,10 +388,10 @@
     {
       "id": 34,
       "title": "Steg 34: Lägg till 'Se hela prompt' info-knapp i prompt-kort",
-      "status": "not-started",
+      "status": "completed",
       "verification": "Varje prompt-kort har ℹ️ 'Se hela prompt'-knapp, Klick visar overlay/modal med full text, ESC eller klick utanför stänger, Modal är responsiv",
       "dependencies": [29],
-      "completed_by": null,
+      "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
       "notes": "Visa fullständig prompt-text i modal/overlay. Modal med scrollbar om lång text. ESC-knapp + click-outside stänger. Tid: 45min"
@@ -599,6 +599,12 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "BATCH STEG 32–33 KLART: Implementerade favorit-meny med rensa-funktion. (Steg 32) Skapade snabb-meny '⭐ Mina Favoriter': CSS för .favorites-menu med gradient-bakgrund (gul), .favorite-chip för varje favorit-prompt, updateFavoritesMenu() bygger dynamisk lista av favoriter, scrollToPrompt() scrollar till + flashar originalkort vid klick, meny döljs automatiskt när inga favoriter finns. (Steg 33) Lade till 'Rensa favoriter'-knapp: clearAllFavorites() med confirm-dialog, rensar localStorage + uppdaterar alla stjärn-knappar + dold meny, knapp synlig i favorit-menyn (🗑️ Rensa favoriter). Verifiering: Testad på localhost:8000, favorit-meny visas/döljs dynamiskt, klick på chip scrollar till kort, rensa-knapp fungerar med bekräftelse. Tid: 1h 5min ✅. Nästa: Steg 34 ('Se hela prompt' modal)."
+    },
+    {
+      "date": "2026-01-27T09:00:00Z",
+      "role": "engineer",
+      "step": "implementation",
+      "summary": "BATCH STEG 34 KLART: Implementerade 'Se hela prompt' modal. CSS: .modal-overlay med dark bakgrund + flex-centering, .modal-content med max 800px bredd + 80vh höjd, .modal-header med titel + stäng-knapp (×), .modal-body med scrollbar + pre-formaterad text, .info-btn (ℹ️) i varje prompt-kort. JavaScript: handleInfoClick() visar modal med full prompt-text, closeModal() dold modal, event-lyssnare för: (1) stäng-knapp, (2) click-outside, (3) ESC-knapp. Responsiv: Modal 90vh på mobil, padding anpassad. Verifiering: Testad på localhost:8000, info-knapp synlig på alla kort, modal visar full text med scrollbar, stängs med X/ESC/click-outside, fungerar på desktop + mobil. Tid: 45min ✅. Nästa: Steg 35 (final testning av alla funktioner)."
     }
   ],
       "date": "2026-01-26T17:00:00Z",

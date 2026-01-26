@@ -220,4 +220,37 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 
 ---
 
+## Exportfunktionalitet
+
+### Funktioner
+- **LocalStorage**: Exportinställningar sparas lokalt i webbläsaren.
+- **Exportmodul**: Användare kan öppna, kopiera och ladda ner instruktioner.
+
+### Testning
+1. Kontrollera att LocalStorage sparar och hämtar data korrekt.
+2. Verifiera att exportmodulen fungerar utan fel:
+   - Öppna och stäng modalen.
+   - Använd kopieringsknappen.
+   - Ladda ner filen.
+
+### Kända Begränsningar
+- LocalStorage är begränsat till webbläsaren och kan rensas av användaren.
+- Exportmodulen kräver JavaScript aktiverat.
+
+---
+
+## Deploy-Ready Version
+
+### Compliance Information
+- **EU AI Act**: Marked as a low-risk AI application.
+- **GDPR**: Privacy notice and no data tracking.
+
+### Deployment Steps
+1. Ensure all prompts are visible and functional.
+2. Verify AI Act disclaimer is displayed.
+3. Deploy to the municipality's server.
+
+### Version
+- Current version: 1.0.0
+
 *Skapad för att göra kommunal kommunikation tydligare, snabbare och bättre.* 🚀

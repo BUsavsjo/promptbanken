@@ -118,16 +118,19 @@
         .info-btn {
             background: none;
             border: none;
-            font-size: 1.2rem;
+            font-size: 0.85rem;
             cursor: pointer;
             color: #0066cc;
-            padding: 0.25rem 0.5rem;
-            transition: transform 0.2s ease;
-            margin-left: 0.5rem;
+            padding: 0;
+            transition: color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 0.5rem;
         }
 
         .info-btn:hover {
-            transform: scale(1.1);
+            color: #0052a3;
+            text-decoration: underline;
         }
 
         /* Modal Overlay */
@@ -591,10 +594,10 @@
                         <strong>Vad du ska ta bort:</strong>
                         <ul>${examplesHtml}</ul>
                     </div>
+                    <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
 
                 <button class="copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
-                <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 <textarea id="textarea-${prompt.id}">${promptText}</textarea>
             `;
 

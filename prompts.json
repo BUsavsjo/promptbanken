@@ -97,6 +97,13 @@
       "description": "Identifiera och lista viktiga ord och koncept från en text.",
       "file": "prompts/nyckelord.txt",
       "security_examples": ["Personnummer", "Hemliga termer", "Känsliga koncept"]
+    },
+    {
+      "id": "informationsutskick",
+      "title": "📣 Skapa informationsutskick",
+      "description": "Skriv ett tydligt informationsmeddelande med rubrik, sammanfattning och nästa steg.",
+      "file": "prompts/informationsutskick.txt",
+      "security_examples": ["Namn på berörda personer", "Känsliga detaljer om incidenter", "Interna systemnummer"]
     }
   ]
 }

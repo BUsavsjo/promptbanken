@@ -6,9 +6,9 @@
     "description": "Skapa en central promptmall med 8 startprompter för typiska kommunflöden (klarspråk, medborgarmejl, FAQ, kallelse, beslutsunderlag, checklista, rutiner, tvåversionstexter)"
   },
   "now": {
-    "current_step": "qa",
-    "current_goal": "Step 24–26: GitHub Pages-aktivering + Final QA + Lansering",
-    "status": "ready"
+    "current_step": "engineer",
+    "current_goal": "Batch: Steg 29-31: Checkbox bort + Favoriter grundfunktion",
+    "status": "completed"
   },
   "backlog": [
     {
@@ -329,7 +329,95 @@
       "verified": false,
       "documentation_completed": false,
       "notes": "Lanserings-checklista: (1) GitHub Pages-URL är live och funktionell, (2) Alla 14 prompts laddar, (3) Copy-function testad på alla major browsers (Chrome, Firefox, Safari), (4) Compliance-docs (AI Act, GDPR, review-checklista) är tillgängliga, (5) README-instruktioner är klara, (6) Projektets status: LIVE/PROD. Nästa iteration: feedback från användare, nya prompts, förbättringar. Tid: 0 (signoff)"
-    }
+    },
+    {
+      "id": 29,
+      "title": "Steg 29: Ta bort anonymiserings-checkbox från alla prompt-kort",
+      "status": "completed",
+      "verification": "Checkbox-element borttaget från HTML-generering, Copy-knapp alltid aktiverad, JavaScript för checkbox borttagen, Alla 14 prompts testad - copy fungerar direkt",
+      "dependencies": [],
+      "completed_by": "engineer",
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Förenkla UX genom att ta bort checkbox-kravet. Copy-knapp direkt tillgänglig utan bekräftelse. Tid: 20min"
+    },
+    {
+      "id": 30,
+      "title": "Steg 30: Lägg till favoritmarkering-ikon (stjärna) på prompt-kort",
+      "status": "completed",
+      "verification": "Varje prompt-kort har stjärn-ikon (☆/★) i hörnet, Klick togglerar favorit-status, Visuell feedback när favorit markeras",
+      "dependencies": [29],
+      "completed_by": "engineer",
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "UI för att markera/avmarkera favoriter. Position: absolute top-right i kort. CSS: .favorite-btn med hover-effekt. Tid: 30min"
+    },
+    {
+      "id": 31,
+      "title": "Steg 31: Implementera localStorage för favoriter",
+      "status": "completed",
+      "verification": "JavaScript lagrar favoriter i localStorage (nyckel: favoritePrompts), Vid sidladdning läses favoriter från cache, Favoritstatus kvarstår efter refresh",
+      "dependencies": [30],
+      "completed_by": "engineer",
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Cacha favorit-status lokalt i webbläsaren. Funktioner: getFavorites(), saveFavorites(), toggleFavorite(), loadFavoriteStates(). Tid: 30min"
+    },
+    {
+      "id": 32,
+      "title": "Steg 32: Skapa 'Snabb-meny' med favoritprompts",
+      "status": "not-started",
+      "verification": "Ny sektion '⭐ Mina Favoriter' visas ovanför huvudgridet, Sektion döljs om inga favoriter, Klick scrollar till original-kortet",
+      "dependencies": [31],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Visa favoriter i egen sektion överst på sidan. Ska uppdateras dynamiskt när favoriter läggs till/tas bort. Tid: 45min"
+    },
+    {
+      "id": 33,
+      "title": "Steg 33: Lägg till 'Rensa alla favoriter'-knapp",
+      "status": "not-started",
+      "verification": "Knapp 'Rensa favoriter' visas i snabb-menyn, Bekräftelsedialog vid klick, Alla favoriter rensas från localStorage + UI uppdateras",
+      "dependencies": [32],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Låt användaren rensa alla favoriter med ett klick. Använd JavaScript confirm() för bekräftelse. Tid: 20min"
+    },
+    {
+      "id": 34,
+      "title": "Steg 34: Lägg till 'Se hela prompt' info-knapp i prompt-kort",
+      "status": "not-started",
+      "verification": "Varje prompt-kort har ℹ️ 'Se hela prompt'-knapp, Klick visar overlay/modal med full text, ESC eller klick utanför stänger, Modal är responsiv",
+      "dependencies": [29],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Visa fullständig prompt-text i modal/overlay. Modal med scrollbar om lång text. ESC-knapp + click-outside stänger. Tid: 45min"
+    },
+    {
+      "id": 35,
+      "title": "Steg 35: Lokal testning av alla nya funktioner",
+      "status": "not-started",
+      "verification": "Checkbox borttagen - copy fungerar direkt, Favoriter sparas/läses från localStorage, Snabb-meny visas/döljs, 'Rensa favoriter' fungerar, 'Se hela prompt' modal fungerar, Inga JavaScript-fel, Testad på Chrome/Firefox/Safari",
+      "dependencies": [29, 30, 31, 32, 33, 34],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Verifiera att allt fungerar tillsammans på desktop + mobil. Testad på alla major browsers. Tid: 45min"
+    },
+    {
+      "id": 36,
+      "title": "Steg 36: Git commit + dokumentera nya funktioner",
+      "status": "not-started",
+      "verification": "git commit genomförd, README.md uppdaterad med nya funktioner, Skärmdump/GIF (om möjligt)",
+      "dependencies": [35],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Spara ändringar och uppdatera README. Commit-message: 'feat: Favoriter + Se hela prompt + Ta bort checkbox'. Tid: 15min"
+    },
     {
       "id": 17,
       "title": "Steg 15: Skapa prompts/-mapp och 14 prompt-filer",
@@ -481,6 +569,30 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "BATCH STEG 21–23 KLART: Testning + dokumentation + git commit. (Step 21) Lokal testning slutförd: Server på localhost:8000, alla 14 prompts laddar dynamiskt utan fel. Verifiera: Alla prompt-kort renderas, copy-button fungerar, expand-examples toggles, checkbox-gating fungerar, responsiv design OK mobil+desktop, inga console-fel. (Step 22) README.md skapad med: projektöversikt, GitHub Pages snabbstart, lokal utveckling instruktioner, hur man lägger till/uppdaterar prompts, compliance-info, FAQ, licens (CC0). (Step 23) Git commit genomförd: git add . (alla 37 filer), git commit -m 'feat: Dynamisk prompt-laddning...', status ready för git push. Nästa: Step 24–26 för GitHub Pages-aktivering + final QA + lansering. Tid totalt: 1h 10min ✅"
+    },
+    {
+      "date": "2026-01-27T04:00:00Z",
+      "role": "planner",
+      "step": "planning",
+      "summary": "PLAN FÖR PROMPT-FÖRBÄTTRINGAR: Analys identifierade 14 specifika förbättringsförslag för att höja prompt-kvaliteten före GitHub Pages-lansering. Plan bruten ned till 6 verifierbara steg (24–29): (Step 24) Uppdatera Prompts 1–3 (HÖGPRIORITET: Klarspråk, Medborgarmejl, FAQ) – lägg till antes/efter-exempel, tydligare format-specifikation, målgrupp-definition. (Step 25) Uppdatera Prompts 4–7 (MEDELPRIORITERING: Checklista, Kallelse, Beslutsunderlag, Rutiner) – förbättra struktur, lägg till roller/ansvar, mer konkreta exempel. (Step 26) Uppdatera Prompts 8–14 (LÅG-MEDELPRIORITERING: Två versioner–Nyckelord) – förbättra output-format, lägg till exempel, tydligare instruktioner. (Step 27) Lokal testning av alla 14 uppdaterade prompts – verifiera att alla laddar, copy fungerar, exempel är tydliga. (Step 28) Git commit & push uppdaterade prompts. (Step 29) GitHub Pages lansering. Total tid för prompt-förbättringar: ~4–5h. Prioritering: Börja med Step 24 (högprioritet-prompts)."
+    },
+    {
+      "date": "2026-01-27T05:00:00Z",
+      "role": "engineer",
+      "step": "implementation",
+      "summary": "BATCH STEG 24–28 KLART: Implementering av prompt-förbättringsplan genomförd. (Step 24) Uppdaterade Prompts 1–3 (Klarspråk, Medborgarmejl, FAQ) med: före/efter-exempel, konkreta regler (ex: max 8–12 ord per mening för klarspråk), målgrupp-definition, tydlig output-format. Varje prompt nu ~300–400 ord (tidigare ~50–80 ord). (Step 25) Uppdaterade Prompts 4–7 med: struktur-specifikation (ex: Checklista: en handling per punkt, börja med verb; Beslutsunderlag: sammanfattning+bakgrund+förslag+ekonomi), ansvarsroller, praktiska exempel. (Step 26) Uppdaterade Prompts 8–14 med: djupare instruktioner, format-exempel, output-struktur, tips för facilitering. Sammanfattning (Steg 27) Testad lokalt på localhost:8000 – alla 14 prompts laddar dynamiskt, kopiera-funktion fungerar, ny utökad innehål synlig. (Step 28) Git commit genomförd: 'feat: Uppdatera alla 14 prompts...' – 14 filer ändrade, 471 insertioner, 28 deletioner. Status: Alla 14 prompts nu redo för GitHub Pages-lansering med högre kvalitet och användarvänlighet. Nästa: Step 29 för GitHub Pages-aktivering + lansering. Tid totalt: 2h 15min ✅"
+    },
+    {
+      "date": "2026-01-27T06:00:00Z",
+      "role": "planner",
+      "step": "planning",
+      "summary": "PLAN FÖR TRE NYA FUNKTIONER (STEG 29–36): Användaren begärde: (1) Ta bort anonymiserings-checkbox, (2) Favoriter med localStorage-cache och snabb-meny, (3) 'Se hela prompt' modal. Plan skapad med 8 verifierbara steg: (29) Ta bort checkbox från createPromptCard() + aktivera copy-knapp direkt. (30) Lägg till stjärn-ikon för favoritmarkering på varje kort. (31) Implementera localStorage för att cacha favoriter (nyckel: favoritePrompts). (32) Skapa snabb-meny '⭐ Mina Favoriter' ovanför huvudgrid (döljs om tom). (33) Lägg till 'Rensa favoriter'-knapp med confirm-dialog. (34) Lägg till ℹ️ 'Se hela prompt'-knapp som visar modal/overlay med full prompt-text. (35) Lokal testning av alla funktioner (Chrome/Firefox/Safari). (36) Git commit + uppdatera README med nya funktioner. Total tid: ~4h. Kritiska beroenden: 30→31→32→33 (sekventiell), 34 parallell. Nästa: Engineer startar med Steg 29 (snabbast win)."
+    },
+    {
+      "date": "2026-01-27T07:00:00Z",
+      "role": "engineer",
+      "step": "implementation",
+      "summary": "BATCH STEG 29–31 KLART: Implementerade tre sammanhängande funktioner. (Steg 29) Tog bort anonymiserings-checkbox: Raderade .anonymization-check CSS, tog bort checkbox-HTML från createPromptCard(), raderade updateButtonState() + checkbox-lyssnare, copy-knapp nu alltid aktiverad (ingen disabled-state). (Steg 30) Lade till favoritmarkering: CSS för .favorite-btn (position: absolute top-right, hover-effekt), stjärn-knapp (☆/★) i varje kort, handleFavoriteClick() togglerar status, visuell feedback när favorit markeras. (Steg 31) Implementerade localStorage: Funktioner getFavorites()/saveFavorites()/toggleFavorite() sparar i localStorage (nyckel: 'favoritePrompts'), loadFavoriteStates() läser cache vid sidladdning, favoriter kvarstår efter refresh/stänga webbläsare. Verifiering: Testad på localhost:8000, alla 14 prompts laddar, copy fungerar direkt, favoriter sparas/läses korrekt. Tid: 1h 20min ✅. Nästa: Steg 32-33 (snabb-meny + rensa-knapp)."
     }
   ],
       "date": "2026-01-26T17:00:00Z",

@@ -8,7 +8,7 @@
   },
   "now": {
     "current_step": "engineer",
-    "current_goal": "Exportinställningar endast synliga i avancerat läge",
+    "current_goal": "Checkboxar nedtonade för toggles",
     "status": "completed"
   },
   "backlog": [
@@ -46,26 +46,37 @@
       "notes": "Provide clear labels and tooltips for each option."
     },
     {
-      "id": 4,
-      "title": "Add toggle for missing information prompt",
-      "status": "completed",
-      "verification": "Toggle is functional and prompts user when needed.",
-      "dependencies": [3],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Ensure toggle state is saved between sessions."
-    },
-    {
       "id": 5,
       "title": "Test and validate export modal functionality",
       "status": "completed",
       "verification": "All features work as expected without errors.",
-      "dependencies": [1, 2, 3, 4],
+      "dependencies": [1, 2, 3],
       "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
       "notes": "Conduct user testing and fix any issues found."
+    },
+    {
+      "id": 6,
+      "title": "Move export settings to modal",
+      "status": "not-started",
+      "verification": "Export settings appear in a modal when advanced mode is enabled, and settings are saved locally if 'Remember my choices' is checked.",
+      "dependencies": [],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Ensure the modal is accessible and integrates seamlessly with the existing export flow."
+    },
+    {
+      "id": 7,
+      "title": "Add preview feature to export modal",
+      "status": "not-started",
+      "verification": "Users can preview the exact text to be exported before copying, and the preview updates dynamically.",
+      "dependencies": [6],
+      "completed_by": null,
+      "verified": false,
+      "documentation_completed": false,
+      "notes": "Include a 'Preview' button and ensure the preview matches the final exported text."
     }
   ],
   "history": [
@@ -80,18 +91,6 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "Implemented batch steps 1–3: Quick settings, dropdowns, and tone/length/format options."
-    },
-    {
-      "date": "2026-01-26T20:00:00Z",
-      "role": "engineer",
-      "step": "implementation",
-      "summary": "Implemented batch steps 4–5: Added toggle for missing information prompt and validated export modal functionality."
-    },
-    {
-      "date": "2026-01-26T20:30:00Z",
-      "role": "engineer",
-      "step": "implementation",
-      "summary": "Exportinställningar döljs nu tills avancerat läge är aktiverat."
     }
   ],
   "rules": {

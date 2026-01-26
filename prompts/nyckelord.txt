@@ -1,0 +1,7 @@
+Extrahera nyckelord
+Identifiera och lista viktiga ord och koncept från en text.
+
+Extrahera 10–15 nyckelord från texten nedan. Ord och koncept som är centrala för att förstå innehållet. Format: nyckelord, brief förklaring.
+
+Text:
+[klistra in här]

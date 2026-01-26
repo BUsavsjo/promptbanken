@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promptmallar för kommun</title>
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background-color: #f9f9f9;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Prompt Cards Grid */
+        .prompt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .prompt-grid.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .prompt-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .prompt-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .prompt-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #0066cc;
+        }
+
+        .prompt-card p {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        .loading-message {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
+        }
+
+        .error-message {
+            background-color: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            padding: 1rem;
+            color: #c33;
+            margin: 1rem 0;
+            grid-column: 1 / -1;
+        }
+
+        /* Security Note (Compact) */
+        .security-note {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .security-note-text {
+            margin-bottom: 0.5rem;
+        }
+
+        .security-note-link {
+            color: #0066cc;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 0.3rem;
+        }
+
+        .security-note-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Expandable Examples */
+        .security-examples {
+            display: none;
+            background-color: #f9f9f9;
+            border-left: 3px solid #ffc107;
+            padding: 0.75rem;
+            margin: 0.5rem 0 1rem 0;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .security-examples.active {
+            display: block;
+        }
+
+        .security-examples strong {
+            display: block;
+            color: #856404;
+            margin-bottom: 0.3rem;
+        }
+
+        .security-examples ul {
+            margin-left: 1.5rem;
+            color: #666;
+        }
+
+        .security-examples li {
+            margin-bottom: 0.2rem;
+        }
+
+        /* Anonymization Checkbox */
+        .anonymization-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .anonymization-check input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .anonymization-check label {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+            width: 100%;
+            text-align: center;
+        }
+
+        .copy-btn:hover:not(:disabled) {
+            background-color: #0052a3;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+
+        .copy-btn.copied {
+            background-color: #28a745;
+        }
+
+        .copy-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Hidden Textarea */
+        textarea {
+            display: none;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            .prompt-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main {
+                margin: 1rem auto;
+            }
+
+            .prompt-card {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 1.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🏛️ Promptmallar för kommun</h1>
+        <p>AI-drivna kommunikationsmallar för tydlig och klarare kommunikation</p>
+    </header>
+
+    <main>
+        <section class="prompt-grid" id="prompt-grid">
+            <div class="loading-message">Laddar promptmallar...</div>
+        </section>
+    </main>
+
+    <footer>
+        <div style="margin-bottom: 1rem; padding: 1rem; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #0066cc;">
+            <strong style="color: #0066cc;">ℹ️ Viktigt:</strong>
+            <p style="margin-top: 0.5rem; color: #0066cc; font-size: 0.95rem;">
+                Dessa prompter är verktyg för <strong>mänsklig beslutsfattning</strong>. 
+                AI-genererat innehål kräver alltid mänsklig granskning före publicering. 
+                Du är ansvarig för att anonymisera personuppgifter och verifiera resultat.
+            </p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                <a href="GDPR-POLICY.md" style="color: #0066cc; text-decoration: none;">📋 Läs dataskyddspolicy</a> | 
+                <a href="AI-COMPLIANCE.md" style="color: #0066cc; text-decoration: none;">🔍 EU AI Act compliance</a>
+            </p>
+        </div>
+        <p>Promptmallar för kommun | v1.0.0 | <a href="GDPR-POLICY.md">Dataskydd</a> | <a href="AI-COMPLIANCE.md">AI-compliance</a></p>
+        <p style="margin-top: 1rem; opacity: 0.8;">För feedback eller nya mallar, kontakta IT-avdelningen.</p>
+    </footer>
+
+    <script>
+        // Step 19: Dynamic JavaScript loading from prompts.json
+        
+        const grid = document.getElementById('prompt-grid');
+
+        // Load prompts configuration and build UI dynamically
+        async function loadPrompts() {
+            try {
+                grid.classList.add('loading');
+
+                // Fetch prompts.json
+                const configResponse = await fetch('prompts.json');
+                if (!configResponse.ok) {
+                    throw new Error(`Failed to load prompts.json: ${configResponse.statusText}`);
+                }
+
+                const config = await configResponse.json();
+                const prompts = config.prompts || [];
+
+                // Clear loading message
+                grid.innerHTML = '';
+
+                // Build UI for each prompt
+                for (const prompt of prompts) {
+                    try {
+                        // Fetch prompt text file
+                        const promptResponse = await fetch(prompt.file);
+                        if (!promptResponse.ok) {
+                            throw new Error(`Failed to load ${prompt.file}`);
+                        }
+
+                        const promptText = await promptResponse.text();
+
+                        // Create card HTML
+                        const card = createPromptCard(prompt, promptText);
+                        grid.appendChild(card);
+                    } catch (error) {
+                        console.error(`Error loading prompt ${prompt.id}:`, error);
+                        grid.innerHTML += `<div class="error-message">⚠️ Kunde inte ladda prompt: ${prompt.title}</div>`;
+                    }
+                }
+
+                // Set up event delegation for all cards
+                setupEventDelegation();
+
+                grid.classList.remove('loading');
+            } catch (error) {
+                console.error('Error loading prompts:', error);
+                grid.innerHTML = `<div class="error-message">⚠️ Kunde inte ladda promptmallar. Kontrollera att prompts.json och prompt-filer finns.</div>`;
+                grid.classList.remove('loading');
+            }
+        }
+
+        function createPromptCard(prompt, promptText) {
+            const card = document.createElement('div');
+            card.className = 'prompt-card';
+            card.setAttribute('data-prompt-id', prompt.id);
+
+            // Build security examples HTML
+            const examplesHtml = prompt.security_examples
+                .map(ex => `<li>${ex}</li>`)
+                .join('');
+
+            // Build card HTML
+            card.innerHTML = `
+                <h3>${prompt.title}</h3>
+                <p>${prompt.description}</p>
+
+                <div class="security-note">
+                    <div class="security-note-text">🔒 Anonymisera alltid personuppgifter <a class="security-note-link" data-toggle-examples="${prompt.id}">Visa exempel</a></div>
+                    <div class="security-examples" data-prompt="${prompt.id}">
+                        <strong>Vad du ska ta bort:</strong>
+                        <ul>${examplesHtml}</ul>
+                    </div>
+                </div>
+
+                <div class="anonymization-check">
+                    <input type="checkbox" id="anon-${prompt.id}" name="anonymized" class="anon-checkbox" data-prompt-id="${prompt.id}">
+                    <label for="anon-${prompt.id}">Jag bekräftar att data är anonymiserat</label>
+                </div>
+
+                <button class="copy-btn" data-prompt="${prompt.id}" disabled>Kopiera prompt</button>
+                <textarea id="textarea-${prompt.id}">${promptText}</textarea>
+            `;
+
+            return card;
+        }
+
+        function setupEventDelegation() {
+            // Toggle examples - event delegation
+            grid.addEventListener('click', (event) => {
+                if (event.target.classList.contains('security-note-link')) {
+                    event.preventDefault();
+                    const promptId = event.target.getAttribute('data-toggle-examples');
+                    const examplesDiv = grid.querySelector(`[data-prompt="${promptId}"].security-examples`);
+                    if (examplesDiv) {
+                        examplesDiv.classList.toggle('active');
+                    }
+                }
+
+                // Copy button click
+                if (event.target.classList.contains('copy-btn')) {
+                    handleCopyClick(event.target);
+                }
+            });
+
+            // Checkbox change - event delegation
+            grid.addEventListener('change', (event) => {
+                if (event.target.classList.contains('anon-checkbox')) {
+                    updateButtonState(event.target.getAttribute('data-prompt-id'));
+                }
+            });
+        }
+
+        function updateButtonState(promptId) {
+            const checkbox = document.querySelector(`#anon-${promptId}`);
+            const button = document.querySelector(`.copy-btn[data-prompt="${promptId}"]`);
+
+            if (checkbox && button) {
+                if (checkbox.checked) {
+                    button.removeAttribute('disabled');
+                } else {
+                    button.setAttribute('disabled', 'disabled');
+                }
+            }
+        }
+
+        async function handleCopyClick(button) {
+            event.preventDefault();
+            const promptId = button.getAttribute('data-prompt');
+            const textArea = document.getElementById(`textarea-${promptId}`);
+
+            if (!textArea) {
+                console.error(`Textarea for prompt '${promptId}' not found`);
+                return;
+            }
+
+            const textToCopy = textArea.value;
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+
+                // Visual feedback
+                const originalText = button.textContent;
+                button.textContent = '✅ Kopierad!';
+                button.classList.add('copied');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                alert('Kunde inte kopiera. Prova igen eller kopiera manuellt.');
+            }
+        }
+
+        // Load prompts on page load
+        window.addEventListener('DOMContentLoaded', loadPrompts);
+    </script>
+</body>
+</html>

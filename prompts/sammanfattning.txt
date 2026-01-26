@@ -1,0 +1,7 @@
+Skriva sammanfattning
+Förkorta en längre text – både innehålls- och språkmässigt.
+
+Skapa en kort sammanfattning av texten nedan. Max 100 ord. Behåll huvudbudskapet men ta bort detaljer och exempel.
+
+Text:
+[klistra in här]

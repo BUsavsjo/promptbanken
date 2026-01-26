@@ -1,0 +1,7 @@
+Skapa checklista
+Omvandla text eller instruktioner till en strukturerad checklista.
+
+Gör en checklista från texten nedan. Gör checklistor korta och enkla – en punkt per rad. Gruppera logiskt.
+
+Text:
+[klistra in här]

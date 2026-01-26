@@ -22,11 +22,10 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 
 ### Online (GitHub Pages)
 1. Öppna: [username.github.io/promptbanken](https://username.github.io/promptbanken)
-2. Klicka på en prompt-kort
+2. Välj ett prompt-kort
 3. Klicka **"Visa exempel"** för att se vad du ska anonymisera
-4. Checka **"Jag bekräftar att data är anonymiserat"**
-5. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
-6. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
+4. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
+5. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
 
 ### Lokal utveckling
 ```bash
@@ -43,7 +42,17 @@ http://localhost:8000
 
 ---
 
-## 📋 Tillgängliga prompter (14 st.)
+## ✨ Nya funktioner
+
+- Kopiera utan anonymiserings-checkbox (snabbare flöde)
+- Favoriter med stjärna + localStorage-cache
+- Snabbmeny "⭐ Mina Favoriter" och knapp för att rensa alla
+- ℹ️ "Se hela prompt"-modal för full text
+- Ny prompt #15: 📣 Skapa informationsutskick
+
+---
+
+## 📋 Tillgängliga prompter (15 st.)
 
 | # | Prompt | Syfte |
 |---|--------|-------|
@@ -61,6 +70,7 @@ http://localhost:8000
 | 12 | 📝 Strukturera anteckningar | Organisera mötes-anteckningar |
 | 13 | 💬 Diskussionsfrågor | Driva diskussion framåt |
 | 14 | 🔑 Extrahera nyckelord | Identifiera centrala termer |
+| 15 | 📣 Skapa informationsutskick | Skriv tydligt utskick med rubrik, sammanfattning och nästa steg |
 
 ---
 
@@ -173,7 +183,7 @@ Vi välkomnar feedback och förbättringar!
 
 ## 📜 Licens
 
-Creative Commons Zero (CC0) – använd fritt utan begränsningar.
+MIT-licens © Peter Wenström. Se licensen på GitHub: https://github.com/BUsavsjo/promptbanken
 
 ---
 
@@ -195,7 +205,7 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 
 ## 📞 Kontakt
 
-**Frågor eller feedback?** Kontakta IT-avdelningen eller öppna ett GitHub Issue.
+**Frågor eller feedback?** Öppna ett GitHub Issue eller kontakta Peter Wenström via repo-sidan: https://github.com/BUsavsjo/promptbanken
 
 ---
 

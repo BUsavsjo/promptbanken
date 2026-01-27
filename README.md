@@ -166,6 +166,12 @@ git push origin main
 - **Hosting:** GitHub Pages (static)
 - **Design:** CSS Grid/Flexbox, responsiv, WCAG AA
 
+### GDPR och fritextruta (egen roll)
+
+- **Ingen data lagras:** Allt du skriver i fritextrutan för "Annan/Egen roll" hanteras endast lokalt i din webbläsare och sparas inte.
+- **Personuppgifter:** Ange aldrig personuppgifter i fritextrutan. Du ansvarar för att all text är anonymiserad.
+- **Privacy by design:** Ingen information skickas till server eller tredje part.
+
 ### Inställningsmeny (Settings Menu)
 - **Positionering:** `.settings-container` med flexbox (justify-content: flex-end) för högerjustering
 - **Responsiv:** Media query (@768px) anpassar dropdown-bredd för mobila enheter
@@ -239,6 +245,7 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 ### Funktioner
 - **LocalStorage**: Exportinställningar sparas lokalt i webbläsaren.
 - **Exportmodul**: Användare kan öppna, kopiera och ladda ner instruktioner.
+- **Knappsynlighet**: "Kopiera prompt"-knappen döljs automatiskt när "Anpassa prompt" (avancerat läge) är aktivt, och visas annars. Detta minskar risken för felkopiering och gör flödet tydligare.
 
 ### Testning
 1. Kontrollera att LocalStorage sparar och hämtar data korrekt.
@@ -268,3 +275,21 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 - Current version: 1.0.0
 
 *Skapad för att göra kommunal kommunikation tydligare, snabbare och bättre.* 🚀
+
+## 🆕 Senaste ändringar (jan 2026)
+
+- Snabbinmatningstexten ("quick input") injiceras nu automatiskt i alla promptflöden:
+  - "Kopiera prompt" ersätter både `[klistra in här]` och `[TEXT]`-markörer med din snabbinmatning.
+  - "Se hela prompt"-modal visar prompten med din snabbinmatning på rätt plats.
+  - "Anpassa prompt" (export) inkluderar snabbinmatning i förhandsvisning och export.
+- Gäller även prompten "📣 Skapa informationsutskick" och framtida prompts med `[TEXT]`-markör.
+- Ingen snabbinmatning lagras eller skickas – allt sker lokalt i webbläsaren.
+
+---
+
+## 🔒 Integritet och lokal hantering
+
+- Ingen snabbinmatning eller promptdata lagras på servern eller skickas till tredje part.
+- All bearbetning sker lokalt i din webbläsare.
+- Endast favoriter och exportinställningar sparas i din webbläsares localStorage (kan rensas när som helst).
+- Du ansvarar alltid för att anonymisera personuppgifter innan du kopierar eller exporterar en prompt.

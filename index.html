@@ -843,7 +843,7 @@
             id="quick-input-textarea" 
             class="quick-input-textarea" 
             maxlength="5000"
-            placeholder="Klistra in eller skriv din text här... När du sedan kopierar en prompt kommer din text automatiskt att inkluderas."
+            placeholder="Klistra in eller skriv din text här... När du sedan kopierar en prompt kommer din text automatiskt att inkluderas. (Ingen data lagras, allt sker lokalt)"
             aria-label="Snabbinmatning för text"></textarea>
         <div class="quick-input-info-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; font-size: 0.97rem; color: #555;">
             <span>Max 5 000 tecken. Undvik personuppgifter. <a href="#" id="show-anon-examples">Visa exempel</a></span>
@@ -1150,7 +1150,7 @@
 
                         const promptText = await promptResponse.text();
 
-                        // Create card HTML
+                        // Create card HTML with quick input text support
                         const card = createPromptCard(prompt, promptText);
                         grid.appendChild(card);
                     } catch (error) {
@@ -1184,7 +1184,11 @@
             card.className = 'prompt-card';
             card.setAttribute('data-prompt-id', prompt.id);
 
-            // Build card HTML (no anonymization examples)
+            // Include user input dynamically
+            const userInput = document.getElementById('quick-input-textarea')?.value || '';
+            const combinedText = userInput ? `${userInput}\n\n${promptText}` : promptText;
+
+            // Build card HTML
             card.innerHTML = `
                 <button class="favorite-btn favorites-only" data-favorite="${prompt.id}" title="Markera som favorit">☆</button>
                 <h3>${prompt.title}</h3>
@@ -1195,7 +1199,7 @@
                     <button class="secondary-btn copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
                     <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
-                <textarea id="textarea-${prompt.id}">${promptText}</textarea>
+                <textarea id="textarea-${prompt.id}">${combinedText}</textarea>
             `;
             return card;
         }
@@ -1357,9 +1361,7 @@
             if (textArea && prompt) {
                 promptModalTitle.textContent = prompt.title;
                 let text = textArea.value;
-                if (quickInputText && quickInputText.trim()) {
-                    text = text.replace(/\[klistra in här\]/gi, quickInputText);
-                }
+                text = replaceInputMarkers(text, quickInputText);
                 promptModalText.textContent = text;
                 promptModal.classList.add('active');
             }
@@ -1409,13 +1411,7 @@
                 return;
             }
 
-            let textToCopy = textArea.value;
-
-            // If quick input has text, insert it into the prompt at [klistra in här] markers
-            if (quickInputText.trim()) {
-                textToCopy = textToCopy.replace(/\[klistra in här\]/gi, quickInputText);
-                console.log('Inserted quick input text into prompt');
-            }
+            let textToCopy = replaceInputMarkers(textArea.value, quickInputText);
 
             try {
                 await navigator.clipboard.writeText(textToCopy);
@@ -1434,6 +1430,13 @@
                 console.error('Failed to copy:', err);
                 alert('Kunde inte kopiera. Prova igen eller kopiera manuellt.');
             }
+        }
+
+        function replaceInputMarkers(text, input) {
+            if (!input || !input.trim()) return text;
+            return text
+                .replace(/\[klistra in här\]/gi, input)
+                .replace(/\[TEXT\]/gi, input);
         }
 
         // Export settings
@@ -1573,11 +1576,7 @@
         function buildExportText(baseText) {
             const settings = getCurrentExportSettings();
             const labels = getLabels(settings);
-            let text = baseText;
-            // Always insert quick input text if present
-            if (quickInputText && quickInputText.trim()) {
-                text = text.replace(/\[klistra in här\]/gi, quickInputText);
-            }
+            let text = replaceInputMarkers(baseText, quickInputText);
             // Only show custom role if selected, otherwise show standard role
             let roleLine = `Roll: ${labels.role}`;
             const header = [

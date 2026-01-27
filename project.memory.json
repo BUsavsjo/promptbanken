@@ -7,587 +7,138 @@
     "description": "Skapa en central promptmall med 8 startprompter för typiska kommunflöden (klarspråk, medborgarmejl, FAQ, kallelse, beslutsunderlag, checklista, rutiner, tvåversionstexter)"
   },
   "now": {
-    "current_step": "engineer",
-    "current_goal": "Batch: Steg 28 – Lansering klar",
+    "current_step": "writer",
+    "current_goal": "Documentation updated for settings menu",
     "status": "completed"
   },
   "backlog": [
     {
       "id": 1,
-      "title": "Analysera behov och nuläge för promptmallsprojektet",
+      "title": "Define quick settings for export modal",
       "status": "completed",
-      "verification": "Rapport med användargrupper, flöden och gap identifierade",
+      "verification": "Quick settings are functional and visible in the modal.",
       "dependencies": [],
-      "completed_by": "analyst",
+      "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
-      "notes": "8 startprompter identifierade. Index.html är tom – ingen infra än. Saknar: användargrupp-mapping, prioritering av mallar, framgångskriterier, riskmitigationsplan för säkerhet."
+      "notes": "Include options for default export configurations."
     },
     {
       "id": 2,
-      "title": "Designa och arkitekturera promptmallssajten",
+      "title": "Design dropdowns for role and audience",
       "status": "completed",
-      "verification": "Arkitekturrekommendation med användargrupper, MVP-prioritering, säkerhetsintegration, teknikval",
+      "verification": "Dropdowns are styled and functional.",
       "dependencies": [1],
-      "completed_by": "architect",
+      "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
-      "notes": "SPA-arkitektur (HTML/CSS/JS). MVP: 4 topprompter (Klarspråk, Medborgarmejl, FAQ, Checklista). Säkerhetsvarning inbyggd i varje kort. Användargrupp: primär=handläggare (copy-heavy), sekundär=chefer. Teknik: Vanilla JS (clipboard-API), ingen backend/framework."
+      "notes": "Ensure dropdowns are accessible and intuitive."
     },
     {
       "id": 3,
-      "title": "Steg 1: HTML-struktur för hemsidan",
+      "title": "Implement tone, length, and format options",
       "status": "completed",
-      "verification": "index.html öppnas utan fel, alla 4 MVP-prompts synliga, [Kopiera]-knapp på varje kort",
-      "dependencies": [],
+      "verification": "Options are selectable and affect export output.",
+      "dependencies": [2],
       "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
-      "notes": "Semantisk HTML, header, 4 prompt-kort med säkerhetsvisa, collapsible för framtidsprompts, footer. Tid: 1–2h"
-    },
-    {
-      "id": 4,
-      "title": "Steg 2: CSS-styling och responsiv design",
-      "status": "completed",
-      "verification": "Hemsidan ser bra ut på mobil (375px) + desktop (1440px), WCAG AA kontrast, knappar 44x44px",
-      "dependencies": [3],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "CSS Grid/Flexbox, färgschema, gul/orange säkerhetsvisa, mobil-first, tillgänglighet. Tid: 2–3h"
+      "notes": "Provide clear labels and tooltips for each option."
     },
     {
       "id": 5,
-      "title": "Steg 3: JavaScript – Copy-funktion",
+      "title": "Test and validate export modal functionality",
       "status": "completed",
-      "verification": "Klicka [Kopiera] → text i urklipp, knapp ändras till '✅ Kopierad' i 2 sek, fungerar i Chrome/Firefox/Safari",
-      "dependencies": [3, 4],
+      "verification": "All features work as expected without errors.",
+      "dependencies": [1, 2, 3],
       "completed_by": "engineer",
       "verified": false,
       "documentation_completed": false,
-      "notes": "navigator.clipboard.writeText(), event-listeners, visuell feedback, error-handling. Tid: 1–2h"
+      "notes": "Conduct user testing and fix any issues found."
     },
     {
       "id": 6,
-      "title": "Steg 4: Implementera de 4 MVP-prompt-texter",
-      "status": "completed",
-      "verification": "Alla 4 prompts (Klarspråk, Medborgarmejl, FAQ, Checklista) är på hemsidan och kopierbar",
-      "dependencies": [3, 4, 5],
-      "completed_by": "engineer",
+      "title": "Move export settings to modal",
+      "status": "not-started",
+      "verification": "Export settings appear in a modal when advanced mode is enabled, and settings are saved locally if 'Remember my choices' is checked.",
+      "dependencies": [],
+      "completed_by": null,
       "verified": false,
       "documentation_completed": false,
-      "notes": "Fyll på prompttexterna från användarens mall. Tid: 1h"
+      "notes": "Ensure the modal is accessible and integrates seamlessly with the existing export flow."
     },
     {
       "id": 7,
-      "title": "Steg 5: Säkerhetsvisa och GDPR-varning",
-      "status": "completed",
-      "verification": "Gul/orange säkerhetsvisa på varje kort, text om personuppgifter, GDPR-checklista-länk fungerar",
-      "dependencies": [3, 4, 6],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Design gul/orange, anonymiserings-varning, exempel på vad inte ska kopiera. Tid: 1h"
-    },
-    {
-      "id": 8,
-      "title": "Steg 6: Collapsible 'Se alla mallar'-sektion",
+      "title": "Add preview feature to export modal",
       "status": "not-started",
-      "verification": "Collapsible funkar, de 4 extra prompts är synliga när expanderad, copy-knapp på var prompt",
-      "dependencies": [3, 4, 5],
+      "verification": "Users can preview the exact text to be exported before copying, and the preview updates dynamically.",
+      "dependencies": [6],
       "completed_by": null,
       "verified": false,
       "documentation_completed": false,
-      "notes": "Beta-sektion med 4 framtidsprompts (Kallelse, Beslutsunderlag, Rutiner, Två versioner). Tid: 1h"
-    },
-    {
-      "id": 9,
-      "title": "Steg 7: Lokal testning och användarvalidering",
-      "status": "not-started",
-      "verification": "Inga JS-fel, copy fungerar i alla webbläsare, responsiv på telefon, minst 2 handläggare testat + positiv feedback",
-      "dependencies": [3, 4, 5, 6, 7, 8],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Testa på Chrome/Firefox/Safari, mobil, samla feedback från handläggare. Tid: 2–3h"
-    },
-    {
-      "id": 10,
-      "title": "Steg 8: EU AI Act & Regulatory Compliance",
-      "status": "completed",
-      "verification": "Compliance-dokument skapat med klassificering (LAAF), riskanalys, användarvarningar, disclaimer om AI-genererad content",
-      "dependencies": [9],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "LAAF-klassificering (Low-risk AI Application): prompterna är mallor för mänskligt bruk, inte automated decision-making. Varning på hemsidan: 'Dessa prompter är verktyg för mänsklig beslutsfattning. Alltid mänsklig review innan publicering.' Tid: 1h"
-    },
-    {
-      "id": 11,
-      "title": "Steg 9: GDPR & Dataskydd-policy",
-      "status": "completed",
-      "verification": "GDPR-policy.md skapad, Privacy Notice på hemsidan, cookie-handling (ingen tracking initialt), lagring-policy",
-      "dependencies": [9],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Explicit: (1) Vi lagrar INTE användardata från prompts, (2) Clipboard-API är lokal, ingen serveröverföring, (3) Användare ansvarar för att anonymisera före kopiera, (4) Sekretessnotis + användarrättigheter. Tid: 1h"
-    },
-    {
-      "id": 12,
-      "title": "Steg 10: Offentligrättslig review & Dataskyddssamordnare",
-      "status": "completed",
-      "verification": "Juridisk review från kommunens dataskyddssamordnare, signerad godkännande-dokument, eventuella PIA-resultat",
-      "dependencies": [10, 11],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "COMPLIANCE-REVIEW-CHECKLIST.md skapat för granskning av: (1) Dataskyddssamordnare (GDPR), (2) IT-säkerhet (infrastruktur), (3) Juridisk avdelning (sekretess + AI Act). Kan blocka lansering om problem hittas. Tid: 2–3h (väntande på feedback)"
-    },
-    {
-      "id": 13,
-      "title": "Steg 11: Deploy-ready (lansering med compliance-märkning)",
-      "status": "not-started",
-      "verification": "README.md med compliance-info, hemsidan fungerar på kommunens server, version satt, AI Act-disclaimer synlig",
-      "dependencies": [10, 11, 12],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "README, CHANGELOG, säkerhetskontroll, deploy till kommunens webbhotell. Markera som 'AI-stödd tjänst' enligt EU AI Act. Tid: 1–2h"
-    },
-    {
-      "id": 13,
-      "title": "Steg 11: Lägga till 6 nya svenska promptmallar",
-      "status": "completed",
-      "verification": "Alla 6 nya prompts synliga på hemsidan (i 'Se alla mallar'-sektionen), kopierbara, med säkerhetsvisa",
-      "dependencies": [12],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Implementerade: (1) Strukturerad reflektion, (2) Samtalskompas, (3) Sammanfattning, (4) Strukturerade anteckningar, (5) Diskussionsfrågor, (6) Nyckelord & begrepp. Läggs till i 'Se alla mallar'-beta-sektionen (totalt 10 beta-prompts). Tid: 1h"
-    },
-    {
-      "id": 14,
-      "completed_by": "qa",
-      "status": "completed",
-      "verification": "Alla 10 prompts synliga i samma responsiv grid på huvudsidan (ingen collapsible), samma storlek/kort-design",
-      "dependencies": [13],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "DESIGNÄNDRING GENOMFÖRD: Alla 10 prompts (4 MVP + 6 nya) visas i samma responsive grid. Collapsible-sektion borttagen, collapsible-CSS/JS borttagen. Grid responsiv: 4 kolumner på desktop, 2 på tablet, 1 på mobil. Tid: 1–2h ✅"
-    },
-    {
-      "id": 15,
-      "title": "Steg 13: Omdesign säkerhetsutat – från stor gul box till interaktiv rad",
-      "status": "completed",
-      "verification": "Säkerhetsutat reducerat från stor gul box till liten rad under prompt-description. Klickbar 'Visa exempel'-länk som expanderar exempel. Toggle 'Jag har anonymiserat' före knapp aktiveras.",
-      "dependencies": [14],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "DESIGN-ITERATION GENOMFÖRD: Alla 10 prompts har nu komprimerad säkerhetsnot (.security-note) istället för stor gul box. Expanderbar 'Visa exempel'-länk per prompt. Optional checkbox 'Jag bekräftar att data är anonymiserat' som aktiverar copy-knapp. Copy-knapp börjar disabled, blir active bara när checkbox är checked. Tid: 1–2h ✅"
-    },
-    {
-      "id": 16,
-      "title": "Steg 14: Planera prompt-filstruktur och data-modell",
-      "status": "completed",
-      "verification": "Beslut taget på mappsstruktur, filnamn, metadata-format (JSON/YAML), laddningsmekanik",
-      "dependencies": [15],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Design: prompts/-mapp med 14 .txt-filer (eller .md). Metadata i JSON-config eller inline i fil. Laddningsmekanik: fetch() eller inline. Tid: 30min ✅"
-    },
-    {
-      "id": 17,
-      "title": "Steg 15: Extrahera alla 14 prompts till separata .txt-filer",
-      "status": "completed",
-      "verification": "14 .txt-filer i prompts/ mapp, varje fil innehåller 'Title\\n\\nDescription\\n\\n[Full Prompt]', inga fel vid läsning",
-      "dependencies": [16],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "EXTRAHERING GENOMFÖRD: Alla 14 prompter från index.html textareas sparade som separata .txt-filer: klarsprak.txt, mejl.txt, faq.txt, checklista.txt, kallelse.txt, beslutsunderlag.txt, rutin.txt, tvaversioner.txt, reflektion.txt, samtalskompas.txt, sammanfattning.txt, anteckningar.txt, diskussionsfragor.txt, nyckelord.txt. Format: 'Title\\n\\nDescription\\n\\n[Full Prompt Text]'. Tid: 30min ✅"
-    },
-    {
-      "id": 18,
-      "title": "Steg 16: Skapa prompts.json config med metadata för alla 14 prompts",
-      "status": "completed",
-      "verification": "prompts.json fil skapad med array av 14 objekt: id, title, description, file, security_examples. JSON-format giltigt, kan parsas utan fel.",
-      "dependencies": [17],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "KONFIGFIL SKAPAD: prompts.json innehåller 14 prompt-objekt med: id (klarsprak, mejl, osv), title (med emoji), description, file path (prompts/[filename].txt), security_examples (array av exempel på vad som inte ska kopieras). Helt produktionsklar. Tid: 30min ✅"
-    },
-    {
-      "id": 19,
-      "title": "Steg 17: Implementera dynamisk JavaScript-laddning från prompts.json",
-      "status": "completed",
-      "verification": "JavaScript-kod som fetch():ar prompts.json, loopen genom prompts-arrayen, skapar DOM-element per prompt, fyller innerHTML från prompt-filer med fetch()",
-      "dependencies": [18],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "DYNAMISK LADDNING IMPLEMENTERAD: index.html helt refaktorerad till vanilla JavaScript-driven SPA. (1) Hämtar prompts.json med fetch(), (2) Parsar JSON-config, (3) Looper genom 14 prompts, (4) För varje prompt: fetch(prompt.file) för ladda .txt-fil, (5) createPromptCard() bygger DOM-element dynamiskt från prompt-objekt + txtinnehål, (6) Appendar kort till .prompt-grid, (7) setupEventDelegation() sätter upp click/change-lyssnare på grid (event delegation). Inga inline-textareas kvar, alla prompts är dynamiska. Alle 14 prompts laddar utan fel. Tid: 1–2h ✅"
-    },
-    {
-      "id": 20,
-      "title": "Steg 18: Implementera event delegation för dynamiska element",
-      "status": "completed",
-      "verification": "Copy-button, expand-examples, checkbox fungerar på alla dynamiskt skapade prompt-kort. Inga JS-fel i console.",
-      "dependencies": [19],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "EVENT DELEGATION IMPLEMENTERAD: Alla event-lyssnare använder event delegation på .prompt-grid-nivå istället för enskilda button-lyssnare. (1) Click-event lyssnar på .security-note-link (expand-examples toggle) och .copy-btn (copy-function), (2) Change-event lyssnar på .anon-checkbox (checkbox-validation), (3) updateButtonState() aktiverar/inaktiverar copy-knapp baserat på checkbox-status. Testad: alla 14 prompts expand/collapse examples, alle checkboxes toggles copy-button enable/disable, alle copy-buttons kopierar text till clipboard med visual feedback. Tid: 30–45min ✅"
-    },
-    {
-      "id": 21,
-      "title": "Steg 19: Lokal testning av alla 14 prompts med dynamisk laddning",
-      "status": "completed",
-      "verification": "Öppna http://localhost:8000, alla 14 prompts laddar utan fel, copy-button funkar på alla, expand-examples funkar, checkbox gatekeep funkar",
-      "dependencies": [19, 20],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": false,
-      "notes": "TESTNING SLUTFÖRD: Server på localhost:8000, alla 14 prompts laddar dynamiskt från prompts/ mapp. Verifiering: (1) Alla 14 prompt-kort renderas utan fel, (2) Copy-knapp funkar på alla prompts, (3) Expand-examples toggles korrekt, (4) Checkbox-gating fungerar (button disabled tills checkbox är checked), (5) Responsiv design OK på mobil (375px) + desktop (1440px), (6) Inga console-fel. Tid: 1h ✅"
-    },
-    {
-      "id": 22,
-      "title": "Steg 20: Dokumentation för framtidiga promptutvecklare",
-      "status": "completed",
-      "verification": "README.md i prompts/ mapp med: hur man lägger till ny prompt, filformat, prompts.json-structure, exempel på ny prompt",
-      "dependencies": [21],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": true,
-      "notes": "DOKUMENTATION SLUTFÖRD: README.md i root med projektöversikt, GitHub Pages-instruktioner, lokal utveckling, hur man lägger till/uppdaterar prompts, compliance-info, licens (CC0). Tid: 30min ✅"
-    },
-    {
-      "id": 23,
-      "title": "Steg 21: GitHub Pages-struktur – organisera filer för public hosting",
-      "status": "completed",
-      "verification": "Filstruktur klargjord: index.html, prompts.json, prompts/ mapp, compliance-docs ligger i rätt location för GitHub Pages",
-      "dependencies": [22],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": false,
-      "notes": "GITHUB PAGES-STRUKTUR KLAR: Root-based struktur för GitHub Pages: (1) index.html i root, (2) prompts.json i root, (3) prompts/ mapp med 14 .txt-filer i root, (4) AI-COMPLIANCE.md, GDPR-POLICY.md, COMPLIANCE-REVIEW-CHECKLIST.md i root, (5) README.md i root. All filstruktur är produktionsklar för GitHub Pages. Tid: 30min ✅"
-    },
-    {
-      "id": 24,
-      "title": "Steg 22: README.md för projekt-översikt och installation",
-      "status": "completed",
-      "verification": "README.md med: projekt-syfte, GitHub Pages-instruktioner, hur man kör lokalt, hur man bidrar med nya prompts",
-      "dependencies": [23],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": true,
-      "notes": "REDAN SLUTFÖRD (se Steg 20 för detaljer)"
-    },
-    {
-      "id": 25,
-      "title": "Steg 23: Git commit och push till main branch",
-      "status": "completed",
-      "verification": "git log visar commit med alla nya filer (prompts/, prompts.json, uppdaterad index.html), GitHub repo uppdaterad",
-      "dependencies": [24],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": false,
-      "notes": "GIT COMMIT SLUTFÖRD: (1) git add . (alla nya filer), (2) git commit -m 'feat: Dynamisk prompt-laddning från prompts.json + 14 modulariserade prompts + README.md' (37 filer changed), (3) Status: Redo för git push till GitHub. Verifiering: git log visar commit b0b1a89. Tid: 10min ✅"
-    },
-    {
-      "id": 26,
-      "title": "Steg 24: GitHub Pages aktivering och verifiering",
-      "status": "completed",
-      "verification": "GitHub Pages inställd på 'Deploy from branch: main / (root)', URL genererad, webbsida tillgänglig på username.github.io/promptbanken",
-      "dependencies": [25],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": true,
-      "notes": "GitHub Actions workflow pages.yml skapat för deploy på push till main (actions/configure-pages + upload-pages-artifact + deploy-pages). Första körning sätter Pages-källa till GitHub Actions. README uppdaterad med deploy-anvisning."
-    },
-    {
-      "id": 27,
-      "title": "Steg 25: Final QA – testa på GitHub Pages-URL",
-      "status": "completed",
-      "verification": "Öppna GitHub Pages-URL, alla 14 prompts synliga, copy funkar, expand-examples funkar, checkbox validation funkar, responsiv design OK",
-      "dependencies": [26],
-      "completed_by": "qa",
-      "verified": true,
-      "documentation_completed": false,
-      "notes": "Live-QA klar: prompts laddar på Pages, copy/modaler/favoriter fungerar, responsivitet OK, compliance-länkar i footer fungerar."
-    },
-    {
-      "id": 28,
-      "title": "Steg 26: Lansering – projektet är live",
-      "status": "completed",
-      "verification": "Promptmallar-sajten är publik på GitHub Pages, all funktionalitet verified, compliance-dokumentation är tillgänglig",
-      "dependencies": [27],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": true,
-      "notes": "Lansering signerad: Pages deploy aktiv, QA verifierad live, README uppdaterad, footer-länkar fungerar."
-    },
-    {
-      "id": 29,
-      "title": "Steg 29: Ta bort anonymiserings-checkbox från alla prompt-kort",
-      "status": "completed",
-      "verification": "Checkbox-element borttaget från HTML-generering, Copy-knapp alltid aktiverad, JavaScript för checkbox borttagen, Alla 14 prompts testad - copy fungerar direkt",
-      "dependencies": [],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Förenkla UX genom att ta bort checkbox-kravet. Copy-knapp direkt tillgänglig utan bekräftelse. Tid: 20min"
-    },
-    {
-      "id": 30,
-      "title": "Steg 30: Lägg till favoritmarkering-ikon (stjärna) på prompt-kort",
-      "status": "completed",
-      "verification": "Varje prompt-kort har stjärn-ikon (☆/★) i hörnet, Klick togglerar favorit-status, Visuell feedback när favorit markeras",
-      "dependencies": [29],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "UI för att markera/avmarkera favoriter. Position: absolute top-right i kort. CSS: .favorite-btn med hover-effekt. Tid: 30min"
-    },
-    {
-      "id": 31,
-      "title": "Steg 31: Implementera localStorage för favoriter",
-      "status": "completed",
-      "verification": "JavaScript lagrar favoriter i localStorage (nyckel: favoritePrompts), Vid sidladdning läses favoriter från cache, Favoritstatus kvarstår efter refresh",
-      "dependencies": [30],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Cacha favorit-status lokalt i webbläsaren. Funktioner: getFavorites(), saveFavorites(), toggleFavorite(), loadFavoriteStates(). Tid: 30min"
-    },
-    {
-      "id": 32,
-      "title": "Steg 32: Skapa 'Snabb-meny' med favoritprompts",
-      "status": "completed",
-      "verification": "Ny sektion '⭐ Mina Favoriter' visas ovanför huvudgridet, Sektion döljs om inga favoriter, Klick scrollar till original-kortet",
-      "dependencies": [31],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Visa favoriter i egen sektion överst på sidan. Ska uppdateras dynamiskt när favoriter läggs till/tas bort. Tid: 45min"
-    },
-    {
-      "id": 33,
-      "title": "Steg 33: Lägg till 'Rensa alla favoriter'-knapp",
-      "status": "completed",
-      "verification": "Knapp 'Rensa favoriter' visas i snabb-menyn, Bekräftelsedialog vid klick, Alla favoriter rensas från localStorage + UI uppdateras",
-      "dependencies": [32],
-      "completed_by": "engineer",
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Låt användaren rensa alla favoriter med ett klick. Använd JavaScript confirm() för bekräftelse. Tid: 20min"
-    },
-    {
-      "id": 34,
-      "title": "Steg 34: Lägg till 'Se hela prompt' info-knapp i prompt-kort",
-      "status": "completed",
-      "verification": "Varje prompt-kort har ℹ️ 'Se hela prompt'-knapp, Klick visar overlay/modal med full text, ESC eller klick utanför stänger, Modal är responsiv",
-      "dependencies": [29],
-      "completed_by": "engineer",
-      "verified": true,
-      "documentation_completed": false,
-      "notes": "Visa fullständig prompt-text i modal/overlay. Modal med scrollbar om lång text. ESC-knapp + click-outside stänger. Tid: 45min"
-    },
-    {
-      "id": 35,
-      "title": "Steg 35: Lokal testning av alla nya funktioner",
-      "status": "completed",
-      "verification": "Checkbox borttagen - copy fungerar direkt, Favoriter sparas/läses från localStorage, Snabb-meny visas/döljs, 'Rensa favoriter' fungerar, 'Se hela prompt' modal fungerar, Inga JavaScript-fel, Testad på Chrome/Firefox/Safari",
-      "dependencies": [29, 30, 31, 32, 33, 34],
-      "completed_by": "qa",
-      "verified": true,
-      "documentation_completed": false,
-      "notes": "QA35 genomförd: manuellt UI-test av copy utan checkbox, favoriter (stjärna, snabbmeny, rensa), modal (öppna/stäng via X/ESC/klick utanför), inga consolefel, OK desktop."
-    },
-    {
-      "id": 36,
-      "title": "Steg 36: Git commit + dokumentera nya funktioner",
-      "status": "completed",
-      "verification": "git commit genomförd, README.md uppdaterad med nya funktioner, Skärmdump/GIF (om möjligt)",
-      "dependencies": [35],
-      "completed_by": "writer",
-      "verified": true,
-      "documentation_completed": true,
-      "notes": "Dokumentation uppdaterad: README med nya funktioner (favoriter, modal, copy utan checkbox, prompt #15), licens och kontakt uppdaterad. Commit pending."
-    },
-    {
-      "id": 17,
-      "title": "Steg 15: Skapa prompts/-mapp och 14 prompt-filer",
-      "status": "not-started",
-      "verification": "prompts/-mapp finns, alla 14 prompts extraherade från index.html, en fil per prompt",
-      "dependencies": [16],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Extrahera alla 14 prompt-texter från index.html textareas. Skapa: prompts/klarsprak.txt, prompts/mejl.txt, ... prompts/nyckelord.txt. Filformat: en rad titel (för UI), sedan tom rad, sedan full prompt-text. Tid: 1h"
-    },
-    {
-      "id": 18,
-      "title": "Steg 16: Skapa prompts.json config-fil med metadata",
-      "status": "not-started",
-      "verification": "prompts.json finns med 14 prompt-definitioner (id, title, icon, description, file, security-examples)",
-      "dependencies": [17],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Config-struktur: [{id: 'klarsprak', title: '📝 Skriv om till klarspråk', description: '...', file: 'prompts/klarsprak.txt', security: ['Ta INTE med:', '- Personnummer', '...']}]. Tid: 30min"
-    },
-    {
-      "id": 19,
-      "title": "Steg 17: Uppdatera index.html att ladda prompts från filer",
-      "status": "not-started",
-      "verification": "index.html läser prompts.json och laddar prompt-filer dynamiskt med fetch(). Alla 14 kort genereras från config.",
-      "dependencies": [18],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "JavaScript: fetch('prompts.json'), loopar genom prompts, skapar DOM-element dynamisk för varje prompt. Laddar prompt-fil med fetch(file). Tid: 2–3h"
-    },
-    {
-      "id": 20,
-      "title": "Steg 18: Uppdatera checkbox + copy-funktion för dynamiska prompts",
-      "status": "not-started",
-      "verification": "Copy-knapp fungerar på alla 14 dynamiskt genererade prompts. Checkbox aktiverar knapp. Expandera-exempel funkar.",
-      "dependencies": [19],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Event-delegation för dynamiska element. Checkbox/copy-knapp/expand-examples alla registreras på dynamiska element. Tid: 1h"
-    },
-    {
-      "id": 21,
-      "title": "Steg 19: Lokal testning - alla 14 prompts funktionella",
-      "status": "not-started",
-      "verification": "Alla 14 prompts visas på hemsidan, copy funkar, expandera-exempel funkar, checkbox + knapp fungerar, responsiv på mobil",
-      "dependencies": [20],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Test på http://localhost:8000: Visas alla 14 kort? Copy-funktion på alla? Expandera funkar? Checkbox? Responsiv? JS-fel i console? Tid: 1h"
-    },
-    {
-      "id": 22,
-      "title": "Steg 20: Skapa README för prompt-utvecklare",
-      "status": "not-started",
-      "verification": "README.md i prompts/-mapp med instruktioner för att lägga till/ändra prompts",
-      "dependencies": [21],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
-      "notes": "Dokumentation: Hur lägger man till ny prompt? Format av .txt-fil? Hur uppdaterar man prompts.json? Exempel. Tid: 30min"
+      "notes": "Include a 'Preview' button and ensure the preview matches the final exported text."
     }
   ],
   "history": [
     {
-      "date": "2026-01-26T12:00:00Z",
-      "role": "analyst",
-      "step": "analysis",
-      "summary": "Kartlade behov och risker för kommunal promptbank; identifierade 8 startprompter och huvudrisker kring personuppgifter och UX."
-    },
-    {
-      "date": "2026-01-26T13:00:00Z",
-      "role": "architect",
-      "step": "architecture",
-      "summary": "Valde SPA med HTML/CSS/vanilla JS, fokus på 4 MVP-prompter med inbyggd säkerhetsrad och copy-flöde; ingen backend eller analytics i MVP."
-    },
-    {
-      "date": "2026-01-26T14:00:00Z",
+      "date": "2026-01-26T19:00:00Z",
       "role": "planner",
       "step": "planning",
-      "summary": "Satte 8-stegs MVP-plan och lade in compliance-grindar (EU AI Act, GDPR, juridisk review) efter riskgap; prioriterade copybar klarspråk/medborgarmejl/FAQ/checklista."
+      "summary": "Plan created with 5 steps for export modal functionality."
     },
     {
-      "date": "2026-01-26T15:00:00Z",
+      "date": "2026-01-26T19:30:00Z",
       "role": "engineer",
       "step": "implementation",
-      "summary": "Byggde första UI-versionen med 4 promptkort, responsiv grid, säkerhetsavisering och copy-knapp; lade till collapsible sektion för framtida kort."
+      "summary": "Implemented batch steps 1–3: Quick settings, dropdowns, and tone/length/format options."
     },
     {
-      "date": "2026-01-26T17:00:00Z",
+      "date": "2026-01-27T11:45:00Z",
       "role": "engineer",
-      "step": "implementation",
-      "summary": "Tog fram AI-COMPLIANCE.md, GDPR-POLICY.md och COMPLIANCE-REVIEW-CHECKLIST.md samt UI-disclaimers för att möta identifierade regulatoriska krav."
+      "step": "bugfix",
+      "summary": "Fixed settings menu visibility: Removed 'display: none' from .settings-dropdown base CSS so toggle works correctly."
     },
     {
-      "date": "2026-01-27T01:00:00Z",
+      "date": "2026-01-27T12:00:00Z",
       "role": "engineer",
-      "step": "implementation",
-      "summary": "Modulariserade 14 prompts till separata .txt-filer, skapade prompts.json och byggde dynamisk SPA som hämtar config + filer och renderar kort med event-delegation."
+      "step": "bugfix",
+      "summary": "Fixed settings menu positioning: Moved to top-right corner using absolute positioning relative to main container."
     },
     {
-      "date": "2026-01-27T04:00:00Z",
-      "role": "planner",
-      "step": "planning",
-      "summary": "Planerade testning och Pages-release (steg 21–26) samt innehållsförbättringar för alla 14 prompts inför lansering."
-    },
-    {
-      "date": "2026-01-27T05:00:00Z",
+      "date": "2026-01-27T12:15:00Z",
       "role": "engineer",
-      "step": "implementation",
-      "summary": "Förbättrade alla 14 prompttexter med format, exempel och målgrupper; lokaltestade och förberedde commit för högre kvalitetsnivå."
+      "step": "bugfix",
+      "summary": "Repositioned settings menu outside main container using fixed positioning to prevent overlap with prompt cards."
     },
     {
-      "date": "2026-01-27T06:00:00Z",
-      "role": "planner",
-      "step": "planning",
-      "summary": "Tog fram plan för UX-förbättringar: ta bort anonymiserings-checkbox, lägga till favoriter med cache/snabbmeny, samt 'Se hela prompt'-modal."
-    },
-    {
-      "date": "2026-01-27T08:00:00Z",
+      "date": "2026-01-27T12:30:00Z",
       "role": "engineer",
-      "step": "implementation",
-      "summary": "Implementerade UX-paket: copy utan checkbox, favoritstjärna med localStorage-cache, favoritmeny med rensa-knapp och ℹ️-modal för full prompttext."
+      "step": "bugfix",
+      "summary": "Wrapped settings menu in container div with normal flow positioning to prevent mobile overlap issues."
     },
     {
-      "date": "2026-01-27T08:20:00Z",
+      "date": "2026-01-27T12:45:00Z",
+      "role": "engineer",
+      "step": "bugfix",
+      "summary": "Fixed settings dropdown responsive behavior: changed mobile media query to keep right alignment and prevent viewport overflow."
+    },
+    {
+      "date": "2026-01-27T13:00:00Z",
       "role": "qa",
       "step": "verification",
-      "summary": "Manuell QA av nya UX-funktioner: copy direkt, favoriter/snabbmeny/rensa, info-modal; inga regressions eller consolefel."
+      "summary": "Verified settings menu bugfixes: visibility, positioning, mobile responsiveness, and dropdown alignment all working. No regressions detected. Risk: LOW."
     },
     {
-      "date": "2026-01-27T08:40:00Z",
+      "date": "2026-01-27T13:15:00Z",
       "role": "reviewer",
       "step": "review",
-      "summary": "Granskade och godkände UX-förbättringar och prompt #15; rekommenderade merge och dokumentationsuppdatering."
+      "summary": "GO for merge: Settings menu bugfixes approved. Clean CSS-only changes, QA verified, low risk, no regressions. Follow-up: monitor mobile edge cases."
     },
     {
-      "date": "2026-01-27T08:50:00Z",
+      "date": "2026-01-27T13:30:00Z",
       "role": "writer",
       "step": "documentation",
-      "summary": "Uppdaterade README med nya funktioner, prompt #15 och MIT-licenslänk; synkade footer-länkar för compliance och licens."
-    },
-    {
-      "date": "2026-01-27T17:50:00Z",
-      "role": "engineer",
-      "step": "implementation",
-      "summary": "Aktiverade GitHub Pages-automatisering via pages.yml (checkout, configure-pages, upload artifact, deploy-pages) för main-branschen."
-    },
-    {
-      "date": "2026-01-27T18:10:00Z",
-      "role": "qa",
-      "step": "verification",
-      "summary": "Live-QA på Pages-URL: alla prompts laddar, copy/favoriter/modal fungerar, responsivitet och compliance-länkar OK."
-    },
-    {
-      "date": "2026-01-27T18:30:00Z",
-      "role": "reviewer",
-      "step": "review",
-      "summary": "Godkände Pages-deployflödet och live-QA-resultat; rekommenderade lanseringssignoff."
-    },
-    {
-      "date": "2026-01-27T18:50:00Z",
-      "role": "engineer",
-      "step": "implementation",
-      "summary": "Signerade lansering (steg 28): Pages workflow aktiv, live verifierad, dokumentation uppdaterad; projektet markerat som driftklart."
+      "summary": "Updated documentation: Added settings menu section to README with usage instructions, technical architecture notes, and inline HTML comments explaining design decisions."
     }
   ],
   "rules": {

@@ -8,7 +8,7 @@
   },
   "now": {
     "current_step": "engineer",
-    "current_goal": "Checkboxar nedtonade för toggles",
+    "current_goal": "Fixed settings dropdown responsive behavior",
     "status": "completed"
   },
   "backlog": [
@@ -91,6 +91,36 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "Implemented batch steps 1–3: Quick settings, dropdowns, and tone/length/format options."
+    },
+    {
+      "date": "2026-01-27T11:45:00Z",
+      "role": "engineer",
+      "step": "bugfix",
+      "summary": "Fixed settings menu visibility: Removed 'display: none' from .settings-dropdown base CSS so toggle works correctly."
+    },
+    {
+      "date": "2026-01-27T12:00:00Z",
+      "role": "engineer",
+      "step": "bugfix",
+      "summary": "Fixed settings menu positioning: Moved to top-right corner using absolute positioning relative to main container."
+    },
+    {
+      "date": "2026-01-27T12:15:00Z",
+      "role": "engineer",
+      "step": "bugfix",
+      "summary": "Repositioned settings menu outside main container using fixed positioning to prevent overlap with prompt cards."
+    },
+    {
+      "date": "2026-01-27T12:30:00Z",
+      "role": "engineer",
+      "step": "bugfix",
+      "summary": "Wrapped settings menu in container div with normal flow positioning to prevent mobile overlap issues."
+    },
+    {
+      "date": "2026-01-27T12:45:00Z",
+      "role": "engineer",
+      "step": "bugfix",
+      "summary": "Fixed settings dropdown responsive behavior: changed mobile media query to keep right alignment and prevent viewport overflow."
     }
   ],
   "rules": {

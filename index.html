@@ -633,12 +633,19 @@
             }
         }
 
+        /* Settings Container */
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1rem 0 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
         /* Settings Menu */
         .settings-menu {
             position: relative;
-            display: inline-block;
-            text-align: right;
-            margin-bottom: 2rem;
+            z-index: 1001;
         }
 
         .settings-gear {
@@ -655,7 +662,6 @@
         }
 
         .settings-dropdown {
-            display: none;
             position: absolute;
             top: 2.5rem;
             right: 0;
@@ -666,6 +672,7 @@
             padding: 1rem;
             z-index: 1000;
             min-width: 250px;
+            max-width: 90vw;
         }
 
         .settings-option {
@@ -707,8 +714,9 @@
 
         @media (max-width: 768px) {
             .settings-dropdown {
-                right: auto;
-                left: 0;
+                right: 0;
+                min-width: 200px;
+                max-width: calc(100vw - 2rem);
             }
         }
     </style>
@@ -719,7 +727,7 @@
         <p>AI-drivna kommunikationsmallar för tydlig och klarare kommunikation</p>
     </header>
 
-    <main>
+    <div class="settings-container">
         <div class="settings-menu">
             <button class="settings-gear" id="settings-gear">⚙️</button>
             <div class="settings-dropdown hidden" id="settings-dropdown">
@@ -739,7 +747,9 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <main>
         <div class="favorites-menu hidden favorites-only" id="favorites-menu">
             <div class="favorites-header">
                 <h2>⭐ Mina Favoriter</h2>

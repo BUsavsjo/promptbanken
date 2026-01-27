@@ -166,6 +166,12 @@ git push origin main
 - **Hosting:** GitHub Pages (static)
 - **Design:** CSS Grid/Flexbox, responsiv, WCAG AA
 
+### GDPR och fritextruta (egen roll)
+
+- **Ingen data lagras:** Allt du skriver i fritextrutan för "Annan/Egen roll" hanteras endast lokalt i din webbläsare och sparas inte.
+- **Personuppgifter:** Ange aldrig personuppgifter i fritextrutan. Du ansvarar för att all text är anonymiserad.
+- **Privacy by design:** Ingen information skickas till server eller tredje part.
+
 ### Inställningsmeny (Settings Menu)
 - **Positionering:** `.settings-container` med flexbox (justify-content: flex-end) för högerjustering
 - **Responsiv:** Media query (@768px) anpassar dropdown-bredd för mobila enheter
@@ -239,6 +245,7 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 ### Funktioner
 - **LocalStorage**: Exportinställningar sparas lokalt i webbläsaren.
 - **Exportmodul**: Användare kan öppna, kopiera och ladda ner instruktioner.
+- **Knappsynlighet**: "Kopiera prompt"-knappen döljs automatiskt när "Anpassa prompt" (avancerat läge) är aktivt, och visas annars. Detta minskar risken för felkopiering och gör flödet tydligare.
 
 ### Testning
 1. Kontrollera att LocalStorage sparar och hämtar data korrekt.

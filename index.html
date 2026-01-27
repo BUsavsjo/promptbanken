@@ -507,6 +507,11 @@
             color: #003d7a;
         }
 
+        .secondary-btn.with-text {
+            /* No color change, only keep font-weight if needed */
+            font-weight: 600;
+        }
+
         .secondary-btn:active,
         .primary-btn:active,
         .copy-btn:active {
@@ -633,6 +638,78 @@
             }
         }
 
+        /* Quick Input Container */
+        .quick-input-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .quick-input-header h3 {
+            font-size: 1.1rem;
+            color: #0b3a82;
+            margin: 0;
+        }
+
+        .quick-input-clear-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .quick-input-clear-btn:hover {
+            background: #e0e0e0;
+            border-color: #bbb;
+        }
+
+        .quick-input-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.75rem;
+            border: 2px solid #d6e4ff;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .quick-input-textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .quick-input-textarea::placeholder {
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .quick-input-container {
+                padding: 0.75rem;
+            }
+
+            .quick-input-textarea {
+                min-height: 100px;
+                font-size: 0.9rem;
+            }
+        }
+
         /* Settings Container */
         /* Why: Separate container outside <main> prevents settings menu from interfering 
            with prompt card layout. Flexbox ensures right-alignment across all screen sizes. */
@@ -742,9 +819,9 @@
                 <div class="settings-option">
                     <label for="advanced-toggle-input">
                         <input type="checkbox" id="advanced-toggle-input" />
-                        Avancerat läge
+                        Anpassa din prompt
                     </label>
-                    <p class="settings-helper">Exportera instruktion till valfri GPT/agent</p>
+                    <p class="settings-helper">Justera struktur, ton och format innan du exporterar till valfri GPT/agent</p>
                 </div>
                 <div class="settings-option">
                     <label for="favorites-toggle-input">
@@ -754,6 +831,38 @@
                     <p class="settings-helper">Spara och visa favoriter</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="quick-input-container">
+        <div class="quick-input-header">
+            <h3>✍️ Snabbinmatning</h3>
+            <button class="quick-input-clear-btn" id="quick-input-clear-btn">🗑️ Rensa</button>
+        </div>
+        <textarea 
+            id="quick-input-textarea" 
+            class="quick-input-textarea" 
+            maxlength="5000"
+            placeholder="Klistra in eller skriv din text här... När du sedan kopierar en prompt kommer din text automatiskt att inkluderas."
+            aria-label="Snabbinmatning för text"></textarea>
+        <div class="quick-input-info-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; font-size: 0.97rem; color: #555;">
+            <span>Max 5 000 tecken. Undvik personuppgifter. <a href="#" id="show-anon-examples">Visa exempel</a></span>
+            <span id="quick-input-char-counter">0 / 5 000 tecken</span>
+        </div>
+        <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.2em;">🔒</span>
+            <span>Anonymisera alltid personuppgifter innan du exporterar eller kopierar! Kontrollera att namn, personnummer, adresser och känsliga uppgifter är borttagna.</span>
+        </div>
+        <div id="anon-examples-modal" style="display:none; background:#fff; border:1px solid #bbb; border-radius:6px; box-shadow:0 2px 8px #0002; padding:1rem; margin-top:0.5rem; max-width:420px;">
+            <strong>Exempel på vad du ska ta bort:</strong>
+            <ul style="margin-top:0.5rem; margin-bottom:0.5rem;">
+                <li>Namn på personer (t.ex. 'Anna Andersson')</li>
+                <li>Personnummer eller födelsedatum</li>
+                <li>Adress, telefonnummer, e-post</li>
+                <li>Specifika ärendenummer eller diarienummer</li>
+                <li>Hälsoinformation eller känsliga uppgifter</li>
+            </ul>
+            <button id="close-anon-examples" style="margin-top:0.5rem;">Stäng</button>
         </div>
     </div>
 
@@ -781,6 +890,9 @@
                 <button class="modal-close" id="modal-close">×</button>
             </div>
             <div class="modal-body">
+                                                <div id="export-tips-row" style="font-size:0.97rem;color:#36507a;margin-bottom:0.5rem;">
+                                                    <span>Tips: För att göra prompten till en instruktion – börja med ett tydligt syfte, ange roll och målgrupp, och avsluta med önskat format/resultat.</span>
+                                                </div>
                 <pre id="modal-text"></pre>
             </div>
         </div>
@@ -790,11 +902,14 @@
     <div class="modal-overlay" id="export-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Exportera Instruktion</h3>
+                <h3>Anpassa prompt</h3>
                 <button class="modal-close" id="export-modal-close">×</button>
             </div>
             <div class="modal-body">
-                <p>Genererad instruktion:</p>
+                                <p>Genererad instruktion:</p>
+                                <div id="export-quickinput-info" style="font-size:0.97rem;color:#555;margin-bottom:0.5rem;display:none;">
+                                    <span>Snabbinmatningstexten inkluderas automatiskt i instruktionen nedan.</span>
+                                </div>
                 <textarea id="export-textarea" readonly></textarea>
                 <div class="actions">
                     <button class="primary-btn" id="preview-export-btn" style="display: none;">👁️ Förhandsgranska</button>
@@ -815,7 +930,12 @@
                             <option value="handlaggare">Handläggare</option>
                             <option value="chef">Chef / ledning</option>
                             <option value="kommunikator">Kommunikatör</option>
+                            <option value="custom">Annan/Egen roll</option>
                         </select>
+                        <input type="text" id="export-role-custom" placeholder="Ange egen roll..." style="display:none;margin-top:0.5rem;" maxlength="60" />
+                                            <div id="export-role-gdpr" style="display:none;font-size:0.93rem;color:#b85c00;margin-top:0.25rem;">
+                                                ⚠️ Ingen data lagras. Ange aldrig personuppgifter här.
+                                            </div>
                     </div>
                     <div class="field">
                         <label for="export-audience">Målgrupp</label>
@@ -959,6 +1079,7 @@
             if (advancedToggleInput) {
                 advancedToggleInput.checked = enabled;
             }
+            updateCopyButtonLabels();
         }
 
         function initAdvancedToggle() {
@@ -1063,33 +1184,19 @@
             card.className = 'prompt-card';
             card.setAttribute('data-prompt-id', prompt.id);
 
-            // Build security examples HTML
-            const examplesHtml = prompt.security_examples
-                .map(ex => `<li>${ex}</li>`)
-                .join('');
-
-            // Build card HTML
+            // Build card HTML (no anonymization examples)
             card.innerHTML = `
                 <button class="favorite-btn favorites-only" data-favorite="${prompt.id}" title="Markera som favorit">☆</button>
                 <h3>${prompt.title}</h3>
                 <p>${prompt.description}</p>
-
-                <div class="security-note">
-                    <div class="security-note-text">🔒 Anonymisera alltid personuppgifter <a class="security-note-link" data-toggle-examples="${prompt.id}">Visa exempel</a></div>
-                    <div class="security-examples" data-prompt="${prompt.id}">
-                        <strong>Vad du ska ta bort:</strong>
-                        <ul>${examplesHtml}</ul>
-                    </div>
-                </div>
-
+                <div style="min-height: 1.5em;"></div>
                 <div class="actions">
-                    <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Exportera instruktion</button>
+                    <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Anpassa prompt</button>
                     <button class="secondary-btn copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
                     <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
                 <textarea id="textarea-${prompt.id}">${promptText}</textarea>
             `;
-
             return card;
         }
 
@@ -1249,7 +1356,11 @@
 
             if (textArea && prompt) {
                 promptModalTitle.textContent = prompt.title;
-                promptModalText.textContent = textArea.value;
+                let text = textArea.value;
+                if (quickInputText && quickInputText.trim()) {
+                    text = text.replace(/\[klistra in här\]/gi, quickInputText);
+                }
+                promptModalText.textContent = text;
                 promptModal.classList.add('active');
             }
         }
@@ -1298,7 +1409,13 @@
                 return;
             }
 
-            const textToCopy = textArea.value;
+            let textToCopy = textArea.value;
+
+            // If quick input has text, insert it into the prompt at [klistra in här] markers
+            if (quickInputText.trim()) {
+                textToCopy = textToCopy.replace(/\[klistra in här\]/gi, quickInputText);
+                console.log('Inserted quick input text into prompt');
+            }
 
             try {
                 await navigator.clipboard.writeText(textToCopy);
@@ -1347,6 +1464,8 @@
 
         const exportPresetSelect = document.getElementById('export-preset');
         const exportRoleSelect = document.getElementById('export-role');
+        const exportRoleCustomInput = document.getElementById('export-role-custom');
+        const exportRoleGdpr = document.getElementById('export-role-gdpr');
         const exportAudienceSelect = document.getElementById('export-audience');
         const exportToneSelect = document.getElementById('export-tone');
         const exportLengthSelect = document.getElementById('export-length');
@@ -1357,6 +1476,7 @@
             return {
                 preset: exportPresetSelect.value,
                 role: exportRoleSelect.value,
+                customRole: exportRoleSelect.value === 'custom' ? exportRoleCustomInput.value.trim() : '',
                 audience: exportAudienceSelect.value,
                 tone: exportToneSelect.value,
                 length: exportLengthSelect.value,
@@ -1374,6 +1494,14 @@
             exportFormatSelect.value = settings.format || 'punktlista';
             if (exportRememberCheckbox) {
                 exportRememberCheckbox.checked = settings.remember ?? false;
+            }
+            // Show/hide custom role field and set value
+            if (exportRoleSelect.value === 'custom') {
+                exportRoleCustomInput.style.display = '';
+                exportRoleCustomInput.value = settings.customRole || '';
+            } else {
+                exportRoleCustomInput.style.display = 'none';
+                exportRoleCustomInput.value = '';
             }
         }
 
@@ -1397,7 +1525,9 @@
             const preset = presets[presetKey];
             if (!preset) return;
             exportPresetSelect.value = presetKey;
+            // Set role and trigger change event to update custom field logic
             exportRoleSelect.value = preset.role;
+            exportRoleSelect.dispatchEvent(new Event('change'));
             exportAudienceSelect.value = preset.audience;
             exportToneSelect.value = preset.tone;
             exportLengthSelect.value = preset.length;
@@ -1410,11 +1540,13 @@
 
         function getLabels(settings) {
             return {
-                role: {
-                    handlaggare: 'Handläggare',
-                    chef: 'Chef / ledning',
-                    kommunikator: 'Kommunikatör'
-                }[settings.role] || settings.role,
+                role: settings.role === 'custom' && settings.customRole
+                    ? settings.customRole
+                    : {
+                        handlaggare: 'Handläggare',
+                        chef: 'Chef / ledning',
+                        kommunikator: 'Kommunikatör'
+                    }[settings.role] || settings.role,
                 audience: {
                     invanare: 'Invånare',
                     kollegor: 'Kollegor',
@@ -1441,24 +1573,52 @@
         function buildExportText(baseText) {
             const settings = getCurrentExportSettings();
             const labels = getLabels(settings);
+            let text = baseText;
+            // Always insert quick input text if present
+            if (quickInputText && quickInputText.trim()) {
+                text = text.replace(/\[klistra in här\]/gi, quickInputText);
+            }
+            // Only show custom role if selected, otherwise show standard role
+            let roleLine = `Roll: ${labels.role}`;
             const header = [
-                `Roll: ${labels.role}`,
+                roleLine,
                 `Målgrupp: ${labels.audience}`,
                 `Ton: ${labels.tone}`,
                 `Längd: ${labels.length}`,
                 `Format: ${labels.format}`
             ].join('\n');
-
-            return `${header}\n\n${baseText}`;
+            return `${header}\n\n${text}`;
         }
 
         function registerExportSettingsListeners() {
             exportPresetSelect.addEventListener('change', (event) => {
                 applyPreset(event.target.value);
+                // Always hide and clear custom role field and GDPR warning on preset change
+                if (exportRoleCustomInput) {
+                    exportRoleCustomInput.style.display = 'none';
+                    exportRoleCustomInput.value = '';
+                }
+                if (exportRoleGdpr) exportRoleGdpr.style.display = 'none';
             });
 
+            exportRoleSelect.addEventListener('change', () => {
+                if (exportRoleSelect.value === 'custom') {
+                    exportRoleCustomInput.style.display = '';
+                    exportRoleCustomInput.focus();
+                    if (exportRoleGdpr) exportRoleGdpr.style.display = '';
+                } else {
+                    exportRoleCustomInput.style.display = 'none';
+                    exportRoleCustomInput.value = '';
+                    if (exportRoleGdpr) exportRoleGdpr.style.display = 'none';
+                }
+                saveExportSettings();
+                updateExportPreview();
+            });
+            exportRoleCustomInput.addEventListener('input', () => {
+                saveExportSettings();
+                updateExportPreview();
+            });
             [
-                exportRoleSelect,
                 exportAudienceSelect,
                 exportToneSelect,
                 exportLengthSelect,
@@ -1488,6 +1648,15 @@
             const text = buildExportText(currentPromptRaw);
             currentExportText = text;
             exportTextarea.value = text;
+            // Show/hide info row if quick input is present
+            const infoRow = document.getElementById('export-quickinput-info');
+            if (infoRow) {
+                if (quickInputText && quickInputText.trim()) {
+                    infoRow.style.display = '';
+                } else {
+                    infoRow.style.display = 'none';
+                }
+            }
         }
 
         function openExportModal(promptId) {
@@ -1555,6 +1724,59 @@
             }
         });
 
+        // Quick input state management
+        let quickInputText = '';
+        const quickInputTextarea = document.getElementById('quick-input-textarea');
+        const quickInputClearBtn = document.getElementById('quick-input-clear-btn');
+
+        function updateCopyButtonLabels() {
+            // Döljer alltid knappen (och labeln) när advancedModeEnabled är true, annars visas rätt label beroende på quickInputText
+            const allCopyBtns = document.querySelectorAll('.copy-btn');
+            allCopyBtns.forEach(btn => {
+                if (advancedModeEnabled) {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = '';
+                    if (quickInputText.trim()) {
+                        btn.textContent = 'Kopiera prompt + text';
+                        btn.classList.add('with-text');
+                    } else {
+                        btn.textContent = 'Kopiera prompt';
+                        btn.classList.remove('with-text');
+                    }
+                }
+            });
+        }
+
+        if (quickInputTextarea) {
+            // Update state and character counter when user types
+            const quickInputCharCounter = document.getElementById('quick-input-char-counter');
+            function updateCharCounter() {
+                const len = quickInputTextarea.value.length;
+                if (quickInputCharCounter) {
+                    quickInputCharCounter.textContent = `${len} / 5 000 tecken`;
+                }
+            }
+            quickInputTextarea.addEventListener('input', (event) => {
+                quickInputText = event.target.value;
+                updateCharCounter();
+                updateCopyButtonLabels();
+                updateExportPreview(); // keep export preview in sync
+            });
+            // Initialize counter on load
+            updateCharCounter();
+        }
+
+        if (quickInputClearBtn && quickInputTextarea) {
+            // Clear button functionality
+            quickInputClearBtn.addEventListener('click', () => {
+                quickInputTextarea.value = '';
+                quickInputText = '';
+                console.log('Quick input cleared');
+                updateCopyButtonLabels();
+            });
+        }
+
         // Settings gear menu toggle
         const settingsGear = document.getElementById('settings-gear');
         const settingsDropdown = document.getElementById('settings-dropdown');
@@ -1582,4 +1804,22 @@
         });
     </script>
 </body>
+</script>
+    <script>
+    // Visa/dölj anonymiseringsexempel i snabbinmatning
+    document.addEventListener('DOMContentLoaded', function() {
+        const showExamples = document.getElementById('show-anon-examples');
+        const modal = document.getElementById('anon-examples-modal');
+        const closeBtn = document.getElementById('close-anon-examples');
+        if (showExamples && modal && closeBtn) {
+            showExamples.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'block';
+            });
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+        }
+    });
+    </script>
 </html>

@@ -431,6 +431,16 @@
         .security-examples ul {
             margin-left: 1.5rem;
             color: #666;
+            padding-left: 1.2em;
+            word-break: break-word;
+            white-space: normal;
+            max-width: 95%;
+            box-sizing: border-box;
+        }
+        .security-examples li {
+            margin-bottom: 0.2rem;
+            word-break: break-word;
+            white-space: normal;
         }
 
         .security-examples li {
@@ -1773,6 +1783,9 @@
                 quickInputText = '';
                 console.log('Quick input cleared');
                 updateCopyButtonLabels();
+                // Nollställ teckenräknaren
+                const quickInputCharCounter = document.getElementById('quick-input-char-counter');
+                if (quickInputCharCounter) quickInputCharCounter.textContent = '0 / 5 000 tecken';
             });
         }
 

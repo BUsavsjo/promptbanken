@@ -22,10 +22,13 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 
 ### Online (GitHub Pages)
 1. Öppna: [username.github.io/promptbanken](https://username.github.io/promptbanken)
-2. Välj ett prompt-kort
-3. Klicka **"Visa exempel"** för att se vad du ska anonymisera
-4. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
-5. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
+2. **Inställningar (⚙️)**: Klicka på kugghjulet i övre högra hörnet för att:
+   - Aktivera **Avancerat läge** för exportinstruktioner till GPT/agent
+   - Aktivera **Favoritläge** för att spara och visa favoriter
+3. Välj ett prompt-kort
+4. Klicka **"Visa exempel"** för att se vad du ska anonymisera
+5. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
+6. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
 
 ### Lokal utveckling
 ```bash
@@ -55,6 +58,10 @@ http://localhost:8000
 
 ## ✨ Nya funktioner
 
+- **Inställningsmeny (⚙️)**: Kugghjulsmeny i övre högra hörnet för att aktivera avancerat läge och favoritläge
+  - Responsiv design som anpassar sig för mobila enheter
+  - Dropdown-meny som stannar inom viewport-gränser
+  - Placerad i dedikerad container för att undvika överlappning med kort
 - Kopiera utan anonymiserings-checkbox (snabbare flöde)
 - Favoriter med stjärna + localStorage-cache
 - Snabbmeny "⭐ Mina Favoriter" och knapp för att rensa alla
@@ -158,6 +165,13 @@ git push origin main
 - **Copy-mekanik:** navigator.clipboard API
 - **Hosting:** GitHub Pages (static)
 - **Design:** CSS Grid/Flexbox, responsiv, WCAG AA
+
+### Inställningsmeny (Settings Menu)
+- **Positionering:** `.settings-container` med flexbox (justify-content: flex-end) för högerjustering
+- **Responsiv:** Media query (@768px) anpassar dropdown-bredd för mobila enheter
+- **Z-index:** 1001 för att ligga över annat innehåll
+- **Viewport-säker:** `max-width: calc(100vw - 2rem)` förhåller overflow
+- **Design-motivering:** Placerad i separat container utanför `<main>` för att undvika överlappning med prompt-kort i dokumentflödet
 
 **Filstruktur:**
 ```

@@ -7,8 +7,8 @@
     "description": "Skapa en central promptmall med 8 startprompter för typiska kommunflöden (klarspråk, medborgarmejl, FAQ, kallelse, beslutsunderlag, checklista, rutiner, tvåversionstexter)"
   },
   "now": {
-    "current_step": "engineer",
-    "current_goal": "Fixed settings dropdown responsive behavior",
+    "current_step": "writer",
+    "current_goal": "Documentation updated for settings menu",
     "status": "completed"
   },
   "backlog": [
@@ -121,6 +121,24 @@
       "role": "engineer",
       "step": "bugfix",
       "summary": "Fixed settings dropdown responsive behavior: changed mobile media query to keep right alignment and prevent viewport overflow."
+    },
+    {
+      "date": "2026-01-27T13:00:00Z",
+      "role": "qa",
+      "step": "verification",
+      "summary": "Verified settings menu bugfixes: visibility, positioning, mobile responsiveness, and dropdown alignment all working. No regressions detected. Risk: LOW."
+    },
+    {
+      "date": "2026-01-27T13:15:00Z",
+      "role": "reviewer",
+      "step": "review",
+      "summary": "GO for merge: Settings menu bugfixes approved. Clean CSS-only changes, QA verified, low risk, no regressions. Follow-up: monitor mobile edge cases."
+    },
+    {
+      "date": "2026-01-27T13:30:00Z",
+      "role": "writer",
+      "step": "documentation",
+      "summary": "Updated documentation: Added settings menu section to README with usage instructions, technical architecture notes, and inline HTML comments explaining design decisions."
     }
   ],
   "rules": {

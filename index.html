@@ -634,6 +634,8 @@
         }
 
         /* Settings Container */
+        /* Why: Separate container outside <main> prevents settings menu from interfering 
+           with prompt card layout. Flexbox ensures right-alignment across all screen sizes. */
         .settings-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -662,6 +664,9 @@
         }
 
         .settings-dropdown {
+            /* Why: Absolute positioning relative to .settings-menu (parent) allows dropdown 
+               to overlay content without affecting document flow. right: 0 keeps alignment 
+               consistent with gear icon. max-width prevents mobile viewport overflow. */
             position: absolute;
             top: 2.5rem;
             right: 0;
@@ -713,6 +718,9 @@
         }
 
         @media (max-width: 768px) {
+            /* Why: Mobile devices need tighter constraints. calc(100vw - 2rem) ensures 
+               dropdown never causes horizontal scroll. Reduced min-width (200px) 
+               accommodates narrower screens while maintaining readability. */
             .settings-dropdown {
                 right: 0;
                 min-width: 200px;

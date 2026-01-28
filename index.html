@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Promptbank för kommun</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         /* Reset & Base */
         * {
@@ -856,7 +857,7 @@
             placeholder="Klistra in eller skriv din text här... När du sedan kopierar en prompt kommer din text automatiskt att inkluderas. (Ingen data lagras, allt sker lokalt)"
             aria-label="Snabbinmatning för text"></textarea>
         <div class="quick-input-info-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; font-size: 0.97rem; color: #555;">
-            <span>Max 5 000 tecken. Undvik personuppgifter. <a href="#" id="show-anon-examples">Visa exempel</a></span>
+            <span>Max 5 000 tecken. Undvik personuppgifter. <button id="show-anon-examples" class="example-btn" type="button">Visa exempel</button></span>
             <span id="quick-input-char-counter">0 / 5 000 tecken</span>
         </div>
         <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -872,7 +873,7 @@
                 <li>Specifika ärendenummer eller diarienummer</li>
                 <li>Hälsoinformation eller känsliga uppgifter</li>
             </ul>
-            <button id="close-anon-examples" style="margin-top:0.5rem;">Stäng</button>
+            <button id="close-anon-examples" class="example-btn" style="margin-top:0.5rem;">Stäng</button>
         </div>
     </div>
 

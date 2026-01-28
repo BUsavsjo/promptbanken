@@ -1,0 +1,112 @@
+.example-btn {
+	background-color: #0052a3 !important;
+	color: #fff !important;
+	border: none;
+	padding: 0.18rem 0.8rem;
+	font-size: 0.85em;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	font-weight: 700;
+	text-align: center;
+	display: inline-block;
+	margin-left: 0.5em;
+	line-height: 1.1;
+	box-shadow: none;
+}
+ .example-btn:hover,
+ .example-btn:focus {
+	background-color: #003d7a !important;
+	color: #fff !important;
+}
+.btn-small {
+	font-size: 0.5em;
+	padding: 0.2em 0.6em;
+	margin-left: 0.5em;
+	vertical-align: middle;
+}
+/* Reset & Base */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+header {
+	background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+	color: white;
+	padding: 2rem 1rem;
+	text-align: center;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+header h1 {
+	font-size: 2rem;
+	margin-bottom: 0.5rem;
+	font-weight: 700;
+}
+header p {
+	font-size: 1.1rem;
+	opacity: 0.95;
+}
+.primary-btn, .btn, .quick-input-clear-btn {
+	background-color: #0052a3;
+	color: white;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	font-size: 1rem;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	font-weight: 700;
+	text-align: center;
+	display: inline-block;
+}
+.primary-btn:hover, .btn:hover, .quick-input-clear-btn:hover {
+	background-color: #003d7a;
+}
+.secondary-btn {
+	background-color: #ffffff;
+	color: #0052a3;
+	border: 1px solid #c7d7f5;
+	padding: 0.75rem 1.5rem;
+	font-size: 1rem;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: border-color 0.3s ease, color 0.3s ease;
+	font-weight: 600;
+	width: 100%;
+	text-align: center;
+}
+.secondary-btn:hover:not(:disabled) {
+	border-color: #0052a3;
+	color: #003d7a;
+}
+.info-btn {
+	background: none;
+	border: none;
+	font-size: 0.85rem;
+	cursor: pointer;
+	color: #0066cc;
+	padding: 0;
+	transition: color 0.2s ease;
+	text-decoration: none;
+	display: inline-block;
+	margin-top: 0.5rem;
+}
+.info-btn:hover {
+	color: #0052a3;
+	text-decoration: underline;
+}
+footer {
+	background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+	color: white;
+	text-align: center;
+	padding: 1.5rem 1rem;
+	margin-top: 3rem;
+	font-size: 0.9rem;
+}
+footer a {
+	color: #fff;
+	text-decoration: underline;
+}
+footer a:hover {
+	color: #ffc107;
+}

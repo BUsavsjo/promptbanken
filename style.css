@@ -96,19 +96,20 @@ header p {
 	text-decoration: underline;
 }
 footer {
-	background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
-	color: white;
+	background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); /* Ensure exact match with banner */
+	color: #ffffff;
 	text-align: center;
 	padding: 1.5rem 1rem;
 	margin-top: 3rem;
 	font-size: 0.9rem;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
 footer a {
-	color: #fff;
+	color: #ffffff;
 	text-decoration: underline;
 }
 footer a:hover {
-	color: #ffc107;
+	opacity: 0.85;
 }
 #anon-examples-modal {
     padding: 1rem; /* Add uniform padding to all sides to ensure content stays within bounds */

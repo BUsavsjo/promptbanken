@@ -110,3 +110,16 @@ footer a {
 footer a:hover {
 	color: #ffc107;
 }
+#anon-examples-modal {
+    padding: 1rem; /* Add uniform padding to all sides to ensure content stays within bounds */
+    box-sizing: border-box; /* Ensure padding is included in the element's total width */
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+#anon-examples-modal ul {
+    padding-left: 1.25rem; /* kontrollerad indragning */
+    margin-left: 0;
+}
+#anon-examples-modal li {
+    margin-left: 0;
+}

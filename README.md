@@ -188,6 +188,7 @@ git push origin main
 │   ├── klarsprak.txt
 │   ├── mejl.txt
 │   └── ... (14 filer totalt)
+├── LICENSE              # MIT-licensfil
 ├── README.md            # Detta dokument
 ├── AI-COMPLIANCE.md     # EU AI Act dokumentation
 ├── GDPR-POLICY.md       # GDPR policy
@@ -214,7 +215,7 @@ Vi välkomnar feedback och förbättringar!
 
 ## 📜 Licens
 
-MIT-licens © Peter Wenström. Se licensen på GitHub: https://github.com/BUsavsjo/promptbanken
+MIT-licens © Peter Wenström. Se detaljer i [LICENSE](LICENSE)-filen i projektroten eller på GitHub: [promptbanken](https://github.com/BUsavsjo/promptbanken).
 
 ---
 
@@ -293,3 +294,14 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 - All bearbetning sker lokalt i din webbläsare.
 - Endast favoriter och exportinställningar sparas i din webbläsares localStorage (kan rensas när som helst).
 - Du ansvarar alltid för att anonymisera personuppgifter innan du kopierar eller exporterar en prompt.
+
+### Export och kopiera prompt
+
+- **Knappbeteende:**
+  - När "Anpassa prompt" är aktivt, döljs knappen "Kopiera prompt" för att undvika förvirring.
+  - När "Anpassa prompt" är inaktiv, visas knappen "Kopiera prompt" som vanligt.
+- **Tillgänglighet:**
+  - Fokus och tabbning fungerar korrekt oavsett knappens synlighet.
+- **Användning:**
+  - Aktivera "Anpassa prompt" via inställningsmenyn för att justera struktur och ton innan export.
+  - Kopiera prompten direkt när "Anpassa prompt" är avstängd.

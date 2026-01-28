@@ -294,3 +294,14 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
 - All bearbetning sker lokalt i din webbläsare.
 - Endast favoriter och exportinställningar sparas i din webbläsares localStorage (kan rensas när som helst).
 - Du ansvarar alltid för att anonymisera personuppgifter innan du kopierar eller exporterar en prompt.
+
+### Export och kopiera prompt
+
+- **Knappbeteende:**
+  - När "Anpassa prompt" är aktivt, döljs knappen "Kopiera prompt" för att undvika förvirring.
+  - När "Anpassa prompt" är inaktiv, visas knappen "Kopiera prompt" som vanligt.
+- **Tillgänglighet:**
+  - Fokus och tabbning fungerar korrekt oavsett knappens synlighet.
+- **Användning:**
+  - Aktivera "Anpassa prompt" via inställningsmenyn för att justera struktur och ton innan export.
+  - Kopiera prompten direkt när "Anpassa prompt" är avstängd.

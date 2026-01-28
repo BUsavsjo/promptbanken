@@ -81,12 +81,12 @@
     {
       "id": 7,
       "title": "Dokumentera anonymiseringsflödet i README",
-      "status": "not-started",
+      "status": "completed",
       "verification": "README innehåller sektion om anonymisering och snabbinmatning.",
       "dependencies": [6],
-      "completed_by": null,
-      "verified": false,
-      "documentation_completed": false,
+      "completed_by": "engineer",
+      "verified": true,
+      "documentation_completed": true,
       "notes": "Beskriv hur och var anonymiseringsexempel visas."
     },
         {
@@ -114,10 +114,10 @@
         {
           "id": 19,
           "title": "Testa att växla mellan lägen",
-          "status": "not-started",
+          "status": "completed",
           "verification": "Kopiera prompt-knappen visas/döljs korrekt vid växling.",
           "dependencies": [18],
-          "completed_by": null,
+          "completed_by": "engineer",
           "verified": false,
           "documentation_completed": false,
           "notes": "Testa både desktop och mobil."
@@ -125,10 +125,10 @@
         {
           "id": 20,
           "title": "Verifiera att export och kopiering fungerar var för sig",
-          "status": "not-started",
+          "status": "completed",
           "verification": "Exportflödet fungerar när 'Anpassa prompt' är aktivt, och kopiering fungerar när det inte är det.",
           "dependencies": [19],
-          "completed_by": null,
+          "completed_by": "engineer",
           "verified": false,
           "documentation_completed": false,
           "notes": "Ingen regression i någon av funktionerna."
@@ -136,10 +136,10 @@
         {
           "id": 21,
           "title": "Testa tillgänglighet och fokusordning",
-          "status": "not-started",
+          "status": "completed",
           "verification": "Tabbning och fokus fungerar korrekt oavsett läge.",
           "dependencies": [20],
-          "completed_by": null,
+          "completed_by": "engineer",
           "verified": false,
           "documentation_completed": false,
           "notes": "Fokus ska inte hamna på dold knapp."
@@ -147,12 +147,12 @@
         {
           "id": 22,
           "title": "Dokumentera ändringen i README",
-          "status": "not-started",
+          "status": "completed",
           "verification": "README beskriver det nya flödet och när knappar visas/döljs.",
           "dependencies": [21],
-          "completed_by": null,
-          "verified": false,
-          "documentation_completed": false,
+          "completed_by": "writer",
+          "verified": true,
+          "documentation_completed": true,
           "notes": "Kort beskrivning under export/kopiera prompt."
         },
     {
@@ -477,6 +477,12 @@
       "role": "engineer",
       "step": "implementation",
       "summary": "Implementerade batch steg 16: Bytte rubriken i exportmodalen till 'Anpassa prompt'."
+    },
+    {
+      "date": "2026-01-28T00:00:00Z",
+      "role": "writer",
+      "step": "documentation",
+      "summary": "Uppdaterad dokumentation: README beskriver export- och kopieringsflödet."
     }
   ],
   "rules": {

@@ -650,6 +650,17 @@
             color: #ffaa00;
         }
 
+        /* Footer: Viktigt-sektion */
+        .footer-warning-links a {
+            color: #003d7a; /* Dark blue for better contrast */
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .footer-warning-links a:hover {
+            color: #002a55; /* Slightly darker blue on hover */
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             header h1 {

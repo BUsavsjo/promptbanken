@@ -188,6 +188,7 @@ git push origin main
 │   ├── klarsprak.txt
 │   ├── mejl.txt
 │   └── ... (14 filer totalt)
+├── LICENSE              # MIT-licensfil
 ├── README.md            # Detta dokument
 ├── AI-COMPLIANCE.md     # EU AI Act dokumentation
 ├── GDPR-POLICY.md       # GDPR policy
@@ -214,7 +215,7 @@ Vi välkomnar feedback och förbättringar!
 
 ## 📜 Licens
 
-MIT-licens © Peter Wenström. Se licensen på GitHub: https://github.com/BUsavsjo/promptbanken
+MIT-licens © Peter Wenström. Se detaljer i [LICENSE](LICENSE)-filen i projektroten eller på GitHub: [promptbanken](https://github.com/BUsavsjo/promptbanken).
 
 ---
 

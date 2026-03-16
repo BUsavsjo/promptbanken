@@ -109,11 +109,14 @@ class OpenAIClient:
 
 class ProviderRegistry:
     def __init__(self) -> None:
+        default_timeout_seconds = float(os.getenv("MODEL_TIMEOUT_SECONDS", "60"))
+        ollama_local_timeout_seconds = float(os.getenv("OLLAMA_LOCAL_TIMEOUT_SECONDS", str(max(default_timeout_seconds, 300.0))))
+
         self._providers: dict[str, OllamaClient | OpenAIClient] = {
             "ollama_local": OllamaClient(
                 provider_name="ollama_local",
                 base_url=os.getenv("OLLAMA_LOCAL_BASE_URL", "http://localhost:11434"),
-                timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "60")),
+                timeout_seconds=ollama_local_timeout_seconds,
             )
         }
 
@@ -122,7 +125,7 @@ class ProviderRegistry:
             self._providers["ollama_cloud"] = OllamaClient(
                 provider_name="ollama_cloud",
                 base_url=ollama_cloud_url,
-                timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "60")),
+                timeout_seconds=default_timeout_seconds,
                 api_key=os.getenv("OLLAMA_CLOUD_API_KEY"),
             )
 
@@ -131,7 +134,7 @@ class ProviderRegistry:
             self._providers["openai"] = OpenAIClient(
                 api_key=openai_api_key,
                 base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-                timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "60")),
+                timeout_seconds=default_timeout_seconds,
             )
 
     def list_provider_names(self) -> list[str]:

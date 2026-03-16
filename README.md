@@ -41,6 +41,8 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+# Vid långsamma lokala modeller: höj timeout (sekunder)
+export OLLAMA_LOCAL_TIMEOUT_SECONDS=300
 uvicorn app.main:app --reload --port 8001
 
 # 2) I ett nytt terminalfönster: starta frontend

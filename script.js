@@ -193,6 +193,7 @@
                 <div class="actions">
                     <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Anpassa prompt</button>
                     <button class="secondary-btn copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
+                    <button class="secondary-btn local-run-btn" data-run-local="${prompt.id}">Kör med lokal modell</button>
                     <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
                 <textarea id="textarea-${prompt.id}">${combinedText}</textarea>
@@ -225,6 +226,11 @@
                 // Info button click
                 if (event.target.classList.contains('info-btn')) {
                     handleInfoClick(event.target);
+                }
+
+                if (event.target.classList.contains('local-run-btn')) {
+                    const promptId = event.target.getAttribute('data-run-local');
+                    openLocalRunModal(promptId);
                 }
             });
         }
@@ -718,6 +724,137 @@
                 closeExportModal();
             }
         });
+
+        const localRunModal = document.getElementById('local-run-modal');
+        const localRunClose = document.getElementById('local-run-close');
+        const localRunTitle = document.getElementById('local-run-title');
+        const localModelSelect = document.getElementById('local-model-select');
+        const localUserInput = document.getElementById('local-user-input');
+        const localRunSubmit = document.getElementById('local-run-submit');
+        const localRunStatus = document.getElementById('local-run-status');
+        const localRunResult = document.getElementById('local-run-result');
+        const BACKEND_BASE_URL = window.PROMPTBANKEN_API_BASE_URL || 'http://localhost:8001';
+
+        let selectedPromptForLocalRun = null;
+
+        async function fetchLocalModels() {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/models`);
+            if (!response.ok) {
+                throw new Error('Kunde inte hämta modeller från backend.');
+            }
+
+            const data = await response.json();
+            return data.models || [];
+        }
+
+        async function populateLocalModels() {
+            localModelSelect.innerHTML = '<option>Laddar modeller...</option>';
+
+            try {
+                const models = await fetchLocalModels();
+                if (!models.length) {
+                    localModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
+                    return;
+                }
+
+                localModelSelect.innerHTML = models
+                    .map(model => `<option value="${model.name}">${model.name}</option>`)
+                    .join('');
+            } catch (error) {
+                localModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
+                showLocalRunError(error.message);
+            }
+        }
+
+        function showLocalRunStatus(message) {
+            localRunStatus.textContent = message;
+            localRunStatus.classList.remove('error');
+        }
+
+        function showLocalRunError(message) {
+            localRunStatus.textContent = message;
+            localRunStatus.classList.add('error');
+        }
+
+        function openLocalRunModal(promptId) {
+            selectedPromptForLocalRun = allPrompts.find(prompt => prompt.id === promptId) || null;
+            localRunTitle.textContent = selectedPromptForLocalRun
+                ? `Kör med lokal modell – ${selectedPromptForLocalRun.title}`
+                : 'Kör med lokal modell';
+
+            localRunResult.textContent = '';
+            showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
+            localUserInput.value = quickInputText || '';
+            populateLocalModels();
+            localRunModal.classList.add('active');
+        }
+
+        function closeLocalRunModal() {
+            localRunModal.classList.remove('active');
+            selectedPromptForLocalRun = null;
+        }
+
+        async function runWithLocalModel() {
+            if (!selectedPromptForLocalRun) {
+                showLocalRunError('Ingen prompt vald.');
+                return;
+            }
+
+            const payload = {
+                prompt_id: selectedPromptForLocalRun.id,
+                user_input: localUserInput.value,
+                model: localModelSelect.value
+            };
+
+            if (!payload.user_input.trim()) {
+                showLocalRunError('Skriv in text innan du kör.');
+                return;
+            }
+
+            if (!payload.model) {
+                showLocalRunError('Välj en modell.');
+                return;
+            }
+
+            localRunSubmit.disabled = true;
+            showLocalRunStatus('Kör prompt mot Ollama...');
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Körning misslyckades.');
+                }
+
+                localRunResult.textContent = data.response || '(Tomt svar från modellen)';
+                showLocalRunStatus('Klart.');
+            } catch (error) {
+                showLocalRunError(error.message);
+            } finally {
+                localRunSubmit.disabled = false;
+            }
+        }
+
+        if (localRunClose) {
+            localRunClose.addEventListener('click', closeLocalRunModal);
+        }
+
+        if (localRunModal) {
+            localRunModal.addEventListener('click', (event) => {
+                if (event.target === localRunModal) {
+                    closeLocalRunModal();
+                }
+            });
+        }
+
+        if (localRunSubmit) {
+            localRunSubmit.addEventListener('click', runWithLocalModel);
+        }
 
         // Quick input state management
         let quickInputText = '';

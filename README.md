@@ -30,17 +30,26 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 5. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
 6. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
 
-### Lokal utveckling
+### Lokal utveckling (frontend + backend för lokal Ollama)
 ```bash
 # Klona repo
 git clone https://github.com/username/promptbanken.git
 cd promptbanken
 
-# Starta lokal webbserver
+# 1) Starta backend (gateway mot Ollama)
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8001
+
+# 2) I ett nytt terminalfönster: starta frontend
+cd ..
 python -m http.server 8000
 
-# Öppna i webbläsare
-http://localhost:8000
+# 3) Öppna i webbläsare
+# Frontend: http://localhost:8000
+# Backend health via docs: http://localhost:8001/docs
 ```
 
 ---
@@ -161,9 +170,11 @@ git push origin main
 ## 🛠️ Teknisk arkitektur
 
 - **Frontend:** Vanilla JavaScript (ingen ramverk)
+- **Backend:** FastAPI-gateway (`/api/models`, `/api/run`) för lokal Ollama
+- **Provider (v1):** Ollama via backend-proxy (frontend anropar aldrig Ollama direkt)
 - **Data:** JSON-config + txt-filer (gitbar)
 - **Copy-mekanik:** navigator.clipboard API
-- **Hosting:** GitHub Pages (static)
+- **Hosting:** Frontend statiskt + lokal backend-tjänst
 - **Design:** CSS Grid/Flexbox, responsiv, WCAG AA
 
 ### GDPR och fritextruta (egen roll)
@@ -188,6 +199,13 @@ git push origin main
 │   ├── klarsprak.txt
 │   ├── mejl.txt
 │   └── ... (14 filer totalt)
+├── backend/
+│   ├── app/
+│   │   ├── main.py           # FastAPI gateway mot Ollama
+│   │   ├── ollama_client.py  # Enkel Ollama integration
+│   │   ├── prompt_repository.py
+│   │   └── schemas.py
+│   └── requirements.txt
 ├── LICENSE              # MIT-licensfil
 ├── README.md            # Detta dokument
 ├── AI-COMPLIANCE.md     # EU AI Act dokumentation

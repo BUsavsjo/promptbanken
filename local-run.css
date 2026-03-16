@@ -1,0 +1,42 @@
+.local-run-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.local-run-body label {
+    font-weight: 600;
+}
+
+#local-model-select,
+#local-user-input {
+    width: 100%;
+    border: 1px solid #cfd8e3;
+    border-radius: 6px;
+    padding: 0.65rem;
+    font-family: inherit;
+}
+
+#local-user-input {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.local-run-status {
+    min-height: 1.5rem;
+    color: #1f5fbf;
+    font-weight: 500;
+}
+
+.local-run-status.error {
+    color: #b42318;
+}
+
+.local-run-result {
+    min-height: 180px;
+    background: #f6f8fb;
+    border: 1px solid #d9e0ea;
+    border-radius: 6px;
+    padding: 0.75rem;
+    white-space: pre-wrap;
+}

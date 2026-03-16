@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Promptbank för kommun</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="local-run.css">
 </head>
 <body>
     <header>
@@ -178,6 +179,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Local model run Modal -->
+    <div class="modal-overlay" id="local-run-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="local-run-title">Kör med lokal modell</h3>
+                <button class="modal-close" id="local-run-close">×</button>
+            </div>
+            <div class="modal-body local-run-body">
+                <label for="local-model-select">Lokal modell</label>
+                <select id="local-model-select"></select>
+
+                <label for="local-user-input">Din text</label>
+                <textarea id="local-user-input" placeholder="Klistra in eller skriv texten som ska köras med prompten..."></textarea>
+
+                <div class="actions">
+                    <button class="primary-btn" id="local-run-submit">Kör</button>
+                </div>
+
+                <div id="local-run-status" class="local-run-status"></div>
+                <pre id="local-run-result" class="local-run-result"></pre>
+            </div>
+        </div>
+    </div>
+
 
     <footer>
         <div class="footer-warning">

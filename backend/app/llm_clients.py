@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import httpx
 
+from .provider_config import ProviderConfigService
+
 
 class ProviderConfigError(RuntimeError):
     """Raised when a provider is not configured correctly."""
@@ -108,40 +110,47 @@ class OpenAIClient:
 
 
 class ProviderRegistry:
-    def __init__(self) -> None:
-        default_timeout_seconds = float(os.getenv("MODEL_TIMEOUT_SECONDS", "60"))
-        ollama_local_timeout_seconds = float(os.getenv("OLLAMA_LOCAL_TIMEOUT_SECONDS", str(max(default_timeout_seconds, 300.0))))
+    def __init__(self, config_service: ProviderConfigService) -> None:
+        self.config_service = config_service
+        self.default_timeout_seconds = float(os.getenv("MODEL_TIMEOUT_SECONDS", "60"))
+        self.ollama_local_timeout_seconds = float(
+            os.getenv("OLLAMA_LOCAL_TIMEOUT_SECONDS", str(max(self.default_timeout_seconds, 300.0)))
+        )
 
-        self._providers: dict[str, OllamaClient | OpenAIClient] = {
+    def _build_providers(self) -> dict[str, OllamaClient | OpenAIClient]:
+        providers: dict[str, OllamaClient | OpenAIClient] = {
             "ollama_local": OllamaClient(
                 provider_name="ollama_local",
                 base_url=os.getenv("OLLAMA_LOCAL_BASE_URL", "http://localhost:11434"),
-                timeout_seconds=ollama_local_timeout_seconds,
+                timeout_seconds=self.ollama_local_timeout_seconds,
             )
         }
 
         ollama_cloud_url = os.getenv("OLLAMA_CLOUD_BASE_URL")
         if ollama_cloud_url:
-            self._providers["ollama_cloud"] = OllamaClient(
+            providers["ollama_cloud"] = OllamaClient(
                 provider_name="ollama_cloud",
                 base_url=ollama_cloud_url,
-                timeout_seconds=default_timeout_seconds,
+                timeout_seconds=self.default_timeout_seconds,
                 api_key=os.getenv("OLLAMA_CLOUD_API_KEY"),
             )
 
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        if openai_api_key:
-            self._providers["openai"] = OpenAIClient(
-                api_key=openai_api_key,
-                base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-                timeout_seconds=default_timeout_seconds,
+        openai_config = self.config_service.get_openai_runtime_config()
+        if openai_config.enabled and openai_config.api_key:
+            providers["openai"] = OpenAIClient(
+                api_key=openai_config.api_key,
+                base_url=openai_config.base_url,
+                timeout_seconds=self.default_timeout_seconds,
             )
 
+        return providers
+
     def list_provider_names(self) -> list[str]:
-        return sorted(self._providers.keys())
+        return sorted(self._build_providers().keys())
 
     def get(self, provider: str) -> OllamaClient | OpenAIClient:
-        client = self._providers.get(provider)
+        providers = self._build_providers()
+        client = providers.get(provider)
         if not client:
-            raise KeyError(f"Okänd provider '{provider}'. Tillgängliga: {', '.join(self.list_provider_names())}")
+            raise KeyError(f"Okänd provider '{provider}'. Tillgängliga: {', '.join(sorted(providers.keys()))}")
         return client

@@ -907,6 +907,138 @@
             localProviderSelect.addEventListener('change', populateLocalModels);
         }
 
+        const adminTokenInput = document.getElementById('admin-token-input');
+        const adminLoadBtn = document.getElementById('admin-load-btn');
+        const adminProviderList = document.getElementById('admin-provider-list');
+        const adminOpenAIKey = document.getElementById('admin-openai-key');
+        const adminOpenAIBaseUrl = document.getElementById('admin-openai-base-url');
+        const adminOpenAIEnabled = document.getElementById('admin-openai-enabled');
+        const adminSaveOpenAIBtn = document.getElementById('admin-save-openai-btn');
+        const adminTestOpenAIBtn = document.getElementById('admin-test-openai-btn');
+        const adminStatus = document.getElementById('admin-status');
+
+        function showAdminStatus(message, isError = false) {
+            if (!adminStatus) {
+                return;
+            }
+            adminStatus.textContent = message;
+            adminStatus.classList.toggle('error', isError);
+        }
+
+        function adminHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Admin-Token': adminTokenInput.value.trim()
+            };
+        }
+
+        function renderAdminProviderList(providers) {
+            if (!providers.length) {
+                adminProviderList.textContent = 'Inga providers registrerade i admin-API.';
+                return;
+            }
+
+            adminProviderList.innerHTML = providers.map((provider) => (
+                `<div><strong>${provider.name}</strong> | enabled=${provider.enabled} | configured=${provider.configured} | key=${provider.masked_key || 'ej satt'} | base_url=${provider.base_url}</div>`
+            )).join('');
+
+            const openai = providers.find((provider) => provider.name === 'openai');
+            if (openai) {
+                adminOpenAIEnabled.checked = openai.enabled;
+                adminOpenAIBaseUrl.value = openai.base_url || '';
+            }
+        }
+
+        async function loadAdminProviders() {
+            if (!adminTokenInput.value.trim()) {
+                showAdminStatus('Ange admin-token först.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/admin/providers`, {
+                    headers: adminHeaders()
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Kunde inte ladda admin providers.');
+                }
+                renderAdminProviderList(data.providers || []);
+                showAdminStatus('Providerstatus uppdaterad.');
+            } catch (error) {
+                showAdminStatus(error.message, true);
+            }
+        }
+
+        async function saveOpenAIConfig() {
+            if (!adminTokenInput.value.trim()) {
+                showAdminStatus('Ange admin-token först.', true);
+                return;
+            }
+
+            const payload = {
+                enabled: adminOpenAIEnabled.checked,
+                base_url: adminOpenAIBaseUrl.value.trim() || undefined
+            };
+
+            const apiKey = adminOpenAIKey.value.trim();
+            if (apiKey) {
+                payload.api_key = apiKey;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/admin/providers/openai`, {
+                    method: 'PATCH',
+                    headers: adminHeaders(),
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Kunde inte spara OpenAI-konfiguration.');
+                }
+
+                adminOpenAIKey.value = '';
+                renderAdminProviderList(data.providers || []);
+                showAdminStatus('OpenAI-konfiguration sparad.');
+                await populateProviders();
+            } catch (error) {
+                showAdminStatus(error.message, true);
+            }
+        }
+
+        async function testOpenAIConnection() {
+            if (!adminTokenInput.value.trim()) {
+                showAdminStatus('Ange admin-token först.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/admin/providers/openai/test`, {
+                    method: 'POST',
+                    headers: adminHeaders()
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Kunde inte testa OpenAI-anslutning.');
+                }
+
+                showAdminStatus(data.detail, !data.ok);
+            } catch (error) {
+                showAdminStatus(error.message, true);
+            }
+        }
+
+        if (adminLoadBtn) {
+            adminLoadBtn.addEventListener('click', loadAdminProviders);
+        }
+        if (adminSaveOpenAIBtn) {
+            adminSaveOpenAIBtn.addEventListener('click', saveOpenAIConfig);
+        }
+        if (adminTestOpenAIBtn) {
+            adminTestOpenAIBtn.addEventListener('click', testOpenAIConnection);
+        }
+
         // Quick input state management
         let quickInputText = '';
         const quickInputTextarea = document.getElementById('quick-input-textarea');

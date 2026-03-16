@@ -36,3 +36,27 @@ class ProviderInfo(BaseModel):
 
 class ProvidersResponse(BaseModel):
     providers: list[ProviderInfo]
+
+
+class AdminProviderInfo(BaseModel):
+    name: str
+    enabled: bool
+    configured: bool
+    masked_key: str | None = None
+    base_url: str
+
+
+class AdminProvidersResponse(BaseModel):
+    providers: list[AdminProviderInfo]
+
+
+class UpdateOpenAIConfigRequest(BaseModel):
+    enabled: bool | None = None
+    api_key: str | None = Field(default=None, min_length=1)
+    base_url: str | None = Field(default=None, min_length=1)
+
+
+class AdminProviderTestResponse(BaseModel):
+    ok: bool
+    provider: str
+    detail: str

@@ -993,3 +993,44 @@
 .spacer-min-height {
     min-height: 1.5em;
 }
+
+.admin-panel {
+    margin: 1rem auto;
+    padding: 1rem;
+    max-width: 1000px;
+    border: 1px solid #d5d5d5;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.admin-helper {
+    color: #444;
+    margin-bottom: 0.75rem;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-grid input[type="text"],
+.admin-grid input[type="password"] {
+    width: 100%;
+    padding: 0.55rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-provider-list {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+}

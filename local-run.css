@@ -8,6 +8,7 @@
     font-weight: 600;
 }
 
+#local-provider-select,
 #local-model-select,
 #local-user-input {
     width: 100%;

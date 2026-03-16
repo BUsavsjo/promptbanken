@@ -728,6 +728,7 @@
         const localRunModal = document.getElementById('local-run-modal');
         const localRunClose = document.getElementById('local-run-close');
         const localRunTitle = document.getElementById('local-run-title');
+        const localProviderSelect = document.getElementById('local-provider-select');
         const localModelSelect = document.getElementById('local-model-select');
         const localUserInput = document.getElementById('local-user-input');
         const localRunSubmit = document.getElementById('local-run-submit');
@@ -737,10 +738,21 @@
 
         let selectedPromptForLocalRun = null;
 
-        async function fetchLocalModels() {
-            const response = await fetch(`${BACKEND_BASE_URL}/api/models`);
+        async function fetchProviders() {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/providers`);
             if (!response.ok) {
-                throw new Error('Kunde inte hämta modeller från backend.');
+                throw new Error('Kunde inte hämta providers från backend.');
+            }
+
+            const data = await response.json();
+            return data.providers || [];
+        }
+
+        async function fetchLocalModels(provider) {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/models?provider=${encodeURIComponent(provider)}`);
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.detail?.message || data.detail || 'Kunde inte hämta modeller från backend.');
             }
 
             const data = await response.json();
@@ -751,7 +763,8 @@
             localModelSelect.innerHTML = '<option>Laddar modeller...</option>';
 
             try {
-                const models = await fetchLocalModels();
+                const provider = localProviderSelect.value;
+                const models = await fetchLocalModels(provider);
                 if (!models.length) {
                     localModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
                     return;
@@ -761,6 +774,28 @@
                     .map(model => `<option value="${model.name}">${model.name}</option>`)
                     .join('');
             } catch (error) {
+                localModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
+                showLocalRunError(error.message);
+            }
+        }
+
+        async function populateProviders() {
+            localProviderSelect.innerHTML = '<option>Laddar providers...</option>';
+            try {
+                const providers = await fetchProviders();
+                if (!providers.length) {
+                    localProviderSelect.innerHTML = '<option value="">Inga providers hittades</option>';
+                    localModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
+                    return;
+                }
+
+                localProviderSelect.innerHTML = providers
+                    .map(provider => `<option value="${provider.name}">${provider.name}</option>`)
+                    .join('');
+
+                await populateLocalModels();
+            } catch (error) {
+                localProviderSelect.innerHTML = '<option value="">Kunde inte hämta providers</option>';
                 localModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
                 showLocalRunError(error.message);
             }
@@ -785,7 +820,7 @@
             localRunResult.textContent = '';
             showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
             localUserInput.value = quickInputText || '';
-            populateLocalModels();
+            populateProviders();
             localRunModal.classList.add('active');
         }
 
@@ -803,7 +838,8 @@
             const payload = {
                 prompt_id: selectedPromptForLocalRun.id,
                 user_input: localUserInput.value,
-                model: localModelSelect.value
+                model: localModelSelect.value,
+                provider: localProviderSelect.value
             };
 
             if (!payload.user_input.trim()) {
@@ -817,7 +853,7 @@
             }
 
             localRunSubmit.disabled = true;
-            showLocalRunStatus('Kör prompt mot Ollama...');
+            showLocalRunStatus(`Kör prompt mot provider '${payload.provider}'...`);
 
             try {
                 const response = await fetch(`${BACKEND_BASE_URL}/api/run`, {
@@ -828,7 +864,18 @@
 
                 const data = await response.json();
                 if (!response.ok) {
-                    throw new Error(data.detail || 'Körning misslyckades.');
+                    const detail = data.detail;
+                    if (detail && typeof detail === 'object') {
+                        console.error('Detaljerat provider-fel:', detail);
+                        const debugInfo = [
+                            detail.message,
+                            detail.request_id ? `request_id=${detail.request_id}` : null,
+                            detail.upstream_status ? `upstream_status=${detail.upstream_status}` : null,
+                            detail.error_type ? `error_type=${detail.error_type}` : null
+                        ].filter(Boolean).join(' | ');
+                        throw new Error(debugInfo || 'Körning misslyckades.');
+                    }
+                    throw new Error(detail || 'Körning misslyckades.');
                 }
 
                 localRunResult.textContent = data.response || '(Tomt svar från modellen)';
@@ -854,6 +901,10 @@
 
         if (localRunSubmit) {
             localRunSubmit.addEventListener('click', runWithLocalModel);
+        }
+
+        if (localProviderSelect) {
+            localProviderSelect.addEventListener('change', populateLocalModels);
         }
 
         // Quick input state management

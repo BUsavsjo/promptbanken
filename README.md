@@ -56,6 +56,46 @@ python -m http.server 8000
 
 ---
 
+## 🤖 Använd OpenAI via backend (i koden)
+
+Backenden har redan stöd för OpenAI genom `OpenAIClient` och `ProviderRegistry`. För att aktivera den behöver du bara sätta miljövariabler innan du startar backend.
+
+```bash
+cd backend
+source .venv/bin/activate
+
+# Krävs
+export OPENAI_API_KEY="sk-..."
+
+# Valfritt
+export OPENAI_BASE_URL="https://api.openai.com/v1"
+export MODEL_TIMEOUT_SECONDS=120
+
+uvicorn app.main:app --reload --port 8001
+```
+
+När `OPENAI_API_KEY` finns registreras providern `openai` automatiskt i `ProviderRegistry`.
+
+Exempel med API:et:
+
+```bash
+# 1) Kontrollera providers
+curl "http://localhost:8001/api/providers"
+
+# 2) Hämta OpenAI-modeller
+curl "http://localhost:8001/api/models?provider=openai"
+
+# 3) Kör en prompt via OpenAI
+curl -X POST "http://localhost:8001/api/run" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "prompt_id": "klarsprak",
+    "user_input": "Skriv om denna text till klarspråk: ..."
+  }'
+```
+
 ## 🌐 Deploy (GitHub Pages via Actions)
 
 - Workflow: .github/workflows/pages.yml (triggas på push till main eller manuellt via Actions → pages).

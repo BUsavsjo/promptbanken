@@ -170,8 +170,8 @@ git push origin main
 ## 🛠️ Teknisk arkitektur
 
 - **Frontend:** Vanilla JavaScript (ingen ramverk)
-- **Backend:** FastAPI-gateway (`/api/models`, `/api/run`) för lokal Ollama
-- **Provider (v1):** Ollama via backend-proxy (frontend anropar aldrig Ollama direkt)
+- **Backend:** FastAPI-gateway (`/api/providers`, `/api/models`, `/api/run`) för flera providers (lokal Ollama, Ollama Cloud, OpenAI)
+- **Providers:** Lokal Ollama + valfria molnproviders via backend-proxy (frontend anropar aldrig leverantörer direkt)
 - **Data:** JSON-config + txt-filer (gitbar)
 - **Copy-mekanik:** navigator.clipboard API
 - **Hosting:** Frontend statiskt + lokal backend-tjänst
@@ -201,8 +201,8 @@ git push origin main
 │   └── ... (14 filer totalt)
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI gateway mot Ollama
-│   │   ├── ollama_client.py  # Enkel Ollama integration
+│   │   ├── main.py           # FastAPI gateway mot flera LLM-providers
+│   │   ├── llm_clients.py    # Provider-klienter (Ollama/OpenAI)
 │   │   ├── prompt_repository.py
 │   │   └── schemas.py
 │   └── requirements.txt

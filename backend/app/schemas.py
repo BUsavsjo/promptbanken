@@ -5,7 +5,8 @@ class RunRequest(BaseModel):
     prompt_id: str | None = Field(default=None, description="Prompt id from prompts.json")
     prompt_text: str | None = Field(default=None, description="Raw prompt text")
     user_input: str = Field(min_length=1, description="User provided text")
-    model: str = Field(min_length=1, description="Ollama model name")
+    model: str = Field(min_length=1, description="Model name")
+    provider: str = Field(default="ollama_local", description="LLM provider name")
 
     @model_validator(mode="after")
     def validate_prompt_source(self) -> "RunRequest":
@@ -16,6 +17,7 @@ class RunRequest(BaseModel):
 
 class RunResponse(BaseModel):
     model: str
+    provider: str
     prompt_used: str
     response: str
 
@@ -26,3 +28,11 @@ class ModelInfo(BaseModel):
 
 class ModelsResponse(BaseModel):
     models: list[ModelInfo]
+
+
+class ProviderInfo(BaseModel):
+    name: str
+
+
+class ProvidersResponse(BaseModel):
+    providers: list[ProviderInfo]

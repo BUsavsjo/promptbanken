@@ -56,45 +56,73 @@ python -m http.server 8000
 
 ---
 
-## 🤖 Använd OpenAI via backend (i koden)
+## 🤖 OpenAI-provider via backend + adminpanel (MVP)
 
-Backenden har redan stöd för OpenAI genom `OpenAIClient` och `ProviderRegistry`. För att aktivera den behöver du bara sätta miljövariabler innan du startar backend.
+Backenden stöder nu både:
+1. **Bakåtkompatibel env-konfig** (`OPENAI_API_KEY`) och
+2. **Dynamisk admin-konfig** via API/UI (utan omstart i normalfallet).
+
+### Säkerhetsprinciper i denna MVP
+- API-nycklar skickas **aldrig** tillbaka i klartext till frontend.
+- API-nycklar lagras server-side i SQLite (`backend/data/provider_secrets.db`) och krypteras med Fernet.
+- Frontend visar bara status: `configured`/maskad suffix (`***1234`).
+- Admin-endpoints skyddas av header `X-Admin-Token` (enkel MVP-autentisering).
+
+> ⚠️ Sätt alltid `ADMIN_PANEL_TOKEN` i driftmiljö. Utan den är admin-API avstängt.
+
+### Starta backend
 
 ```bash
 cd backend
+python -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 
-# Krävs
+# Krävs för adminpanel
+export ADMIN_PANEL_TOKEN="byt-till-stark-hemlighet"
+
+# Rekommenderas i drift (stabil krypteringsnyckel)
+python - <<'PYKEY'
+from cryptography.fernet import Fernet
+print(Fernet.generate_key().decode())
+PYKEY
+export PROVIDER_ENCRYPTION_KEY="<nyckeln-från-kommandot-ovan>"
+
+# Valfritt fallback för första start / bakåtkompatibilitet
 export OPENAI_API_KEY="sk-..."
-
-# Valfritt
 export OPENAI_BASE_URL="https://api.openai.com/v1"
-export MODEL_TIMEOUT_SECONDS=120
 
 uvicorn app.main:app --reload --port 8001
 ```
 
-När `OPENAI_API_KEY` finns registreras providern `openai` automatiskt i `ProviderRegistry`.
-
-Exempel med API:et:
+### Admin-API (exempel)
 
 ```bash
-# 1) Kontrollera providers
-curl "http://localhost:8001/api/providers"
+# 1) Lista providerstatus
+curl "http://localhost:8001/api/admin/providers"   -H "X-Admin-Token: byt-till-stark-hemlighet"
 
-# 2) Hämta OpenAI-modeller
-curl "http://localhost:8001/api/models?provider=openai"
-
-# 3) Kör en prompt via OpenAI
-curl -X POST "http://localhost:8001/api/run" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provider": "openai",
-    "model": "gpt-4o-mini",
-    "prompt_id": "klarsprak",
-    "user_input": "Skriv om denna text till klarspråk: ..."
+# 2) Uppdatera OpenAI-nyckel + aktivera providern
+curl -X PATCH "http://localhost:8001/api/admin/providers/openai"   -H "Content-Type: application/json"   -H "X-Admin-Token: byt-till-stark-hemlighet"   -d '{
+    "enabled": true,
+    "api_key": "sk-...",
+    "base_url": "https://api.openai.com/v1"
   }'
+
+# 3) Testa anslutning
+curl -X POST "http://localhost:8001/api/admin/providers/openai/test"   -H "X-Admin-Token: byt-till-stark-hemlighet"
 ```
+
+### Admin-UI
+- Öppna frontend (`http://localhost:8000`).
+- Sektionen **"🔐 Admin – AI-provider"** finns ovanför promptlistan.
+- Fyll i admin-token, klicka **Ladda providers**, uppdatera OpenAI-inställningar och klicka **Spara OpenAI**.
+- Efter sparning används ny konfiguration direkt av backendens provider-resolver.
+
+### Framtida förbättringar
+- Byt MVP-token till riktig authn/authz (OIDC/SSO + roller).
+- Nyckelrotation med versionshantering och audit-logg.
+- Stöd för fler providers (Azure OpenAI, Ollama Cloud, Anthropic) via samma `ProviderConfigService`.
+- Flytta secrets till extern secret manager (Vault/KMS).
 
 ## 🌐 Deploy (GitHub Pages via Actions)
 

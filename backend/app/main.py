@@ -5,18 +5,24 @@ import uuid
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from .llm_clients import ProviderRegistry
+from .admin_security import verify_admin_token
+from .llm_clients import OpenAIClient, ProviderRegistry
 from .prompt_repository import PromptRepository
+from .provider_config import ProviderConfigService
 from .schemas import (
+    AdminProviderInfo,
+    AdminProvidersResponse,
+    AdminProviderTestResponse,
     ModelInfo,
     ModelsResponse,
     ProviderInfo,
     ProvidersResponse,
     RunRequest,
     RunResponse,
+    UpdateOpenAIConfigRequest,
 )
 
 logging.basicConfig(
@@ -25,7 +31,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("promptbanken.gateway")
 
-app = FastAPI(title="Promptbanken LLM Gateway", version="0.2.0")
+app = FastAPI(title="Promptbanken LLM Gateway", version="0.3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +43,8 @@ app.add_middleware(
 
 repo_root = Path(__file__).resolve().parents[2]
 prompt_repository = PromptRepository(repo_root=repo_root)
-provider_registry = ProviderRegistry()
+provider_config_service = ProviderConfigService(db_path=repo_root / "backend" / "data" / "provider_secrets.db")
+provider_registry = ProviderRegistry(config_service=provider_config_service)
 
 
 def build_final_prompt(prompt_text: str, user_input: str) -> str:
@@ -127,3 +134,41 @@ async def run_prompt(request: RunRequest) -> RunResponse:
         request.prompt_id,
     )
     return RunResponse(model=request.model, provider=provider, prompt_used=final_prompt, response=answer)
+
+
+@app.get("/api/admin/providers", response_model=AdminProvidersResponse, dependencies=[Depends(verify_admin_token)])
+async def get_admin_providers() -> AdminProvidersResponse:
+    provider_status = provider_config_service.list_provider_status()
+    return AdminProvidersResponse(providers=[AdminProviderInfo(**item) for item in provider_status])
+
+
+@app.patch("/api/admin/providers/openai", response_model=AdminProvidersResponse, dependencies=[Depends(verify_admin_token)])
+async def update_openai_config(request: UpdateOpenAIConfigRequest) -> AdminProvidersResponse:
+    provider_config_service.update_openai_config(
+        enabled=request.enabled,
+        api_key=request.api_key,
+        base_url=request.base_url,
+    )
+    provider_status = provider_config_service.list_provider_status()
+    return AdminProvidersResponse(providers=[AdminProviderInfo(**item) for item in provider_status])
+
+
+@app.post(
+    "/api/admin/providers/openai/test",
+    response_model=AdminProviderTestResponse,
+    dependencies=[Depends(verify_admin_token)],
+)
+async def test_openai_connection() -> AdminProviderTestResponse:
+    config = provider_config_service.get_openai_runtime_config()
+    if not config.enabled:
+        return AdminProviderTestResponse(ok=False, provider="openai", detail="OpenAI är inaktiverad")
+    if not config.api_key:
+        return AdminProviderTestResponse(ok=False, provider="openai", detail="OpenAI API-nyckel saknas")
+
+    try:
+        client = OpenAIClient(api_key=config.api_key, base_url=config.base_url)
+        await client.list_models()
+    except httpx.HTTPError:
+        return AdminProviderTestResponse(ok=False, provider="openai", detail="Kunde inte ansluta till OpenAI")
+
+    return AdminProviderTestResponse(ok=True, provider="openai", detail="Anslutning till OpenAI fungerar")

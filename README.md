@@ -30,7 +30,7 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 5. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
 6. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
 
-### Lokal utveckling (frontend + backend för lokal Ollama)
+### Lokal utveckling (utan Docker)
 ```bash
 # Klona repo
 git clone https://github.com/username/promptbanken.git
@@ -42,7 +42,8 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 # Vid långsamma lokala modeller: höj timeout (sekunder)
-export OLLAMA_LOCAL_TIMEOUT_SECONDS=300
+export MODEL_TIMEOUT_SECONDS=300
+export OLLAMA_BASE_URL=http://localhost:11434
 uvicorn app.main:app --reload --port 8001
 
 # 2) I ett nytt terminalfönster: starta frontend
@@ -51,7 +52,41 @@ python -m http.server 8000
 
 # 3) Öppna i webbläsare
 # Frontend: http://localhost:8000
-# Backend health via docs: http://localhost:8001/docs
+# Backend docs: http://localhost:8001/docs
+```
+
+### Community Edition på Windows med Docker (rekommenderat)
+Community Edition är local-first och använder endast Ollama via backend.
+
+1. **Installera Docker Desktop för Windows** (med WSL2 aktiverat).
+2. **Installera Ollama på Windows** och starta minst en modell, t.ex.:
+   ```powershell
+   ollama pull llama3.1:8b
+   ```
+3. **Klona repot** och gå till rotmappen:
+   ```powershell
+   git clone https://github.com/username/promptbanken.git
+   cd promptbanken
+   ```
+4. **Starta frontend + backend med Docker Compose**:
+   ```powershell
+   docker compose up --build
+   ```
+   > Standard i `docker-compose.yml` är `OLLAMA_BASE_URL=http://host.docker.internal:11434`, vilket gör att backend-containern når Ollama som kör lokalt på Windows.
+5. **Öppna appen**:
+   - Frontend: `http://localhost:8080`
+   - Backend API: `http://localhost:8001/docs`
+
+#### Vanliga kommandon
+```powershell
+# Starta i bakgrunden
+docker compose up -d --build
+
+# Se loggar
+docker compose logs -f
+
+# Stoppa och ta bort containrar
+docker compose down
 ```
 
 ---

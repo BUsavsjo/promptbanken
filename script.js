@@ -732,9 +732,11 @@
         const localModelSelect = document.getElementById('local-model-select');
         const localUserInput = document.getElementById('local-user-input');
         const localRunSubmit = document.getElementById('local-run-submit');
+        const localRunCancel = document.getElementById('local-run-cancel');
         const localRunStatus = document.getElementById('local-run-status');
         const localRunResult = document.getElementById('local-run-result');
         const BACKEND_BASE_URL = window.PROMPTBANKEN_API_BASE_URL || 'http://localhost:8001';
+        let localRunAbortController = null;
 
         function copyCodeBlock(button, code) {
             navigator.clipboard.writeText(code).then(() => {
@@ -795,6 +797,19 @@
         }
 
         let selectedPromptForLocalRun = null;
+
+        function setLocalRunStreamingState(isStreaming) {
+            localRunSubmit.disabled = isStreaming;
+            if (localRunCancel) {
+                localRunCancel.disabled = !isStreaming;
+            }
+            localRunResult.classList.toggle('is-streaming', isStreaming);
+        }
+
+        function appendStreamingChunk(chunk) {
+            localRunResult.textContent += chunk;
+            localRunResult.scrollTop = localRunResult.scrollHeight;
+        }
 
         async function fetchProviders() {
             const response = await fetch(`${BACKEND_BASE_URL}/api/providers`);
@@ -878,11 +893,15 @@
             localRunResult.innerHTML = '';
             showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
             localUserInput.value = quickInputText || '';
+            setLocalRunStreamingState(false);
             populateProviders();
             localRunModal.classList.add('active');
         }
 
         function closeLocalRunModal() {
+            if (localRunAbortController) {
+                localRunAbortController.abort();
+            }
             localRunModal.classList.remove('active');
             selectedPromptForLocalRun = null;
         }
@@ -910,18 +929,21 @@
                 return;
             }
 
-            localRunSubmit.disabled = true;
-            showLocalRunStatus(`Kör prompt mot provider '${payload.provider}'...`);
+            localRunResult.textContent = '';
+            setLocalRunStreamingState(true);
+            showLocalRunStatus('Modellen skriver...');
+            localRunAbortController = new AbortController();
 
             try {
-                const response = await fetch(`${BACKEND_BASE_URL}/api/run`, {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/run/stream`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: localRunAbortController.signal
                 });
 
-                const data = await response.json();
                 if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
                     const detail = data.detail;
                     if (detail && typeof detail === 'object') {
                         console.error('Detaljerat provider-fel:', detail);
@@ -936,12 +958,46 @@
                     throw new Error(detail || 'Körning misslyckades.');
                 }
 
-                renderLocalRunResponse(data.response || '(Tomt svar från modellen)');
+                if (!response.body) {
+                    throw new Error('Svarsstream saknas från backend.');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    if (!chunk) {
+                        continue;
+                    }
+
+                    fullResponse += chunk;
+                    appendStreamingChunk(chunk);
+                }
+
+                const trailingChunk = decoder.decode();
+                if (trailingChunk) {
+                    fullResponse += trailingChunk;
+                    appendStreamingChunk(trailingChunk);
+                }
+
+                renderLocalRunResponse(fullResponse || '(Tomt svar från modellen)');
                 showLocalRunStatus('Klart.');
             } catch (error) {
-                showLocalRunError(error.message);
+                if (error.name === 'AbortError') {
+                    showLocalRunStatus('Generering avbruten.');
+                } else {
+                    showLocalRunError(error.message);
+                }
             } finally {
-                localRunSubmit.disabled = false;
+                localRunAbortController = null;
+                setLocalRunStreamingState(false);
             }
         }
 
@@ -959,6 +1015,14 @@
 
         if (localRunSubmit) {
             localRunSubmit.addEventListener('click', runWithLocalModel);
+        }
+
+        if (localRunCancel) {
+            localRunCancel.addEventListener('click', () => {
+                if (localRunAbortController) {
+                    localRunAbortController.abort();
+                }
+            });
         }
 
         if (localProviderSelect) {

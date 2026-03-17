@@ -3,10 +3,12 @@ from __future__ import annotations
 import logging
 import uuid
 from pathlib import Path
+from typing import AsyncIterator
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from .admin_security import verify_admin_token
 from .llm_clients import OpenAIClient, ProviderRegistry
@@ -134,6 +136,42 @@ async def run_prompt(request: RunRequest) -> RunResponse:
         request.prompt_id,
     )
     return RunResponse(model=request.model, provider=provider, prompt_used=final_prompt, response=answer)
+
+
+@app.post("/api/run/stream")
+async def run_prompt_stream(request: RunRequest) -> StreamingResponse:
+    request_id = str(uuid.uuid4())
+
+    try:
+        prompt_text = request.prompt_text or prompt_repository.get_prompt_text(request.prompt_id or "")
+    except (KeyError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    final_prompt = build_final_prompt(prompt_text=prompt_text, user_input=request.user_input)
+    provider = request.provider
+
+    try:
+        client = provider_registry.get(provider)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    async def event_stream() -> AsyncIterator[str]:
+        try:
+            async for chunk in client.run_chat_stream(model=request.model, final_prompt=final_prompt):
+                yield chunk
+            logger.info(
+                "Prompt stream success request_id=%s provider=%s model=%s prompt_id=%s",
+                request_id,
+                provider,
+                request.model,
+                request.prompt_id,
+            )
+        except httpx.HTTPError as exc:
+            error_detail = _http_error_to_detail(provider, exc, request_id)
+            logger.error("Prompt stream failed detail=%s", error_detail)
+            raise
+
+    return StreamingResponse(event_stream(), media_type="text/plain; charset=utf-8")
 
 
 @app.get("/api/admin/providers", response_model=AdminProvidersResponse, dependencies=[Depends(verify_admin_token)])

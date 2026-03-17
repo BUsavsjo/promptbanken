@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
+from typing import AsyncIterator
 
 import httpx
 
@@ -64,6 +66,27 @@ class OllamaClient:
         message = payload.get("message") or {}
         return message.get("content", "")
 
+    async def run_chat_stream(self, model: str, final_prompt: str) -> AsyncIterator[str]:
+        request_payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": final_prompt}],
+            "stream": True,
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers()) as client:
+            async with client.stream("POST", f"{self.base_url}/api/chat", json=request_payload) as response:
+                response.raise_for_status()
+
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+
+                    payload = json.loads(line)
+                    message = payload.get("message") or {}
+                    content = message.get("content")
+                    if content:
+                        yield content
+
 
 class OpenAIClient:
     def __init__(self, api_key: str, base_url: str = "https://api.openai.com/v1", timeout_seconds: float = 60.0) -> None:
@@ -107,6 +130,11 @@ class OpenAIClient:
 
         message = choices[0].get("message") or {}
         return message.get("content", "")
+
+    async def run_chat_stream(self, model: str, final_prompt: str) -> AsyncIterator[str]:
+        answer = await self.run_chat(model=model, final_prompt=final_prompt)
+        if answer:
+            yield answer
 
 
 class ProviderRegistry:

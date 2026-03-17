@@ -35,6 +35,7 @@
 
 .local-run-result {
     min-height: 180px;
+    max-height: 320px;
     background: #ffffff;
     border: 1px solid #d9e0ea;
     border-radius: 10px;
@@ -42,6 +43,25 @@
     line-height: 1.65;
     color: #1f2937;
     font-size: 0.98rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow-x: hidden;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+.local-run-result.is-streaming::after {
+    content: '▍';
+    display: inline-block;
+    margin-left: 0.1rem;
+    color: #1f5fbf;
+    animation: localRunCursorBlink 1s steps(1, end) infinite;
+}
+
+@keyframes localRunCursorBlink {
+    50% {
+        opacity: 0;
+    }
 }
 
 .local-run-result > :first-child {

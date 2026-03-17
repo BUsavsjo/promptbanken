@@ -12,7 +12,7 @@ from fastapi.responses import StreamingResponse
 
 from .llm_clients import OllamaGateway
 from .prompt_repository import PromptRepository
-from .schemas import ModelInfo, ModelsResponse, ProviderInfo, ProvidersResponse, RunRequest, RunResponse
+from .schemas import ChatStreamRequest, ModelInfo, ModelsResponse, ProviderInfo, ProvidersResponse, RunRequest, RunResponse
 
 logging.basicConfig(
     level=logging.INFO,
@@ -109,6 +109,29 @@ async def run_prompt(request: RunRequest) -> RunResponse:
 
     logger.info("Prompt run success request_id=%s model=%s prompt_id=%s", request_id, request.model, request.prompt_id)
     return RunResponse(model=request.model, provider="ollama", prompt_used=final_prompt, response=answer)
+
+
+
+
+@app.post("/api/chat/stream")
+async def run_chat_stream(request: ChatStreamRequest, http_request: Request) -> StreamingResponse:
+    request_id = str(uuid.uuid4())
+
+    async def event_stream() -> AsyncIterator[str]:
+        try:
+            async for chunk in ollama_gateway.get_client().run_chat_stream_messages(
+                model=request.model,
+                messages=[{"role": message.role, "content": message.content} for message in request.messages],
+                should_abort=http_request.is_disconnected,
+            ):
+                yield chunk
+            logger.info("Chat stream finished request_id=%s model=%s", request_id, request.model)
+        except httpx.HTTPError as exc:
+            error_detail = _http_error_to_detail(exc, request_id)
+            logger.error("Chat stream failed detail=%s", error_detail)
+            raise
+
+    return StreamingResponse(event_stream(), media_type="text/plain; charset=utf-8")
 
 
 @app.post("/api/run/stream")

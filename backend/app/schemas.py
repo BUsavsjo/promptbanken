@@ -36,3 +36,13 @@ class ProviderInfo(BaseModel):
 
 class ProvidersResponse(BaseModel):
     providers: list[ProviderInfo]
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(min_length=1)
+    content: str = Field(min_length=1)
+
+
+class ChatStreamRequest(BaseModel):
+    model: str = Field(min_length=1, description="Model name")
+    messages: list[ChatMessage] = Field(min_length=1)

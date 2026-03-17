@@ -63,6 +63,33 @@ class OllamaClient:
                     if content:
                         yield content
 
+    async def run_chat_stream_messages(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        should_abort: Callable[[], Awaitable[bool]] | None = None,
+    ) -> AsyncIterator[str]:
+        request_payload = {
+            "model": model,
+            "messages": messages,
+            "stream": True,
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with client.stream("POST", f"{self.base_url}/api/chat", json=request_payload) as response:
+                response.raise_for_status()
+
+                async for line in response.aiter_lines():
+                    if should_abort and await should_abort():
+                        break
+                    if not line:
+                        continue
+                    payload = json.loads(line)
+                    message = payload.get("message") or {}
+                    content = message.get("content")
+                    if content:
+                        yield content
+
 
 class OllamaGateway:
     def __init__(self) -> None:

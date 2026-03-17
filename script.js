@@ -736,6 +736,64 @@
         const localRunResult = document.getElementById('local-run-result');
         const BACKEND_BASE_URL = window.PROMPTBANKEN_API_BASE_URL || 'http://localhost:8001';
 
+        function copyCodeBlock(button, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Kopierad';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 1200);
+            }).catch(() => {
+                button.textContent = 'Kunde inte kopiera';
+            });
+        }
+
+        function enhanceRenderedCodeBlocks() {
+            localRunResult.querySelectorAll('pre > code').forEach((codeBlock) => {
+                if (window.hljs) {
+                    window.hljs.highlightElement(codeBlock);
+                }
+
+                const pre = codeBlock.parentElement;
+                if (pre.querySelector('.code-copy-btn')) {
+                    return;
+                }
+
+                const copyButton = document.createElement('button');
+                copyButton.type = 'button';
+                copyButton.className = 'code-copy-btn';
+                copyButton.textContent = 'Kopiera';
+                copyButton.addEventListener('click', () => copyCodeBlock(copyButton, codeBlock.textContent));
+                pre.appendChild(copyButton);
+            });
+        }
+
+        function renderLocalRunResponse(responseText) {
+            if (!responseText) {
+                localRunResult.textContent = '(Tomt svar från modellen)';
+                return;
+            }
+
+            if (!window.marked || !window.DOMPurify) {
+                localRunResult.textContent = responseText;
+                return;
+            }
+
+            marked.setOptions({ gfm: true, breaks: true });
+            const rawHtml = marked.parse(responseText);
+            const safeHtml = window.DOMPurify.sanitize(rawHtml, {
+                USE_PROFILES: { html: true },
+                ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class']
+            });
+
+            localRunResult.innerHTML = safeHtml;
+            localRunResult.querySelectorAll('a').forEach((link) => {
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+            });
+            enhanceRenderedCodeBlocks();
+        }
+
         let selectedPromptForLocalRun = null;
 
         async function fetchProviders() {
@@ -817,7 +875,7 @@
                 ? `Kör med lokal modell – ${selectedPromptForLocalRun.title}`
                 : 'Kör med lokal modell';
 
-            localRunResult.textContent = '';
+            localRunResult.innerHTML = '';
             showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
             localUserInput.value = quickInputText || '';
             populateProviders();
@@ -878,7 +936,7 @@
                     throw new Error(detail || 'Körning misslyckades.');
                 }
 
-                localRunResult.textContent = data.response || '(Tomt svar från modellen)';
+                renderLocalRunResponse(data.response || '(Tomt svar från modellen)');
                 showLocalRunStatus('Klart.');
             } catch (error) {
                 showLocalRunError(error.message);

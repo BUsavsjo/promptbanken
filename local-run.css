@@ -123,3 +123,49 @@
     padding: 0.2rem 0.5rem;
     cursor: pointer;
 }
+
+.local-run-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-expand {
+    border: 1px solid #cfd8e3;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 2rem;
+    height: 2rem;
+}
+
+.local-copy-prompt-btn {
+    align-self: flex-start;
+}
+
+.local-run-modal-content {
+    width: min(920px, 92vw);
+}
+
+.local-run-modal-content.is-fullscreen {
+    width: 96vw;
+    max-width: none;
+    height: 92vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.local-run-modal-content.is-fullscreen .local-run-body {
+    flex: 1;
+    min-height: 0;
+}
+
+.local-run-modal-content.is-fullscreen #local-user-input {
+    min-height: 180px;
+}
+
+.local-run-modal-content.is-fullscreen .local-run-result {
+    max-height: none;
+    flex: 1;
+}

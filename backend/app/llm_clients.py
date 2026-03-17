@@ -2,49 +2,19 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable
 from typing import AsyncIterator
 
 import httpx
 
-from .provider_config import ProviderConfigService
-
-
-class ProviderConfigError(RuntimeError):
-    """Raised when a provider is not configured correctly."""
-
-
-@dataclass(slots=True)
-class ProviderError(Exception):
-    provider: str
-    message: str
-    request_id: str | None = None
-    upstream_status: int | None = None
-    upstream_body_excerpt: str | None = None
-    error_type: str | None = None
-
 
 class OllamaClient:
-    def __init__(
-        self,
-        provider_name: str,
-        base_url: str,
-        timeout_seconds: float = 60.0,
-        api_key: str | None = None,
-    ) -> None:
-        self.provider_name = provider_name
+    def __init__(self, base_url: str, timeout_seconds: float = 300.0) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout_seconds
-        self.api_key = api_key
-
-    def _headers(self) -> dict[str, str]:
-        headers: dict[str, str] = {}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-        return headers
 
     async def list_models(self) -> list[str]:
-        async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers()) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.get(f"{self.base_url}/api/tags")
             response.raise_for_status()
 
@@ -58,7 +28,7 @@ class OllamaClient:
             "stream": False,
         }
 
-        async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers()) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(f"{self.base_url}/api/chat", json=request_payload)
             response.raise_for_status()
 
@@ -66,21 +36,27 @@ class OllamaClient:
         message = payload.get("message") or {}
         return message.get("content", "")
 
-    async def run_chat_stream(self, model: str, final_prompt: str) -> AsyncIterator[str]:
+    async def run_chat_stream(
+        self,
+        model: str,
+        final_prompt: str,
+        should_abort: Callable[[], Awaitable[bool]] | None = None,
+    ) -> AsyncIterator[str]:
         request_payload = {
             "model": model,
             "messages": [{"role": "user", "content": final_prompt}],
             "stream": True,
         }
 
-        async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers()) as client:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
             async with client.stream("POST", f"{self.base_url}/api/chat", json=request_payload) as response:
                 response.raise_for_status()
 
                 async for line in response.aiter_lines():
+                    if should_abort and await should_abort():
+                        break
                     if not line:
                         continue
-
                     payload = json.loads(line)
                     message = payload.get("message") or {}
                     content = message.get("content")
@@ -88,97 +64,11 @@ class OllamaClient:
                         yield content
 
 
-class OpenAIClient:
-    def __init__(self, api_key: str, base_url: str = "https://api.openai.com/v1", timeout_seconds: float = 60.0) -> None:
-        if not api_key:
-            raise ProviderConfigError("OPENAI_API_KEY saknas")
+class OllamaGateway:
+    def __init__(self) -> None:
+        timeout = float(os.getenv("MODEL_TIMEOUT_SECONDS", "300"))
+        self.base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        self.client = OllamaClient(base_url=self.base_url, timeout_seconds=timeout)
 
-        self.base_url = base_url.rstrip("/")
-        self.timeout = timeout_seconds
-        self.api_key = api_key
-
-    def _headers(self) -> dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
-    async def list_models(self) -> list[str]:
-        async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers()) as client:
-            response = await client.get(f"{self.base_url}/models")
-            response.raise_for_status()
-
-        payload = response.json()
-        models = payload.get("data", [])
-        return [item["id"] for item in models if "id" in item]
-
-    async def run_chat(self, model: str, final_prompt: str) -> str:
-        request_payload = {
-            "model": model,
-            "messages": [{"role": "user", "content": final_prompt}],
-            "temperature": 0.2,
-        }
-
-        async with httpx.AsyncClient(timeout=self.timeout, headers=self._headers()) as client:
-            response = await client.post(f"{self.base_url}/chat/completions", json=request_payload)
-            response.raise_for_status()
-
-        payload = response.json()
-        choices = payload.get("choices", [])
-        if not choices:
-            return ""
-
-        message = choices[0].get("message") or {}
-        return message.get("content", "")
-
-    async def run_chat_stream(self, model: str, final_prompt: str) -> AsyncIterator[str]:
-        answer = await self.run_chat(model=model, final_prompt=final_prompt)
-        if answer:
-            yield answer
-
-
-class ProviderRegistry:
-    def __init__(self, config_service: ProviderConfigService) -> None:
-        self.config_service = config_service
-        self.default_timeout_seconds = float(os.getenv("MODEL_TIMEOUT_SECONDS", "60"))
-        self.ollama_local_timeout_seconds = float(
-            os.getenv("OLLAMA_LOCAL_TIMEOUT_SECONDS", str(max(self.default_timeout_seconds, 300.0)))
-        )
-
-    def _build_providers(self) -> dict[str, OllamaClient | OpenAIClient]:
-        providers: dict[str, OllamaClient | OpenAIClient] = {
-            "ollama_local": OllamaClient(
-                provider_name="ollama_local",
-                base_url=os.getenv("OLLAMA_LOCAL_BASE_URL", "http://localhost:11434"),
-                timeout_seconds=self.ollama_local_timeout_seconds,
-            )
-        }
-
-        ollama_cloud_url = os.getenv("OLLAMA_CLOUD_BASE_URL")
-        if ollama_cloud_url:
-            providers["ollama_cloud"] = OllamaClient(
-                provider_name="ollama_cloud",
-                base_url=ollama_cloud_url,
-                timeout_seconds=self.default_timeout_seconds,
-                api_key=os.getenv("OLLAMA_CLOUD_API_KEY"),
-            )
-
-        openai_config = self.config_service.get_openai_runtime_config()
-        if openai_config.enabled and openai_config.api_key:
-            providers["openai"] = OpenAIClient(
-                api_key=openai_config.api_key,
-                base_url=openai_config.base_url,
-                timeout_seconds=self.default_timeout_seconds,
-            )
-
-        return providers
-
-    def list_provider_names(self) -> list[str]:
-        return sorted(self._build_providers().keys())
-
-    def get(self, provider: str) -> OllamaClient | OpenAIClient:
-        providers = self._build_providers()
-        client = providers.get(provider)
-        if not client:
-            raise KeyError(f"Okänd provider '{provider}'. Tillgängliga: {', '.join(sorted(providers.keys()))}")
-        return client
+    def get_client(self) -> OllamaClient:
+        return self.client

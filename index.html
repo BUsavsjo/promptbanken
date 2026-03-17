@@ -6,6 +6,7 @@
     <title>Promptbank för kommun</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="local-run.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
 </head>
 <body>
     <header>
@@ -31,6 +32,11 @@
                     </label>
                     <p class="settings-helper">Spara och visa favoriter</p>
                 </div>
+                <div class="settings-option">
+                    <a href="providers.html" class="settings-link">⚙️ Multiprovider-inställningar</a>
+                    <p class="settings-helper">Hantera providers, API-nycklar och anslutningstest</p>
+                </div>
+
             </div>
         </div>
     </div>
@@ -67,28 +73,6 @@
         </div>
     </div>
 
-
-    <section class="admin-panel" id="admin-panel">
-        <h2>🔐 Admin – AI-provider</h2>
-        <p class="admin-helper">MVP-skydd: kräver admin-token i header <code>X-Admin-Token</code>. Nycklar visas aldrig i klartext.</p>
-        <div class="admin-grid">
-            <input type="password" id="admin-token-input" placeholder="Admin-token" autocomplete="off">
-            <button class="secondary-btn" id="admin-load-btn">Ladda providers</button>
-        </div>
-        <div id="admin-provider-list" class="admin-provider-list">Ingen data laddad.</div>
-
-        <h3>OpenAI</h3>
-        <div class="admin-grid">
-            <input type="password" id="admin-openai-key" placeholder="Ny OpenAI API-nyckel (valfritt vid uppdatering)">
-            <input type="text" id="admin-openai-base-url" placeholder="Base URL, t.ex. https://api.openai.com/v1">
-            <label><input type="checkbox" id="admin-openai-enabled"> Aktiverad</label>
-        </div>
-        <div class="admin-actions">
-            <button class="primary-btn" id="admin-save-openai-btn">Spara OpenAI</button>
-            <button class="secondary-btn" id="admin-test-openai-btn">Testa anslutning</button>
-        </div>
-        <div id="admin-status" class="local-run-status"></div>
-    </section>
 
     <main>
         <div class="favorites-menu hidden favorites-only" id="favorites-menu">
@@ -225,7 +209,7 @@
                 </div>
 
                 <div id="local-run-status" class="local-run-status"></div>
-                <pre id="local-run-result" class="local-run-result"></pre>
+                <div id="local-run-result" class="local-run-result" aria-live="polite"></div>
             </div>
         </div>
     </div>
@@ -250,6 +234,9 @@
 <p>Promptmallar för kommun | v1.0.0 | <a href="GDPR-POLICY.md">Dataskydd</a> | <a href="AI-COMPLIANCE.md">AI-compliance</a> | <a href="https://github.com/BUsavsjo/promptbanken">MIT-licens (Peter Wenström)</a></p>
         </div>
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>

@@ -189,19 +189,20 @@
 
     <!-- Local model run Modal -->
     <div class="modal-overlay" id="local-run-modal">
-        <div class="modal-content">
+        <div class="modal-content local-run-modal-content" id="local-run-modal-content">
             <div class="modal-header">
                 <h3 id="local-run-title">Kör med lokal modell</h3>
-                <button class="modal-close" id="local-run-close">×</button>
+                <div class="local-run-header-actions">
+                    <button class="modal-expand" id="local-run-expand" type="button" title="Växla helskärm">⛶</button>
+                    <button class="modal-close" id="local-run-close">×</button>
+                </div>
             </div>
             <div class="modal-body local-run-body">
-                <label for="local-provider-select">Provider</label>
-                <select id="local-provider-select"></select>
-
                 <label for="local-model-select">Modell</label>
                 <select id="local-model-select"></select>
 
                 <label for="local-user-input">Din text</label>
+                <button class="secondary-btn local-copy-prompt-btn" id="local-copy-prompt-btn" type="button">Kopiera prompt</button>
                 <textarea id="local-user-input" placeholder="Klistra in eller skriv texten som ska köras med prompten..."></textarea>
 
                 <div class="actions">

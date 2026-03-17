@@ -6,7 +6,7 @@ class RunRequest(BaseModel):
     prompt_text: str | None = Field(default=None, description="Raw prompt text")
     user_input: str = Field(min_length=1, description="User provided text")
     model: str = Field(min_length=1, description="Model name")
-    provider: str = Field(default="ollama_local", description="LLM provider name")
+    provider: str | None = Field(default=None, description="Ignored in Community Edition")
 
     @model_validator(mode="after")
     def validate_prompt_source(self) -> "RunRequest":
@@ -36,27 +36,3 @@ class ProviderInfo(BaseModel):
 
 class ProvidersResponse(BaseModel):
     providers: list[ProviderInfo]
-
-
-class AdminProviderInfo(BaseModel):
-    name: str
-    enabled: bool
-    configured: bool
-    masked_key: str | None = None
-    base_url: str
-
-
-class AdminProvidersResponse(BaseModel):
-    providers: list[AdminProviderInfo]
-
-
-class UpdateOpenAIConfigRequest(BaseModel):
-    enabled: bool | None = None
-    api_key: str | None = Field(default=None, min_length=1)
-    base_url: str | None = Field(default=None, min_length=1)
-
-
-class AdminProviderTestResponse(BaseModel):
-    ok: bool
-    provider: str
-    detail: str

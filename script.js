@@ -728,14 +728,16 @@
         const localRunModal = document.getElementById('local-run-modal');
         const localRunClose = document.getElementById('local-run-close');
         const localRunTitle = document.getElementById('local-run-title');
-        const localProviderSelect = document.getElementById('local-provider-select');
         const localModelSelect = document.getElementById('local-model-select');
         const localUserInput = document.getElementById('local-user-input');
         const localRunSubmit = document.getElementById('local-run-submit');
         const localRunCancel = document.getElementById('local-run-cancel');
         const localRunStatus = document.getElementById('local-run-status');
         const localRunResult = document.getElementById('local-run-result');
-        const BACKEND_BASE_URL = window.PROMPTBANKEN_API_BASE_URL || 'http://localhost:8001';
+        const BACKEND_BASE_URL = window.PROMPTBANKEN_API_BASE_URL || window.location.origin.replace(/\/$/, '');
+        const localRunModalContent = document.getElementById('local-run-modal-content');
+        const localRunExpand = document.getElementById('local-run-expand');
+        const localCopyPromptBtn = document.getElementById('local-copy-prompt-btn');
         let localRunAbortController = null;
 
         function copyCodeBlock(button, code) {
@@ -811,18 +813,8 @@
             localRunResult.scrollTop = localRunResult.scrollHeight;
         }
 
-        async function fetchProviders() {
-            const response = await fetch(`${BACKEND_BASE_URL}/api/providers`);
-            if (!response.ok) {
-                throw new Error('Kunde inte hämta providers från backend.');
-            }
-
-            const data = await response.json();
-            return data.providers || [];
-        }
-
-        async function fetchLocalModels(provider) {
-            const response = await fetch(`${BACKEND_BASE_URL}/api/models?provider=${encodeURIComponent(provider)}`);
+        async function fetchLocalModels() {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/models`);
             if (!response.ok) {
                 const data = await response.json().catch(() => ({}));
                 throw new Error(data.detail?.message || data.detail || 'Kunde inte hämta modeller från backend.');
@@ -832,12 +824,15 @@
             return data.models || [];
         }
 
+        async function populateProviders() {
+            return populateLocalModels();
+        }
+
         async function populateLocalModels() {
             localModelSelect.innerHTML = '<option>Laddar modeller...</option>';
 
             try {
-                const provider = localProviderSelect.value;
-                const models = await fetchLocalModels(provider);
+                const models = await fetchLocalModels();
                 if (!models.length) {
                     localModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
                     return;
@@ -847,28 +842,6 @@
                     .map(model => `<option value="${model.name}">${model.name}</option>`)
                     .join('');
             } catch (error) {
-                localModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
-                showLocalRunError(error.message);
-            }
-        }
-
-        async function populateProviders() {
-            localProviderSelect.innerHTML = '<option>Laddar providers...</option>';
-            try {
-                const providers = await fetchProviders();
-                if (!providers.length) {
-                    localProviderSelect.innerHTML = '<option value="">Inga providers hittades</option>';
-                    localModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
-                    return;
-                }
-
-                localProviderSelect.innerHTML = providers
-                    .map(provider => `<option value="${provider.name}">${provider.name}</option>`)
-                    .join('');
-
-                await populateLocalModels();
-            } catch (error) {
-                localProviderSelect.innerHTML = '<option value="">Kunde inte hämta providers</option>';
                 localModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
                 showLocalRunError(error.message);
             }
@@ -894,8 +867,40 @@
             showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
             localUserInput.value = quickInputText || '';
             setLocalRunStreamingState(false);
-            populateProviders();
+            populateLocalModels();
             localRunModal.classList.add('active');
+        }
+
+
+        function getSelectedPromptText() {
+            if (!selectedPromptForLocalRun) {
+                return '';
+            }
+            const textarea = document.getElementById(`textarea-${selectedPromptForLocalRun.id}`);
+            return textarea ? textarea.value : '';
+        }
+
+        function copySelectedPromptToClipboard() {
+            const text = getSelectedPromptText();
+            if (!text) {
+                showLocalRunError('Ingen prompttext att kopiera.');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showLocalRunStatus('Prompt kopierad.');
+            }).catch(() => {
+                showLocalRunError('Kunde inte kopiera prompten.');
+            });
+        }
+
+        function toggleLocalRunFullscreen() {
+            if (!localRunModalContent) {
+                return;
+            }
+            const isFullscreen = localRunModalContent.classList.toggle('is-fullscreen');
+            if (localRunExpand) {
+                localRunExpand.textContent = isFullscreen ? '🗗' : '⛶';
+            }
         }
 
         function closeLocalRunModal() {
@@ -904,6 +909,12 @@
             }
             localRunModal.classList.remove('active');
             selectedPromptForLocalRun = null;
+            if (localRunModalContent) {
+                localRunModalContent.classList.remove('is-fullscreen');
+            }
+            if (localRunExpand) {
+                localRunExpand.textContent = '⛶';
+            }
         }
 
         async function runWithLocalModel() {
@@ -916,7 +927,6 @@
                 prompt_id: selectedPromptForLocalRun.id,
                 user_input: localUserInput.value,
                 model: localModelSelect.value,
-                provider: localProviderSelect.value
             };
 
             if (!payload.user_input.trim()) {
@@ -991,7 +1001,7 @@
                 showLocalRunStatus('Klart.');
             } catch (error) {
                 if (error.name === 'AbortError') {
-                    showLocalRunStatus('Generering avbruten.');
+                    showLocalRunStatus('Avbruten.');
                 } else {
                     showLocalRunError(error.message);
                 }
@@ -1017,16 +1027,20 @@
             localRunSubmit.addEventListener('click', runWithLocalModel);
         }
 
+        if (localCopyPromptBtn) {
+            localCopyPromptBtn.addEventListener('click', copySelectedPromptToClipboard);
+        }
+
+        if (localRunExpand) {
+            localRunExpand.addEventListener('click', toggleLocalRunFullscreen);
+        }
+
         if (localRunCancel) {
             localRunCancel.addEventListener('click', () => {
                 if (localRunAbortController) {
                     localRunAbortController.abort();
                 }
             });
-        }
-
-        if (localProviderSelect) {
-            localProviderSelect.addEventListener('change', populateLocalModels);
         }
 
         const adminTokenInput = document.getElementById('admin-token-input');

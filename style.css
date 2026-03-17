@@ -840,9 +840,16 @@
             text-decoration: none;
         }
 
-        .settings-link:hover {
-            text-decoration: underline;
-        }
+.settings-link:hover {
+    text-decoration: underline;
+}
+
+.settings-link-disabled {
+    color: #97a3b6;
+    cursor: not-allowed;
+    text-decoration: none;
+    pointer-events: none;
+}
 
         .settings-dropdown input[type="checkbox"] {
             width: 18px;
@@ -922,6 +929,24 @@
 
 .quick-input-lock-icon {
     font-size: 1.2em;
+}
+
+.quick-input-file-row {
+    margin-top: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.quick-input-file-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0b3a82;
+}
+
+.quick-input-file-help {
+    font-size: 0.8rem;
+    color: #666;
 }
 
 #anon-examples-modal {

@@ -169,3 +169,27 @@
     max-height: none;
     flex: 1;
 }
+
+
+.local-run-export-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.local-chat-followup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+#local-chat-input {
+    width: 100%;
+    border: 1px solid #cfd8e3;
+    border-radius: 6px;
+    padding: 0.65rem;
+    font-family: inherit;
+    min-height: 90px;
+    resize: vertical;
+}

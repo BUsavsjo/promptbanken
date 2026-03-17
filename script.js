@@ -738,7 +738,14 @@
         const localRunModalContent = document.getElementById('local-run-modal-content');
         const localRunExpand = document.getElementById('local-run-expand');
         const localCopyPromptBtn = document.getElementById('local-copy-prompt-btn');
+        const localChatInput = document.getElementById('local-chat-input');
+        const localChatSend = document.getElementById('local-chat-send');
+        const localExportDocxBtn = document.getElementById('local-export-docx');
+        const localExportPdfBtn = document.getElementById('local-export-pdf');
+        const quickInputFile = document.getElementById('quick-input-file');
         let localRunAbortController = null;
+        let localConversationMessages = [];
+        let latestLocalRunResponse = '';
 
         function copyCodeBlock(button, code) {
             navigator.clipboard.writeText(code).then(() => {
@@ -813,6 +820,191 @@
             localRunResult.scrollTop = localRunResult.scrollHeight;
         }
 
+
+        function resetConversationWithPrompt(initialUserInput) {
+            const promptText = getSelectedPromptText();
+            const finalPrompt = promptText
+                ? `System/Instruktion:
+${promptText.trim()}
+
+Användarens indata:
+${initialUserInput.trim()}`
+                : initialUserInput.trim();
+
+            localConversationMessages = [{ role: 'user', content: finalPrompt }];
+        }
+
+        function downloadBlob(filename, blob, mimeType) {
+            const safeBlob = blob instanceof Blob ? blob : new Blob([blob], { type: mimeType });
+            const url = URL.createObjectURL(safeBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportLocalResponseAsDocx() {
+            if (!latestLocalRunResponse.trim()) {
+                showLocalRunError('Det finns inget svar att exportera ännu.');
+                return;
+            }
+
+            const htmlContent = `<html><body><h1>Promptbanken svar</h1><p>${latestLocalRunResponse
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '</p><p>')}</p></body></html>`;
+
+            if (window.htmlDocx && typeof window.htmlDocx.asBlob === 'function') {
+                const docxBlob = window.htmlDocx.asBlob(htmlContent);
+                downloadBlob('promptbanken-svar.docx', docxBlob, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                showLocalRunStatus('DOCX exporterad.');
+                return;
+            }
+
+            const fallbackBlob = new Blob([latestLocalRunResponse], { type: 'text/plain;charset=utf-8' });
+            downloadBlob('promptbanken-svar.txt', fallbackBlob, 'text/plain;charset=utf-8');
+            showLocalRunStatus('DOCX-bibliotek saknas, exporterade TXT istället.');
+        }
+
+        function exportLocalResponseAsPdf() {
+            if (!latestLocalRunResponse.trim()) {
+                showLocalRunError('Det finns inget svar att exportera ännu.');
+                return;
+            }
+
+            const jsPdf = window.jspdf?.jsPDF;
+            if (!jsPdf) {
+                const fallbackBlob = new Blob([latestLocalRunResponse], { type: 'text/plain;charset=utf-8' });
+                downloadBlob('promptbanken-svar.txt', fallbackBlob, 'text/plain;charset=utf-8');
+                showLocalRunStatus('PDF-bibliotek saknas, exporterade TXT istället.');
+                return;
+            }
+
+            const doc = new jsPdf({ unit: 'pt', format: 'a4' });
+            const lines = doc.splitTextToSize(latestLocalRunResponse, 520);
+            doc.text(lines, 40, 60);
+            doc.save('promptbanken-svar.pdf');
+            showLocalRunStatus('PDF exporterad.');
+        }
+
+        async function extractTextFromFile(file) {
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (['txt', 'md', 'csv', 'json', 'log', 'rtf'].includes(extension)) {
+                return file.text();
+            }
+
+            if (extension === 'docx' && window.mammoth) {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await window.mammoth.extractRawText({ arrayBuffer });
+                return result.value || '';
+            }
+
+            if (extension === 'pdf') {
+                if (!window.pdfjsLib) {
+                    throw new Error('PDF-läsare är inte laddad ännu.');
+                }
+                const arrayBuffer = await file.arrayBuffer();
+                const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+                const pdf = await loadingTask.promise;
+                const pages = [];
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
+                    const page = await pdf.getPage(pageNum);
+                    const content = await page.getTextContent();
+                    pages.push(content.items.map((item) => item.str).join(' '));
+                }
+                return pages.join('\n\n');
+            }
+
+            throw new Error('Filformatet stöds inte ännu.');
+        }
+
+        async function handleQuickInputFile(file) {
+            if (!file || !quickInputTextarea) {
+                return;
+            }
+
+            try {
+                const extractedText = await extractTextFromFile(file);
+                quickInputTextarea.value = extractedText.slice(0, 5000);
+                quickInputText = quickInputTextarea.value;
+                quickInputTextarea.dispatchEvent(new Event('input'));
+                showLocalRunStatus(`Fil inläst: ${file.name}`);
+            } catch (error) {
+                showLocalRunError(`Kunde inte läsa filen (${file.name}): ${error.message}`);
+            }
+        }
+
+        async function sendFollowUpMessage() {
+            const followUpText = localChatInput?.value?.trim() || '';
+            const selectedModel = localModelSelect.value;
+            if (!followUpText) {
+                showLocalRunError('Skriv en följdfråga först.');
+                return;
+            }
+            if (!selectedModel) {
+                showLocalRunError('Välj en modell.');
+                return;
+            }
+
+            localConversationMessages.push({ role: 'user', content: followUpText });
+            localRunResult.textContent = '';
+            setLocalRunStreamingState(true);
+            showLocalRunStatus('Modellen skriver på följdfrågan...');
+            localRunAbortController = new AbortController();
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/chat/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: selectedModel, messages: localConversationMessages }),
+                    signal: localRunAbortController.signal
+                });
+
+                if (!response.ok || !response.body) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.detail?.message || data.detail || 'Följdfråga misslyckades.');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantResponse = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    if (!chunk) continue;
+                    assistantResponse += chunk;
+                    appendStreamingChunk(chunk);
+                }
+
+                const trailingChunk = decoder.decode();
+                if (trailingChunk) {
+                    assistantResponse += trailingChunk;
+                    appendStreamingChunk(trailingChunk);
+                }
+
+                localConversationMessages.push({ role: 'assistant', content: assistantResponse });
+                latestLocalRunResponse = assistantResponse;
+                renderLocalRunResponse(assistantResponse || '(Tomt svar från modellen)');
+                localChatInput.value = '';
+                showLocalRunStatus('Klart.');
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showLocalRunStatus('Avbruten.');
+                } else {
+                    showLocalRunError(error.message);
+                }
+            } finally {
+                localRunAbortController = null;
+                setLocalRunStreamingState(false);
+            }
+        }
+
         async function fetchLocalModels() {
             const response = await fetch(`${BACKEND_BASE_URL}/api/models`);
             if (!response.ok) {
@@ -867,6 +1059,11 @@
             showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
             localUserInput.value = quickInputText || '';
             setLocalRunStreamingState(false);
+            latestLocalRunResponse = '';
+            localConversationMessages = [];
+            if (localChatInput) {
+                localChatInput.value = '';
+            }
             populateLocalModels();
             localRunModal.classList.add('active');
         }
@@ -939,6 +1136,7 @@
                 return;
             }
 
+            resetConversationWithPrompt(payload.user_input);
             localRunResult.textContent = '';
             setLocalRunStreamingState(true);
             showLocalRunStatus('Modellen skriver...');
@@ -997,8 +1195,10 @@
                     appendStreamingChunk(trailingChunk);
                 }
 
-                renderLocalRunResponse(fullResponse || '(Tomt svar från modellen)');
-                showLocalRunStatus('Klart.');
+                latestLocalRunResponse = fullResponse || '(Tomt svar från modellen)';
+                localConversationMessages.push({ role: 'assistant', content: latestLocalRunResponse });
+                renderLocalRunResponse(latestLocalRunResponse);
+                showLocalRunStatus('Klart. Du kan nu ställa följdfrågor.');
             } catch (error) {
                 if (error.name === 'AbortError') {
                     showLocalRunStatus('Avbruten.');
@@ -1041,6 +1241,18 @@
                     localRunAbortController.abort();
                 }
             });
+        }
+
+        if (localChatSend) {
+            localChatSend.addEventListener('click', sendFollowUpMessage);
+        }
+
+        if (localExportDocxBtn) {
+            localExportDocxBtn.addEventListener('click', exportLocalResponseAsDocx);
+        }
+
+        if (localExportPdfBtn) {
+            localExportPdfBtn.addEventListener('click', exportLocalResponseAsPdf);
         }
 
         const adminTokenInput = document.getElementById('admin-token-input');
@@ -1216,6 +1428,27 @@
             });
             // Initialize counter on load
             updateCharCounter();
+        }
+
+        if (quickInputFile) {
+            quickInputFile.addEventListener('change', async (event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                    await handleQuickInputFile(file);
+                }
+            });
+
+            quickInputFile.addEventListener('dragover', (event) => {
+                event.preventDefault();
+            });
+
+            quickInputFile.addEventListener('drop', async (event) => {
+                event.preventDefault();
+                const file = event.dataTransfer?.files?.[0];
+                if (file) {
+                    await handleQuickInputFile(file);
+                }
+            });
         }
 
         if (quickInputClearBtn && quickInputTextarea) {

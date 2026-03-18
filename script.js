@@ -454,7 +454,8 @@
             const payload = {
                 promptId,
                 title: prompt?.title || 'Prompt',
-                prompt: preparedPrompt
+                prompt: preparedPrompt,
+                input: (quickInputText || '').trim()
             };
 
             try {

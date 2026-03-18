@@ -8,11 +8,14 @@ const inputElement = document.getElementById('local-chat-input');
 const sendButton = document.getElementById('local-chat-send');
 const stopButton = document.getElementById('local-chat-stop');
 const resetButton = document.getElementById('local-chat-reset');
+const expandButton = document.getElementById('local-chat-expand');
+const chatShellElement = document.querySelector('.local-chat-shell');
 
 const conversationMessages = [];
 let abortController = null;
 let isGenerating = false;
 let shouldAutoScroll = true;
+let hasAppliedSeedPrompt = false;
 
 function setStatus(state, text) {
     statusElement.dataset.state = state;
@@ -77,6 +80,25 @@ function appendMessage(role, content) {
     return text;
 }
 
+function getSeedData() {
+    return window.__PROMPTBANKEN_LOCAL_CHAT_SEED__ || null;
+}
+
+function buildUserMessageForRequest(content) {
+    const text = String(content || '').trim();
+    if (!text) {
+        return '';
+    }
+
+    const seed = getSeedData();
+    if (!seed?.prompt || hasAppliedSeedPrompt || conversationMessages.length > 0) {
+        return text;
+    }
+
+    hasAppliedSeedPrompt = true;
+    return `${seed.prompt}\n\n---\n\nAnvandarens input:\n${text}`;
+}
+
 function setGeneratingState(generating) {
     isGenerating = generating;
     sendButton.disabled = generating;
@@ -88,7 +110,7 @@ async function fetchLocalModels() {
     const response = await fetch(`${BACKEND_BASE_URL}/api/models`);
     if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail?.message || data.detail || 'Kunde inte hämta modeller.');
+        throw new Error(data.detail?.message || data.detail || 'Kunde inte hamta modeller.');
     }
 
     const data = await response.json();
@@ -109,7 +131,7 @@ async function populateModels() {
             .map((model) => `<option value="${model.name}">${model.name}</option>`)
             .join('');
     } catch (error) {
-        modelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
+        modelSelect.innerHTML = '<option value="">Kunde inte hamta modeller</option>';
         setStatus('error', `Fel: ${error.message}`);
     }
 }
@@ -117,13 +139,13 @@ async function populateModels() {
 async function streamAssistantReply() {
     const model = modelSelect.value;
     if (!model) {
-        setStatus('error', 'Välj en modell.');
+        setStatus('error', 'Valj en modell.');
         return;
     }
 
-    const assistantTextNode = appendMessage('assistant', '');
+    const assistantTextNode = appendMessage('assistant', 'Laddar svar fran modellen...');
     setGeneratingState(true);
-    setStatus('writing', 'Skriver…');
+    setStatus('waiting', 'Vantar pa svar fran modellen...');
     abortController = new AbortController();
 
     try {
@@ -136,12 +158,13 @@ async function streamAssistantReply() {
 
         if (!response.ok || !response.body) {
             const data = await response.json().catch(() => ({}));
-            throw new Error(data.detail?.message || data.detail || 'Körning misslyckades.');
+            throw new Error(data.detail?.message || data.detail || 'Korning misslyckades.');
         }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let responseText = '';
+        let hasReceivedChunk = false;
 
         while (true) {
             const { done, value } = await reader.read();
@@ -149,6 +172,11 @@ async function streamAssistantReply() {
 
             const chunk = decoder.decode(value, { stream: true });
             if (!chunk) continue;
+
+            if (!hasReceivedChunk) {
+                hasReceivedChunk = true;
+                setStatus('writing', 'Skriver...');
+            }
 
             responseText += chunk;
             assistantTextNode.textContent = responseText;
@@ -163,7 +191,7 @@ async function streamAssistantReply() {
         }
 
         if (!responseText.trim()) {
-            assistantTextNode.textContent = '(Tomt svar från modellen)';
+            assistantTextNode.textContent = '(Tomt svar fran modellen)';
         }
 
         conversationMessages.push({ role: 'assistant', content: assistantTextNode.textContent });
@@ -171,9 +199,12 @@ async function streamAssistantReply() {
     } catch (error) {
         if (error.name === 'AbortError') {
             setStatus('aborted', 'Avbruten');
+            if (!assistantTextNode.textContent.trim() || assistantTextNode.textContent === 'Laddar svar fran modellen...') {
+                assistantTextNode.textContent = '(Genereringen avbrots innan svar kom tillbaka)';
+            }
         } else {
             setStatus('error', `Fel: ${error.message}`);
-            assistantTextNode.textContent = `⚠️ ${error.message}`;
+            assistantTextNode.textContent = `Fel: ${error.message}`;
         }
     } finally {
         abortController = null;
@@ -188,7 +219,7 @@ async function sendUserMessage(content) {
     }
 
     appendMessage('user', text);
-    conversationMessages.push({ role: 'user', content: text });
+    conversationMessages.push({ role: 'user', content: buildUserMessageForRequest(text) });
     await streamAssistantReply();
 }
 
@@ -202,6 +233,18 @@ function resetChat() {
     setStatus('done', 'Klar');
     inputElement.value = '';
     shouldAutoScroll = true;
+    hasAppliedSeedPrompt = false;
+}
+
+function toggleMaximizedChat() {
+    if (!chatShellElement || !expandButton) {
+        return;
+    }
+
+    const isMaximized = chatShellElement.classList.toggle('is-maximized');
+    expandButton.textContent = isMaximized ? 'Minimera' : 'Maximera';
+    expandButton.setAttribute('aria-pressed', String(isMaximized));
+    scrollToBottom(true);
 }
 
 function consumeSeedPrompt() {
@@ -231,6 +274,20 @@ formElement.addEventListener('submit', async (event) => {
     await sendUserMessage(value);
 });
 
+inputElement.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || event.shiftKey) {
+        return;
+    }
+
+    event.preventDefault();
+    if (typeof formElement.requestSubmit === 'function') {
+        formElement.requestSubmit();
+        return;
+    }
+
+    formElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+});
+
 stopButton.addEventListener('click', () => {
     if (abortController) {
         abortController.abort();
@@ -238,13 +295,10 @@ stopButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', resetChat);
+expandButton?.addEventListener('click', toggleMaximizedChat);
 
 window.addEventListener('DOMContentLoaded', async () => {
     await populateModels();
     setStatus('done', 'Klar');
-
-    const seedPrompt = consumeSeedPrompt();
-    if (seedPrompt) {
-        await sendUserMessage(seedPrompt);
-    }
+    consumeSeedPrompt();
 });

@@ -132,6 +132,62 @@
         .chat-collapsible-content {
             margin-top: 0.35rem;
         }
+
+        .local-chat-input-hint {
+            margin: 0 0 0.5rem;
+            font-size: 0.92rem;
+            color: rgba(0, 0, 0, 0.72);
+        }
+
+        .local-chat-shell.is-maximized {
+            position: fixed;
+            inset: 1rem;
+            z-index: 1000;
+            margin: 0;
+            min-height: auto;
+            height: calc(100vh - 2rem);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+        }
+
+        .local-chat-shell.is-maximized .local-chat-messages {
+            max-height: none;
+        }
+
+        .local-chat-expand-btn {
+            width: auto;
+            min-width: 2.5rem;
+            padding: 0.55rem 0.8rem;
+            line-height: 1;
+        }
+
+        .chat-bubble,
+        .chat-text,
+        .chat-markdown-content,
+        .chat-markdown-content li,
+        .chat-markdown-content p,
+        .chat-collapsible-content {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .chat-bubble {
+            overflow: hidden;
+        }
+
+        .chat-markdown-content {
+            min-width: 0;
+        }
+
+        .chat-markdown-content ul,
+        .chat-markdown-content ol {
+            padding-left: 1.2rem;
+        }
+
+        .chat-markdown-content table {
+            display: block;
+            overflow-x: auto;
+            max-width: 100%;
+        }
     </style>
     <script>
         (() => {
@@ -163,6 +219,7 @@
             <div class="local-chat-toolbar">
                 <label for="local-chat-model-select">Modell</label>
                 <select id="local-chat-model-select"></select>
+                <button type="button" id="local-chat-expand" class="secondary-btn local-chat-expand-btn" aria-pressed="false" aria-label="Maximera chattfönster">Maximera</button>
                 <button type="button" id="local-chat-reset" class="secondary-btn local-chat-reset-btn">Ny chatt</button>
                 <span id="local-chat-status" class="local-chat-state" data-state="idle">Klar</span>
             </div>
@@ -196,6 +253,8 @@
     <script src="local-chat.js" defer></script>
     <script defer>
         (() => {
+            const PROMPT_INPUT_DELIMITER = '\n\n---\n\nAnvandarens input:\n';
+
             function escapeHtml(text) {
                 return String(text || '')
                     .replace(/&/g, '&amp;')
@@ -434,6 +493,37 @@
                 return messages.length ? messages[messages.length - 1].textContent.trim() : '';
             }
 
+            function extractVisibleUserContent(rawText) {
+                const seed = window.__PROMPTBANKEN_LOCAL_CHAT_SEED__;
+                const raw = String(rawText || '');
+                const seededInput = String(seed?.input || '').trim();
+                if (seededInput && raw === seed?.prompt) {
+                    return seededInput;
+                }
+                if (!seed?.prompt) {
+                    return raw;
+                }
+
+                const prefix = `${seed.prompt}${PROMPT_INPUT_DELIMITER}`;
+                if (!raw.startsWith(prefix)) {
+                    return raw;
+                }
+
+                return raw.slice(prefix.length).trim();
+            }
+
+            function ensureInputHint(input) {
+                if (!input || document.getElementById('local-chat-input-hint')) {
+                    return;
+                }
+
+                const hint = document.createElement('p');
+                hint.id = 'local-chat-input-hint';
+                hint.className = 'local-chat-input-hint';
+                hint.textContent = 'Här skriver du bara din egen text. Instruktionen visas separat ovan.';
+                input.insertAdjacentElement('beforebegin', hint);
+            }
+
             function createQuickActions(messagesElement) {
                 const container = document.createElement('div');
                 container.className = 'chat-quick-actions';
@@ -471,7 +561,14 @@
             }
 
             function renderUserInputCollapsible(textNode) {
-                const raw = textNode.textContent || '';
+                const raw = extractVisibleUserContent(textNode.textContent || '');
+                const userMessageCount = textNode.closest('#local-chat-messages')
+                    ?.querySelectorAll('.chat-message-user').length || 0;
+                if (userMessageCount > 1) {
+                    textNode.textContent = raw;
+                    textNode.dataset.userCollapsed = 'true';
+                    return;
+                }
                 textNode.textContent = '';
                 const wrapper = document.createElement('details');
                 wrapper.className = 'chat-collapsible';
@@ -528,10 +625,12 @@
                 context.hidden = false;
                 title.textContent = seed.title || 'Prompt';
                 prompt.textContent = seed.prompt;
-
-                if (!input.value.trim()) {
-                    input.value = seed.prompt;
+                if (!input.value.trim() && seed.input) {
+                    input.value = seed.input;
                 }
+                input.placeholder = 'Skriv din egen text här...';
+                input.setAttribute('aria-label', 'Din text');
+                ensureInputHint(input);
             }
 
             function setupMessageEnhancements() {

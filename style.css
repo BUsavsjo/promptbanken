@@ -473,6 +473,30 @@
             gap: 0.75rem;
         }
 
+        .card-actions {
+            gap: 0.55rem;
+        }
+
+        .copy-btn-primary {
+            order: 1;
+        }
+
+        .local-chat-btn {
+            order: 2;
+        }
+
+        .direct-chat-btn {
+            order: 3;
+            background-color: #f2f4f7;
+            color: #667085;
+            border-color: #d0d5dd;
+            cursor: not-allowed;
+        }
+
+        .direct-chat-btn:disabled {
+            opacity: 0.95;
+        }
+
         .primary-btn {
             background-color: #0052a3;
             color: white;
@@ -522,7 +546,7 @@
         }
 
         .copy-btn {
-            background-color: #0066cc;
+            background-color: #0052a3;
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
@@ -530,13 +554,13 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            font-weight: 600;
+            font-weight: 700;
             width: 100%;
             text-align: center;
         }
 
         .copy-btn:hover:not(:disabled) {
-            background-color: #0052a3;
+            background-color: #003d7a;
         }
 
         .copy-btn:active {

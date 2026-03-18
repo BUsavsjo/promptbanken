@@ -190,10 +190,11 @@
                 <h3>${prompt.title}</h3>
                 <p>${prompt.description}</p>
                 <div class="spacer-min-height"></div>
-                <div class="actions">
+                <div class="actions card-actions">
                     <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Anpassa prompt</button>
-                    <button class="secondary-btn copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
-                    <button class="secondary-btn local-run-btn" data-run-local="${prompt.id}">Kör med lokal modell</button>
+                    <button class="copy-btn copy-btn-primary" data-prompt="${prompt.id}">Kopiera prompt</button>
+                    <button class="secondary-btn local-chat-btn" data-chat-local="${prompt.id}">Chatta lokalt</button>
+                    <button class="secondary-btn direct-chat-btn" type="button" disabled aria-disabled="true" title="Kommer snart">Chatta direkt (kommer snart)</button>
                     <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
                 <textarea id="textarea-${prompt.id}">${combinedText}</textarea>
@@ -228,9 +229,9 @@
                     handleInfoClick(event.target);
                 }
 
-                if (event.target.classList.contains('local-run-btn')) {
-                    const promptId = event.target.getAttribute('data-run-local');
-                    openLocalRunModal(promptId);
+                if (event.target.classList.contains('local-chat-btn')) {
+                    const promptId = event.target.getAttribute('data-chat-local');
+                    navigateToLocalChat(promptId);
                 }
             });
         }
@@ -420,7 +421,7 @@
 
                 // Visual feedback
                 const originalText = button.textContent;
-                button.textContent = '✅ Kopierad!';
+                button.textContent = 'Kopierad';
                 button.classList.add('copied');
 
                 // Reset after 2 seconds
@@ -439,6 +440,30 @@
             return text
                 .replace(/\[klistra in här\]/gi, input)
                 .replace(/\[TEXT\]/gi, input);
+        }
+
+        function navigateToLocalChat(promptId) {
+            const textArea = document.getElementById(`textarea-${promptId}`);
+            const prompt = allPrompts.find((item) => item.id === promptId);
+            if (!textArea) {
+                showLocalRunError('Kunde inte hitta prompten för lokal chatt.');
+                return;
+            }
+
+            const preparedPrompt = replaceInputMarkers(textArea.value, quickInputText).trim();
+            const payload = {
+                promptId,
+                title: prompt?.title || 'Prompt',
+                prompt: preparedPrompt
+            };
+
+            try {
+                sessionStorage.setItem('promptbankenLocalChatSeed', JSON.stringify(payload));
+            } catch (error) {
+                console.warn('Kunde inte spara lokal chat-seed i sessionStorage:', error);
+            }
+
+            window.location.href = 'local-chat.html';
         }
 
         // Export settings
@@ -1393,20 +1418,14 @@ ${initialUserInput.trim()}`
         const quickInputClearBtn = document.getElementById('quick-input-clear-btn');
 
         function updateCopyButtonLabels() {
-            // Döljer alltid knappen (och labeln) när advancedModeEnabled är true, annars visas rätt label beroende på quickInputText
             const allCopyBtns = document.querySelectorAll('.copy-btn');
-            allCopyBtns.forEach(btn => {
+            allCopyBtns.forEach((btn) => {
                 if (advancedModeEnabled) {
                     btn.style.display = 'none';
                 } else {
                     btn.style.display = '';
-                    if (quickInputText.trim()) {
-                        btn.textContent = 'Kopiera prompt + text';
-                        btn.classList.add('with-text');
-                    } else {
-                        btn.textContent = 'Kopiera prompt';
-                        btn.classList.remove('with-text');
-                    }
+                    btn.textContent = 'Kopiera prompt';
+                    btn.classList.remove('with-text');
                 }
             });
         }

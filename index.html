@@ -7,6 +7,165 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="local-run.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+    <style>
+        .workflow-step-shell {
+            margin-bottom: 1rem;
+        }
+
+        .workflow-step-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            background: #e8f1ff;
+            color: #1f5fbf;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.45rem;
+        }
+
+        .workflow-step-title {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .workflow-step-helper {
+            margin: 0.4rem 0 0;
+            color: #475467;
+            max-width: 70ch;
+        }
+
+        .quick-input-container.workflow-step-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quick-input-header {
+            align-items: flex-start;
+        }
+
+        .quick-input-header > h3 {
+            display: none;
+        }
+
+        .quick-input-header-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .prompt-stage-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .selected-prompt-panel {
+            border: 1px solid #bfd3f2;
+            background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 100%);
+            border-radius: 14px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .selected-prompt-panel[hidden] {
+            display: none;
+        }
+
+        .selected-prompt-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .selected-prompt-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1f5fbf;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .selected-prompt-title {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .selected-prompt-description {
+            margin: 0;
+            color: #475467;
+        }
+
+        .selected-prompt-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            align-items: center;
+        }
+
+        .selected-prompt-actions .secondary-btn,
+        .selected-prompt-actions .primary-btn {
+            width: auto;
+        }
+
+        .selected-prompt-meta {
+            font-size: 0.92rem;
+            color: #475467;
+        }
+
+        .prompt-grid .prompt-card {
+            position: relative;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .prompt-grid .prompt-card.workflow-selected {
+            border-color: #1f5fbf;
+            box-shadow: 0 0 0 3px rgba(31, 95, 191, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .prompt-grid .prompt-card .card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .prompt-grid .prompt-card .card-actions .export-btn,
+        .prompt-grid .prompt-card .card-actions .copy-btn,
+        .prompt-grid .prompt-card .card-actions .local-chat-btn,
+        .prompt-grid .prompt-card .card-actions .direct-chat-btn {
+            display: none !important;
+        }
+
+        .prompt-grid .prompt-card .select-prompt-btn {
+            width: auto;
+        }
+
+        .prompt-grid .prompt-card .info-btn {
+            opacity: 0.78;
+        }
+
+        .prompt-grid .prompt-card.workflow-selected .select-prompt-btn {
+            background: #e8f1ff;
+            color: #1f5fbf;
+            border-color: #bfd3f2;
+        }
+
+        @media (max-width: 700px) {
+            .selected-prompt-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -41,8 +200,13 @@
         </div>
     </div>
 
-    <div class="quick-input-container">
+    <div class="quick-input-container workflow-step-shell">
         <div class="quick-input-header">
+            <div class="quick-input-header-copy">
+                <span class="workflow-step-kicker">Steg 1</span>
+                <h3 class="workflow-step-title">Lagg in din text</h3>
+                <p class="workflow-step-helper">Klistra in eller skriv underlaget har. Texten foljer med nar du valjer uppgift i nasta steg.</p>
+            </div>
             <h3>✍️ Snabbinmatning</h3>
             <button class="quick-input-clear-btn" id="quick-input-clear-btn">🗑️ Rensa</button>
         </div>
@@ -62,7 +226,7 @@
         </div>
         <div class="quick-input-file-row">
             <label for="quick-input-file" class="quick-input-file-label">📎 Släpp fil eller välj fil</label>
-            <input id="quick-input-file" type="file" accept=".txt,.md,.csv,.json,.docx,.pdf,.rtf,.odt,.log,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+            <input id="quick-input-file" type="file" accept=".txt,.md,.csv,.json,.docx,.rtf,.odt,.log,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
             <span class="quick-input-file-help">Stöd: txt, md, csv, json, docx och pdf</span>
         </div>
         <div id="anon-examples-modal">
@@ -90,7 +254,30 @@
             </div>
         </div>
 
-        <section class="prompt-grid" id="prompt-grid">
+        <section class="prompt-stage-shell" aria-label="Val av uppgift och fortsattning">
+            <div>
+                <span class="workflow-step-kicker">Steg 2</span>
+                <h2 class="workflow-step-title">Valj vad du vill gora med texten</h2>
+                <p class="workflow-step-helper">Borja med att valja uppgift. Hur du vill fortsatta visas forst nar ett kort ar valt.</p>
+            </div>
+
+            <div class="selected-prompt-panel" id="selected-prompt-panel" hidden>
+                <div class="selected-prompt-summary">
+                    <span class="selected-prompt-label">Vald uppgift</span>
+                    <h3 class="selected-prompt-title" id="selected-prompt-title">Ingen uppgift vald an</h3>
+                    <p class="selected-prompt-description" id="selected-prompt-description">Valj ett kort nedan for att fortsatta.</p>
+                </div>
+                <div class="selected-prompt-actions">
+                    <button class="primary-btn" id="selected-prompt-chat-btn" type="button">Chatta lokalt</button>
+                    <button class="secondary-btn" id="selected-prompt-copy-btn" type="button">Kopiera prompt</button>
+                    <button class="secondary-btn advanced-only" id="selected-prompt-export-btn" type="button">Anpassa prompt</button>
+                    <button class="info-btn" id="selected-prompt-view-btn" type="button">Visa prompt</button>
+                </div>
+                <p class="selected-prompt-meta">Steg 3: Valj hur du vill fortsatta med den markerade uppgiften.</p>
+            </div>
+        </section>
+
+        <section class="prompt-grid" id="prompt-grid" aria-label="Tillgangliga uppgifter">
             <div class="loading-message">Laddar promptmallar...</div>
         </section>
     </main>
@@ -258,5 +445,132 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="script.js" defer></script>
+    <script>
+        (() => {
+            const grid = document.getElementById('prompt-grid');
+            const panel = document.getElementById('selected-prompt-panel');
+            const panelTitle = document.getElementById('selected-prompt-title');
+            const panelDescription = document.getElementById('selected-prompt-description');
+            const panelChatButton = document.getElementById('selected-prompt-chat-btn');
+            const panelCopyButton = document.getElementById('selected-prompt-copy-btn');
+            const panelExportButton = document.getElementById('selected-prompt-export-btn');
+            const panelViewButton = document.getElementById('selected-prompt-view-btn');
+
+            if (!grid || !panel || !panelTitle || !panelDescription || !panelChatButton || !panelCopyButton || !panelExportButton || !panelViewButton) {
+                return;
+            }
+
+            let selectedPromptId = null;
+
+            function getCard(promptId) {
+                return grid.querySelector(`.prompt-card[data-prompt-id="${promptId}"]`);
+            }
+
+            function triggerCardAction(promptId, selector) {
+                const button = getCard(promptId)?.querySelector(selector);
+                if (button) {
+                    button.click();
+                }
+            }
+
+            function selectPrompt(promptId) {
+                selectedPromptId = promptId;
+
+                grid.querySelectorAll('.prompt-card').forEach((card) => {
+                    const isSelected = card.dataset.promptId === promptId;
+                    card.classList.toggle('workflow-selected', isSelected);
+
+                    const selectButton = card.querySelector('.select-prompt-btn');
+                    if (selectButton) {
+                        selectButton.textContent = isSelected ? 'Vald uppgift' : 'Valj uppgift';
+                    }
+                });
+
+                const selectedCard = getCard(promptId);
+                if (!selectedCard) {
+                    return;
+                }
+
+                panelTitle.textContent = selectedCard.querySelector('h3')?.textContent?.trim() || 'Vald uppgift';
+                panelDescription.textContent = selectedCard.querySelector('p')?.textContent?.trim() || 'Valj hur du vill fortsatta med den har uppgiften.';
+                panel.hidden = false;
+            }
+
+            function enhanceCard(card) {
+                if (!card || card.dataset.workflowEnhanced === 'true') {
+                    return;
+                }
+
+                card.dataset.workflowEnhanced = 'true';
+
+                const actions = card.querySelector('.card-actions');
+                const infoButton = card.querySelector('.info-btn');
+                if (infoButton) {
+                    infoButton.textContent = 'Visa prompt';
+                    infoButton.title = 'Visa prompt';
+                }
+
+                if (actions && !actions.querySelector('.select-prompt-btn')) {
+                    const selectButton = document.createElement('button');
+                    selectButton.type = 'button';
+                    selectButton.className = 'primary-btn select-prompt-btn';
+                    selectButton.textContent = 'Valj uppgift';
+                    selectButton.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        selectPrompt(card.dataset.promptId);
+                    });
+                    actions.insertBefore(selectButton, actions.firstChild);
+                }
+
+                card.addEventListener('click', (event) => {
+                    if (event.target.closest('button')) {
+                        return;
+                    }
+                    selectPrompt(card.dataset.promptId);
+                });
+            }
+
+            function enhanceExistingCards() {
+                grid.querySelectorAll('.prompt-card').forEach(enhanceCard);
+            }
+
+            panelChatButton.addEventListener('click', () => {
+                if (selectedPromptId) {
+                    triggerCardAction(selectedPromptId, '.local-chat-btn');
+                }
+            });
+
+            panelCopyButton.addEventListener('click', () => {
+                if (selectedPromptId) {
+                    triggerCardAction(selectedPromptId, '.copy-btn');
+                }
+            });
+
+            panelExportButton.addEventListener('click', () => {
+                if (selectedPromptId) {
+                    triggerCardAction(selectedPromptId, '.export-btn');
+                }
+            });
+
+            panelViewButton.addEventListener('click', () => {
+                if (selectedPromptId) {
+                    triggerCardAction(selectedPromptId, '.info-btn');
+                }
+            });
+
+            const observer = new MutationObserver(() => {
+                enhanceExistingCards();
+                if (selectedPromptId && !getCard(selectedPromptId)) {
+                    selectedPromptId = null;
+                    panel.hidden = true;
+                }
+            });
+
+            observer.observe(grid, { childList: true, subtree: true });
+
+            window.addEventListener('DOMContentLoaded', enhanceExistingCards);
+        })();
+    </script>
 </body>
 </html>

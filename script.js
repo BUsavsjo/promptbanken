@@ -769,6 +769,9 @@
         const localExportDocxBtn = document.getElementById('local-export-docx');
         const localExportPdfBtn = document.getElementById('local-export-pdf');
         const quickInputFile = document.getElementById('quick-input-file');
+        const quickInputFileRow = document.querySelector('.quick-input-file-row');
+        const quickInputFileLabel = document.querySelector('.quick-input-file-label');
+        const quickInputFileHelp = document.querySelector('.quick-input-file-help');
         let localRunAbortController = null;
         let localConversationMessages = [];
         let latestLocalRunResponse = '';
@@ -933,16 +936,7 @@ ${initialUserInput.trim()}`
                 if (!window.pdfjsLib) {
                     throw new Error('PDF-läsare är inte laddad ännu.');
                 }
-                const arrayBuffer = await file.arrayBuffer();
-                const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
-                const pdf = await loadingTask.promise;
-                const pages = [];
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
-                    const page = await pdf.getPage(pageNum);
-                    const content = await page.getTextContent();
-                    pages.push(content.items.map((item) => item.str).join(' '));
-                }
-                return pages.join('\n\n');
+                throw new Error('PDF-uppladdning ar tillfalligt avstangd.');
             }
 
             throw new Error('Filformatet stöds inte ännu.');
@@ -1451,6 +1445,12 @@ ${initialUserInput.trim()}`
         }
 
         if (quickInputFile) {
+            if (quickInputFileLabel) {
+                quickInputFileLabel.textContent = 'Valj fil';
+            }
+            if (quickInputFileHelp) {
+                quickInputFileHelp.textContent = 'Stod just nu: txt, md, csv, json, docx, rtf, odt och logg. PDF och drag/slapp kommer senare.';
+            }
             quickInputFile.addEventListener('change', async (event) => {
                 const file = event.target.files?.[0];
                 if (file) {
@@ -1458,17 +1458,6 @@ ${initialUserInput.trim()}`
                 }
             });
 
-            quickInputFile.addEventListener('dragover', (event) => {
-                event.preventDefault();
-            });
-
-            quickInputFile.addEventListener('drop', async (event) => {
-                event.preventDefault();
-                const file = event.dataTransfer?.files?.[0];
-                if (file) {
-                    await handleQuickInputFile(file);
-                }
-            });
         }
 
         if (quickInputClearBtn && quickInputTextarea) {

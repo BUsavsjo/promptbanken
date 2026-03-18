@@ -486,7 +486,16 @@
             }
 
             function renderAssistantMarkdown(textNode, messagesElement) {
-                const source = textNode.textContent || '';
+                if (textNode.childElementCount === 0) {
+                    textNode.dataset.rawSource = textNode.textContent || '';
+                }
+
+                const source = textNode.dataset.rawSource || textNode.textContent || '';
+                if (textNode.dataset.lastRenderedSource === source) {
+                    return;
+                }
+                textNode.dataset.lastRenderedSource = source;
+
                 textNode.innerHTML = '';
 
                 const markdownContainer = document.createElement('div');

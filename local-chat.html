@@ -495,6 +495,7 @@
                     return;
                 }
                 textNode.dataset.lastRenderedSource = source;
+
                 textNode.innerHTML = '';
 
                 const markdownContainer = document.createElement('div');
@@ -518,13 +519,19 @@
                 const context = document.getElementById('local-chat-context');
                 const title = document.getElementById('local-chat-seed-title');
                 const prompt = document.getElementById('local-chat-seed-prompt');
-                if (!context || !title || !prompt) {
+                const input = document.getElementById('local-chat-input');
+
+                if (!context || !title || !prompt || !input) {
                     return;
                 }
 
                 context.hidden = false;
                 title.textContent = seed.title || 'Prompt';
                 prompt.textContent = seed.prompt;
+
+                if (!input.value.trim()) {
+                    input.value = seed.prompt;
+                }
             }
 
             function setupMessageEnhancements() {

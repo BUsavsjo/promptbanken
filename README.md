@@ -89,22 +89,6 @@ docker compose logs -f
 docker compose down
 ```
 
----
-
-## 🤖 OpenAI-provider via backend + adminpanel (MVP)
-
-Backenden stöder nu både:
-1. **Bakåtkompatibel env-konfig** (`OPENAI_API_KEY`) och
-2. **Dynamisk admin-konfig** via API/UI (utan omstart i normalfallet).
-
-### Säkerhetsprinciper i denna MVP
-- API-nycklar skickas **aldrig** tillbaka i klartext till frontend.
-- API-nycklar lagras server-side i SQLite (`backend/data/provider_secrets.db`) och krypteras med Fernet.
-- Frontend visar bara status: `configured`/maskad suffix (`***1234`).
-- Admin-endpoints skyddas av header `X-Admin-Token` (enkel MVP-autentisering).
-
-> ⚠️ Sätt alltid `ADMIN_PANEL_TOKEN` i driftmiljö. Utan den är admin-API avstängt.
-
 ### Starta backend
 
 ```bash
@@ -112,52 +96,13 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
-# Krävs för adminpanel
-export ADMIN_PANEL_TOKEN="byt-till-stark-hemlighet"
-
-# Rekommenderas i drift (stabil krypteringsnyckel)
-python - <<'PYKEY'
-from cryptography.fernet import Fernet
-print(Fernet.generate_key().decode())
-PYKEY
-export PROVIDER_ENCRYPTION_KEY="<nyckeln-från-kommandot-ovan>"
-
-# Valfritt fallback för första start / bakåtkompatibilitet
-export OPENAI_API_KEY="sk-..."
-export OPENAI_BASE_URL="https://api.openai.com/v1"
-
 uvicorn app.main:app --reload --port 8001
 ```
-
-### Admin-API (exempel)
-
-```bash
-# 1) Lista providerstatus
-curl "http://localhost:8001/api/admin/providers"   -H "X-Admin-Token: byt-till-stark-hemlighet"
-
-# 2) Uppdatera OpenAI-nyckel + aktivera providern
-curl -X PATCH "http://localhost:8001/api/admin/providers/openai"   -H "Content-Type: application/json"   -H "X-Admin-Token: byt-till-stark-hemlighet"   -d '{
-    "enabled": true,
-    "api_key": "sk-...",
-    "base_url": "https://api.openai.com/v1"
-  }'
-
-# 3) Testa anslutning
-curl -X POST "http://localhost:8001/api/admin/providers/openai/test"   -H "X-Admin-Token: byt-till-stark-hemlighet"
-```
-
-### Admin-UI
-- Öppna frontend (`http://localhost:8000`).
-- Sektionen **"🔐 Admin – AI-provider"** finns ovanför promptlistan.
-- Fyll i admin-token, klicka **Ladda providers**, uppdatera OpenAI-inställningar och klicka **Spara OpenAI**.
-- Efter sparning används ny konfiguration direkt av backendens provider-resolver.
 
 ### Framtida förbättringar
 - Byt MVP-token till riktig authn/authz (OIDC/SSO + roller).
 - Nyckelrotation med versionshantering och audit-logg.
 - Stöd för fler providers (Azure OpenAI, Ollama Cloud, Anthropic) via samma `ProviderConfigService`.
-- Flytta secrets till extern secret manager (Vault/KMS).
 
 ## 🌐 Deploy (GitHub Pages via Actions)
 
@@ -222,56 +167,6 @@ Denna plattform följer:
 
 ---
 
-## 📝 Hur man lägger till ny prompt
-
-### 1. Skapa prompt-fil
-Skapa ny fil `prompts/ny-prompt.txt`:
-```
-Titel på prompt
-Kort beskrivning av vad prompen gör
-
-Här börjar själva prompt-instruktionen för AI-verktyget.
-Du kan skriva flera stycken. Instruktionen avslutas med:
-
-Input:
-[klistra in här]
-```
-
-**Format:**
-- **Rad 1:** Titel (samma som i prompts.json)
-- **Rad 2:** Tom rad
-- **Rad 3:** Kort beskrivning
-- **Rad 4:** Tom rad
-- **Rad 5+:** Full prompt-instruktion
-
-### 2. Registrera i prompts.json
-Öppna `prompts.json` och lägg till ett nytt objekt i `prompts`-arrayen:
-
-```json
-{
-  "id": "ny-prompt",
-  "title": "🆕 Titel på prompt",
-  "description": "Kort beskrivning av vad prompen gör",
-  "file": "prompts/ny-prompt.txt",
-  "security_examples": ["Vad du ska anonymisera", "Exempel 2", "Exempel 3"]
-}
-```
-
-### 3. Test lokalt
-```bash
-python -m http.server 8000
-# Öppna http://localhost:8000 och verifiera att ny prompt visas
-```
-
-### 4. Commit och push
-```bash
-git add prompts/ny-prompt.txt prompts.json
-git commit -m "feat: Lägg till ny prompt: Titel på prompt"
-git push origin main
-```
-
----
-
 ## 🛠️ Teknisk arkitektur
 
 - **Frontend:** Vanilla JavaScript (ingen ramverk)
@@ -320,19 +215,32 @@ git push origin main
 
 ---
 
-## 🤝 Bidra
+🤝 Bidra
 
-Vi välkomnar feedback och förbättringar!
+Vi tar gärna emot idéer och förbättringar – men bidrag hanteras manuellt och kontrollerat.
 
-**Rapportera bug:** Öppna ett GitHub Issue
-**Föreslå ny prompt:** Gör en Pull Request med ny prompt-fil + uppdaterad prompts.json
+🐞 Rapportera problem
 
-**Contribution workflow:**
-1. Fork repo
-2. Skapa feature-branch (`git checkout -b feature/ny-prompt`)
-3. Lägg till prompt (se "Hur man lägger till ny prompt" ovan)
-4. Test lokalt
-5. Push och öppna Pull Request
+Öppna ett GitHub Issue.
+
+💡 Föreslå ny prompt
+
+Skicka ditt förslag via e-post istället för Pull Request.
+
+📧 Maila: peter@promptbanken.se
+
+Inkludera:
+
+Prompten
+
+Kort beskrivning av användningsområde
+
+Exempel på input/output (om möjligt)
+
+🚫 Pull Requests
+
+Vi tar i nuläget inte emot Pull Requests för nya prompts.
+Detta för att säkerställa kvalitet, struktur och konsistens i promptbanken.
 
 ---
 
@@ -355,12 +263,6 @@ A: Alla! ChatGPT, Claude, Gemini, etc. Kopiera bara prompen och klistra in i dit
 
 **F: Kan jag redigera prompterna?**
 A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem som utgångspunkt för dina egna.
-
----
-
-## 📞 Kontakt
-
-**Frågor eller feedback?** Öppna ett GitHub Issue eller kontakta Peter Wenström via repo-sidan: https://github.com/BUsavsjo/promptbanken
 
 ---
 
@@ -408,8 +310,9 @@ A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem s
   - "Anpassa prompt" (export) inkluderar snabbinmatning i förhandsvisning och export.
 - Gäller även prompten "📣 Skapa informationsutskick" och framtida prompts med `[TEXT]`-markör.
 - Ingen snabbinmatning lagras eller skickas – allt sker lokalt i webbläsaren.
+- förbättra UI på landningssida
+- stöd för community ollama lokal backend och frontend med docker. 
 
----
 
 ## 🔒 Integritet och lokal hantering
 

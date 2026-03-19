@@ -192,26 +192,27 @@ Denna plattform följer:
 
 **Filstruktur:**
 ```
-.
-├── index.html           # Huvudwebbsida (dynamisk SPA)
-├── prompts.json         # Prompt-konfiguration
-├── prompts/             # Prompt-filer (.txt)
-│   ├── klarsprak.txt
-│   ├── mejl.txt
-│   └── ... (14 filer totalt)
+├── index.html              # Startsida med stegvis promptflöde
+├── local-chat.html         # Lokal chattsida
+├── script.js               # Logik för startsidan, promptkort och filinläsning
+├── local-chat.js           # Logik för lokal chatt via backend/Ollama
+├── style.css               # Gemensam styling för startsidan
+├── local-run.css           # Styling för lokal körning och local-chat
+├── prompts.json            # Prompt-konfiguration
+├── prompts/                # Promptfiler
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI gateway mot flera LLM-providers
-│   │   ├── llm_clients.py    # Provider-klienter (Ollama/OpenAI)
-│   │   ├── prompt_repository.py
-│   │   └── schemas.py
-│   └── requirements.txt
-├── LICENSE              # MIT-licensfil
-├── README.md            # Detta dokument
-├── AI-COMPLIANCE.md     # EU AI Act dokumentation
-├── GDPR-POLICY.md       # GDPR policy
+│   │   ├── main.py         # API för modeller och chat/stream
+│   │   └── llm_clients.py  # Koppling mot Ollama/modellbackend
+│   └── Dockerfile
+├── Dockerfile              # Frontend-container
+├── docker-compose.yml      # Docker-setup
+├── nginx.conf              # Reverse proxy för frontend/api
+├── README.md
+├── LICENSE
+├── AI-COMPLIANCE.md
+├── GDPR-POLICY.md
 └── COMPLIANCE-REVIEW-CHECKLIST.md
-```
 
 ---
 

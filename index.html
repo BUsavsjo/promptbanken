@@ -58,6 +58,54 @@
             gap: 0.15rem;
         }
 
+        .quick-input-status {
+            display: none;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid #cfe8d5;
+            border-radius: 10px;
+            background: #eefaf1;
+            color: #166534;
+            font-size: 0.94rem;
+            font-weight: 500;
+        }
+
+        .quick-input-status.is-ready {
+            display: inline-flex;
+        }
+
+        .quick-input-status.is-error {
+            display: inline-flex;
+            border-color: #f3c7c7;
+            background: #fef2f2;
+            color: #b42318;
+        }
+
+        .quick-input-status-dot {
+            width: 0.55rem;
+            height: 0.55rem;
+            border-radius: 999px;
+            background: #16a34a;
+            flex-shrink: 0;
+        }
+
+        .quick-input-status.is-error .quick-input-status-dot {
+            background: #dc2626;
+        }
+
+        .quick-input-helper-row.compact-helper {
+            margin-top: 0;
+            padding: 0.7rem 0.8rem;
+            border-radius: 10px;
+            background: #f8fafc;
+            color: #475467;
+        }
+
+        .quick-input-helper-row.compact-helper .quick-input-lock-icon {
+            font-size: 1rem;
+        }
+
         .prompt-stage-shell {
             display: flex;
             flex-direction: column;
@@ -113,6 +161,12 @@
         .selected-prompt-actions .secondary-btn,
         .selected-prompt-actions .primary-btn {
             width: auto;
+        }
+
+        .selected-prompt-actions .secondary-btn.is-copied {
+            background: #ecfdf3;
+            border-color: #86d19f;
+            color: #067647;
         }
 
         .selected-prompt-meta {
@@ -204,8 +258,8 @@
         <div class="quick-input-header">
             <div class="quick-input-header-copy">
                 <span class="workflow-step-kicker">Steg 1</span>
-                <h3 class="workflow-step-title">Lagg in din text</h3>
-                <p class="workflow-step-helper">Klistra in eller skriv underlaget har. Texten foljer med nar du valjer uppgift i nasta steg.</p>
+                <h3 class="workflow-step-title">Vilken text vill du arbeta med?</h3>
+                <p class="workflow-step-helper">Klistra in brevet, anteckningarna eller underlaget här. Du väljer uppgift i nästa steg.</p>
             </div>
             <h3>✍️ Snabbinmatning</h3>
             <button class="quick-input-clear-btn" id="quick-input-clear-btn">🗑️ Rensa</button>
@@ -225,9 +279,9 @@
             <span>Anonymisera alltid personuppgifter innan du exporterar eller kopierar! Kontrollera att namn, personnummer, adresser och känsliga uppgifter är borttagna.</span>
         </div>
         <div class="quick-input-file-row">
-            <label for="quick-input-file" class="quick-input-file-label">📎 Släpp fil eller välj fil</label>
+            <label for="quick-input-file" class="quick-input-file-label">Välj fil</label>
             <input id="quick-input-file" type="file" accept=".txt,.md,.csv,.json,.docx,.rtf,.odt,.log,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-            <span class="quick-input-file-help">Stöd: txt, md, csv, json, docx och pdf</span>
+            <span class="quick-input-file-help">Stödjer: txt, md, csv, json, docx</span>
         </div>
         <div id="anon-examples-modal">
             <strong>Exempel på vad du ska ta bort:</strong>
@@ -257,27 +311,27 @@
         <section class="prompt-stage-shell" aria-label="Val av uppgift och fortsattning">
             <div>
                 <span class="workflow-step-kicker">Steg 2</span>
-                <h2 class="workflow-step-title">Valj vad du vill gora med texten</h2>
-                <p class="workflow-step-helper">Borja med att valja uppgift. Hur du vill fortsatta visas forst nar ett kort ar valt.</p>
+                <h2 class="workflow-step-title">Välj vad du vill göra med texten</h2>
+                <p class="workflow-step-helper">Börja med att välja uppgift. Hur du vill fortsätta visas först när ett kort är valt.</p>
             </div>
 
             <div class="selected-prompt-panel" id="selected-prompt-panel" hidden>
                 <div class="selected-prompt-summary">
                     <span class="selected-prompt-label">Vald uppgift</span>
-                    <h3 class="selected-prompt-title" id="selected-prompt-title">Ingen uppgift vald an</h3>
-                    <p class="selected-prompt-description" id="selected-prompt-description">Valj ett kort nedan for att fortsatta.</p>
+                    <h3 class="selected-prompt-title" id="selected-prompt-title">Ingen uppgift vald än</h3>
+                    <p class="selected-prompt-description" id="selected-prompt-description">Välj ett kort nedan för att fortsätta.</p>
                 </div>
                 <div class="selected-prompt-actions">
-                    <button class="primary-btn" id="selected-prompt-chat-btn" type="button">Chatta lokalt</button>
-                    <button class="secondary-btn" id="selected-prompt-copy-btn" type="button">Kopiera prompt</button>
+                    <button class="primary-btn" id="selected-prompt-copy-btn" type="button">Kopiera prompt</button>
+                    <button class="secondary-btn" id="selected-prompt-chat-btn" type="button">Chatta lokalt</button>
                     <button class="secondary-btn advanced-only" id="selected-prompt-export-btn" type="button">Anpassa prompt</button>
                     <button class="info-btn" id="selected-prompt-view-btn" type="button">Visa prompt</button>
                 </div>
-                <p class="selected-prompt-meta">Steg 3: Valj hur du vill fortsatta med den markerade uppgiften.</p>
+                <p class="selected-prompt-meta">Steg 3: Välj hur du vill fortsätta med den markerade uppgiften.</p>
             </div>
         </section>
 
-        <section class="prompt-grid" id="prompt-grid" aria-label="Tillgangliga uppgifter">
+        <section class="prompt-grid" id="prompt-grid" aria-label="Tillgängliga uppgifter">
             <div class="loading-message">Laddar promptmallar...</div>
         </section>
     </main>
@@ -461,6 +515,82 @@
             }
 
             let selectedPromptId = null;
+            let copyFeedbackTimer = null;
+
+            function showCopyFeedback() {
+                if (!panelCopyButton) {
+                    return;
+                }
+
+                if (copyFeedbackTimer) {
+                    clearTimeout(copyFeedbackTimer);
+                }
+
+                panelCopyButton.textContent = 'Kopierad';
+                panelCopyButton.classList.add('is-copied');
+
+                copyFeedbackTimer = setTimeout(() => {
+                    panelCopyButton.textContent = 'Kopiera prompt';
+                    panelCopyButton.classList.remove('is-copied');
+                    copyFeedbackTimer = null;
+                }, 1800);
+            }
+
+            function enhanceStepOne() {
+                const quickInputTitle = document.querySelector('.quick-input-header-copy .workflow-step-title');
+                const quickInputHelper = document.querySelector('.quick-input-header-copy .workflow-step-helper');
+                const quickInputTextarea = document.getElementById('quick-input-textarea');
+                const quickInputInfo = document.querySelector('.quick-input-info-row span');
+                const quickInputExamplesButton = document.getElementById('show-anon-examples');
+                const quickInputHelperRow = document.querySelector('.quick-input-helper-row');
+
+                if (quickInputTitle) {
+                    quickInputTitle.textContent = 'Vilken text vill du arbeta med?';
+                }
+
+                if (quickInputHelper) {
+                    quickInputHelper.textContent = 'Klistra in brevet, anteckningarna eller underlaget här. Du väljer uppgift i nästa steg.';
+                }
+
+                if (quickInputTextarea) {
+                    quickInputTextarea.placeholder = 'Klistra in eller skriv den text du vill arbeta med...';
+                }
+
+                if (quickInputInfo) {
+                    const infoTextNode = quickInputInfo.childNodes[0];
+                    if (infoTextNode) {
+                        infoTextNode.textContent = 'Max 5 000 tecken. ';
+                    }
+                }
+
+                if (quickInputExamplesButton) {
+                    quickInputExamplesButton.textContent = 'Visa exempel på vad som ska tas bort';
+                }
+
+                if (quickInputHelperRow) {
+                    quickInputHelperRow.classList.add('compact-helper');
+                    const helperText = quickInputHelperRow.querySelector('span:last-child');
+                    if (helperText) {
+                        helperText.textContent = 'Ta bort personuppgifter innan du går vidare. Kontrollera namn, personnummer, adresser och andra känsliga uppgifter.';
+                    }
+                }
+
+                if (quickInputTextarea && !document.getElementById('quick-input-status')) {
+                    const status = document.createElement('div');
+                    status.id = 'quick-input-status';
+                    status.className = 'quick-input-status';
+                    status.setAttribute('aria-live', 'polite');
+                    status.innerHTML = '<span class="quick-input-status-dot" aria-hidden="true"></span><span>Text inlagd. Välj nu uppgift i steg 2.</span>';
+                    quickInputTextarea.insertAdjacentElement('afterend', status);
+
+                    const syncStatus = () => {
+                        status.classList.toggle('is-ready', Boolean(quickInputTextarea.value.trim()));
+                    };
+
+                    quickInputTextarea.addEventListener('input', syncStatus);
+                    syncStatus();
+                }
+            }
 
             function getCard(promptId) {
                 return grid.querySelector(`.prompt-card[data-prompt-id="${promptId}"]`);
@@ -482,7 +612,7 @@
 
                     const selectButton = card.querySelector('.select-prompt-btn');
                     if (selectButton) {
-                        selectButton.textContent = isSelected ? 'Vald uppgift' : 'Valj uppgift';
+                        selectButton.textContent = isSelected ? 'Vald uppgift' : 'Välj uppgift';
                     }
                 });
 
@@ -492,8 +622,9 @@
                 }
 
                 panelTitle.textContent = selectedCard.querySelector('h3')?.textContent?.trim() || 'Vald uppgift';
-                panelDescription.textContent = selectedCard.querySelector('p')?.textContent?.trim() || 'Valj hur du vill fortsatta med den har uppgiften.';
+                panelDescription.textContent = selectedCard.querySelector('p')?.textContent?.trim() || 'Välj hur du vill fortsätta med den här uppgiften.';
                 panel.hidden = false;
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
             function enhanceCard(card) {
@@ -514,7 +645,7 @@
                     const selectButton = document.createElement('button');
                     selectButton.type = 'button';
                     selectButton.className = 'primary-btn select-prompt-btn';
-                    selectButton.textContent = 'Valj uppgift';
+                    selectButton.textContent = 'Välj uppgift';
                     selectButton.addEventListener('click', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
@@ -544,6 +675,7 @@
             panelCopyButton.addEventListener('click', () => {
                 if (selectedPromptId) {
                     triggerCardAction(selectedPromptId, '.copy-btn');
+                    showCopyFeedback();
                 }
             });
 
@@ -569,7 +701,10 @@
 
             observer.observe(grid, { childList: true, subtree: true });
 
-            window.addEventListener('DOMContentLoaded', enhanceExistingCards);
+            window.addEventListener('DOMContentLoaded', () => {
+                enhanceStepOne();
+                enhanceExistingCards();
+            });
         })();
     </script>
 </body>

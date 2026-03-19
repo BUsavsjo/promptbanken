@@ -770,11 +770,25 @@
         const localExportPdfBtn = document.getElementById('local-export-pdf');
         const quickInputFile = document.getElementById('quick-input-file');
         const quickInputFileRow = document.querySelector('.quick-input-file-row');
-        const quickInputFileLabel = document.querySelector('.quick-input-file-label');
-        const quickInputFileHelp = document.querySelector('.quick-input-file-help');
         let localRunAbortController = null;
         let localConversationMessages = [];
         let latestLocalRunResponse = '';
+        const supportedQuickInputExtensions = ['txt', 'md', 'csv', 'json', 'docx'];
+
+        function showQuickInputStatus(message, state = 'ready') {
+            const quickInputStatus = document.getElementById('quick-input-status');
+            if (!quickInputStatus) {
+                return;
+            }
+
+            const textNode = quickInputStatus.querySelector('span:last-child');
+            if (textNode) {
+                textNode.textContent = message;
+            }
+
+            quickInputStatus.classList.remove('is-ready', 'is-error');
+            quickInputStatus.classList.add(state === 'error' ? 'is-error' : 'is-ready');
+        }
 
         function copyCodeBlock(button, code) {
             navigator.clipboard.writeText(code).then(() => {
@@ -947,6 +961,12 @@ ${initialUserInput.trim()}`
                 return;
             }
 
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (!supportedQuickInputExtensions.includes(extension)) {
+                showLocalRunError(`Filtypen .${extension || 'okänd'} stöds inte. Stödjer: txt, md, csv, json, docx.`);
+                return;
+            }
+
             try {
                 const extractedText = await extractTextFromFile(file);
                 quickInputTextarea.value = extractedText.slice(0, 5000);
@@ -955,6 +975,28 @@ ${initialUserInput.trim()}`
                 showLocalRunStatus(`Fil inläst: ${file.name}`);
             } catch (error) {
                 showLocalRunError(`Kunde inte läsa filen (${file.name}): ${error.message}`);
+            }
+        }
+
+        async function handleQuickInputFile(file) {
+            if (!file || !quickInputTextarea) {
+                return;
+            }
+
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (!supportedQuickInputExtensions.includes(extension)) {
+                showQuickInputStatus(`Filtypen .${extension || 'okand'} stods inte. Stodjer: txt, md, csv, json, docx.`, 'error');
+                return;
+            }
+
+            try {
+                const extractedText = await extractTextFromFile(file);
+                quickInputTextarea.value = extractedText.slice(0, 5000);
+                quickInputText = quickInputTextarea.value;
+                quickInputTextarea.dispatchEvent(new Event('input'));
+                showQuickInputStatus(`Fil inlast: ${file.name}`);
+            } catch (error) {
+                showQuickInputStatus(`Kunde inte lasa filen (${file.name}): ${error.message}`, 'error');
             }
         }
 
@@ -1445,17 +1487,12 @@ ${initialUserInput.trim()}`
         }
 
         if (quickInputFile) {
-            if (quickInputFileLabel) {
-                quickInputFileLabel.textContent = 'Valj fil';
-            }
-            if (quickInputFileHelp) {
-                quickInputFileHelp.textContent = 'Stod just nu: txt, md, csv, json, docx, rtf, odt och logg. PDF och drag/slapp kommer senare.';
-            }
             quickInputFile.addEventListener('change', async (event) => {
                 const file = event.target.files?.[0];
                 if (file) {
                     await handleQuickInputFile(file);
                 }
+                event.target.value = '';
             });
 
         }

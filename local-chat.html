@@ -139,6 +139,29 @@
             color: rgba(0, 0, 0, 0.72);
         }
 
+        .local-chat-alert {
+            display: none;
+            border: 1px solid #f3c7c7;
+            border-radius: 10px;
+            padding: 0.8rem 0.9rem;
+            background: #fef2f2;
+            color: #b42318;
+        }
+
+        .local-chat-alert.is-visible {
+            display: block;
+        }
+
+        .local-chat-alert-title {
+            margin: 0 0 0.25rem;
+            font-weight: 700;
+        }
+
+        .local-chat-alert p {
+            margin: 0;
+            line-height: 1.45;
+        }
+
         .local-chat-shell.is-maximized {
             position: fixed;
             inset: 1rem;
@@ -219,6 +242,7 @@
             <div class="local-chat-toolbar">
                 <label for="local-chat-model-select">Modell</label>
                 <select id="local-chat-model-select"></select>
+                <button type="button" id="local-chat-demo" class="secondary-btn local-chat-demo-btn">Simulera demo</button>
                 <button type="button" id="local-chat-expand" class="secondary-btn local-chat-expand-btn" aria-pressed="false" aria-label="Maximera chattfönster">Maximera</button>
                 <button type="button" id="local-chat-reset" class="secondary-btn local-chat-reset-btn">Ny chatt</button>
                 <span id="local-chat-status" class="local-chat-state" data-state="idle">Klar</span>
@@ -230,6 +254,11 @@
                     <summary>Visa instruktion</summary>
                     <pre id="local-chat-seed-prompt"></pre>
                 </details>
+            </div>
+
+            <div id="local-chat-alert" class="local-chat-alert" role="alert" aria-live="assertive">
+                <p class="local-chat-alert-title">Kan inte nå Ollama just nu</p>
+                <p id="local-chat-alert-text">Kontrollera att backend och Ollama är igång och försök igen.</p>
             </div>
 
             <div id="local-chat-messages" class="local-chat-messages" aria-live="polite"></div>

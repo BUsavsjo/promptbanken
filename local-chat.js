@@ -8,8 +8,11 @@ const inputElement = document.getElementById('local-chat-input');
 const sendButton = document.getElementById('local-chat-send');
 const stopButton = document.getElementById('local-chat-stop');
 const resetButton = document.getElementById('local-chat-reset');
+const demoButton = document.getElementById('local-chat-demo');
 const expandButton = document.getElementById('local-chat-expand');
 const chatShellElement = document.querySelector('.local-chat-shell');
+const alertElement = document.getElementById('local-chat-alert');
+const alertTextElement = document.getElementById('local-chat-alert-text');
 
 const conversationMessages = [];
 let abortController = null;
@@ -20,6 +23,21 @@ let hasAppliedSeedPrompt = false;
 function setStatus(state, text) {
     statusElement.dataset.state = state;
     statusElement.textContent = text;
+}
+
+function setConnectionAlert(message = '') {
+    if (!alertElement || !alertTextElement) {
+        return;
+    }
+
+    if (!message) {
+        alertElement.classList.remove('is-visible');
+        alertTextElement.textContent = 'Kontrollera att backend och Ollama är igång och försök igen.';
+        return;
+    }
+
+    alertTextElement.textContent = message;
+    alertElement.classList.add('is-visible');
 }
 
 function scrollToBottom(force = false) {
@@ -122,6 +140,7 @@ async function populateModels() {
 
     try {
         const models = await fetchLocalModels();
+        setConnectionAlert('');
         if (!models.length) {
             modelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
             return;
@@ -133,6 +152,7 @@ async function populateModels() {
     } catch (error) {
         modelSelect.innerHTML = '<option value="">Kunde inte hamta modeller</option>';
         setStatus('error', `Fel: ${error.message}`);
+        setConnectionAlert('Sidan når inte Ollama via backend. Kontrollera att backend är startad, att Ollama körs och att modellservern svarar.');
     }
 }
 
@@ -160,6 +180,8 @@ async function streamAssistantReply() {
             const data = await response.json().catch(() => ({}));
             throw new Error(data.detail?.message || data.detail || 'Korning misslyckades.');
         }
+
+        setConnectionAlert('');
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -205,6 +227,7 @@ async function streamAssistantReply() {
         } else {
             setStatus('error', `Fel: ${error.message}`);
             assistantTextNode.textContent = `Fel: ${error.message}`;
+            setConnectionAlert('Kunde inte nå Ollama under körning. Kontrollera att backend och Ollama fortfarande är igång och försök igen.');
         }
     } finally {
         abortController = null;
@@ -234,6 +257,45 @@ function resetChat() {
     inputElement.value = '';
     shouldAutoScroll = true;
     hasAppliedSeedPrompt = false;
+}
+
+function simulateDemoChat() {
+    if (isGenerating) {
+        return;
+    }
+
+    resetChat();
+    setConnectionAlert('');
+    setStatus('waiting', 'Simulerar demo...');
+
+    const demoMessages = [
+        {
+            role: 'user',
+            content: 'Kan du skriva om det här till klarspråk så att det blir lättare att förstå för mottagaren?'
+        },
+        {
+            role: 'assistant',
+            content: 'Absolut. Jag kan göra texten tydligare, kortare och mer direkt utan att ändra innebörden.'
+        },
+        {
+            role: 'user',
+            content: 'Bra. Jag vill också att tonen ska kännas vänlig men professionell.'
+        },
+        {
+            role: 'assistant',
+            content: 'Då kan jag fokusera på tre saker:\n\n1. Kortare meningar.\n2. Tydliga nästa steg.\n3. En vänlig och saklig ton.\n\nKlistra in texten här nedanför när du vill fortsätta.'
+        }
+    ];
+
+    demoMessages.forEach((message) => {
+        appendMessage(message.role, message.content);
+        conversationMessages.push({ role: message.role, content: message.content });
+    });
+
+    inputElement.value = 'Kan du göra texten lite kortare också?';
+    inputElement.focus();
+    setStatus('done', 'Klar');
+    scrollToBottom(true);
 }
 
 function toggleMaximizedChat() {
@@ -295,6 +357,7 @@ stopButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', resetChat);
+demoButton?.addEventListener('click', simulateDemoChat);
 expandButton?.addEventListener('click', toggleMaximizedChat);
 
 window.addEventListener('DOMContentLoaded', async () => {

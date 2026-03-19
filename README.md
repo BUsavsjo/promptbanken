@@ -21,9 +21,9 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 ## 🚀 Snabbstart
 
 ### Online (GitHub Pages)
-1. Öppna: [username.github.io/promptbanken](https://username.github.io/promptbanken)
+1. Öppna: https://kommun.promptbanken.se
 2. **Inställningar (⚙️)**: Klicka på kugghjulet i övre högra hörnet för att:
-   - Aktivera **Avancerat läge** för exportinstruktioner till GPT/agent
+   -aktivera anpassade prompter om du vill.
    - Aktivera **Favoritläge** för att spara och visa favoriter
 3. Välj ett prompt-kort
 4. Klicka **"Visa exempel"** för att se vad du ska anonymisera
@@ -102,7 +102,7 @@ uvicorn app.main:app --reload --port 8001
 ### Framtida förbättringar
 - Byt MVP-token till riktig authn/authz (OIDC/SSO + roller).
 - Nyckelrotation med versionshantering och audit-logg.
-- Stöd för fler providers (Azure OpenAI, Ollama Cloud, Anthropic) via samma `ProviderConfigService`.
+- Stöd för fler providers (Azure OpenAI, Ollama Cloud, Anthropic) via samma `ProviderConfigService`i PRO.
 
 ## 🌐 Deploy (GitHub Pages via Actions)
 

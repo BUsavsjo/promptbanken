@@ -30,20 +30,134 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 5. Klicka **"Kopiera prompt"** → prompen är i ditt urklipp
 6. Klistra in i ditt AI-verktyg (ChatGPT, Claude, etc.)
 
-### Lokal utveckling
+### Lokal utveckling (utan Docker)
 ```bash
 # Klona repo
 git clone https://github.com/username/promptbanken.git
 cd promptbanken
 
-# Starta lokal webbserver
+# 1) Starta backend (gateway mot Ollama)
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+# Vid långsamma lokala modeller: höj timeout (sekunder)
+export MODEL_TIMEOUT_SECONDS=300
+export OLLAMA_BASE_URL=http://localhost:11434
+uvicorn app.main:app --reload --port 8001
+
+# 2) I ett nytt terminalfönster: starta frontend
+cd ..
 python -m http.server 8000
 
-# Öppna i webbläsare
-http://localhost:8000
+# 3) Öppna i webbläsare
+# Frontend: http://localhost:8000
+# Backend docs: http://localhost:8001/docs
+```
+
+### Community Edition på Windows med Docker (rekommenderat)
+Community Edition är local-first och använder endast Ollama via backend.
+
+1. **Installera Docker Desktop för Windows** (med WSL2 aktiverat).
+2. **Installera Ollama på Windows** och starta minst en modell, t.ex.:
+   ```powershell
+   ollama pull llama3.1:8b
+   ```
+3. **Klona repot** och gå till rotmappen:
+   ```powershell
+   git clone https://github.com/username/promptbanken.git
+   cd promptbanken
+   ```
+4. **Starta frontend + backend med Docker Compose**:
+   ```powershell
+   docker compose up --build
+   ```
+   > Standard i `docker-compose.yml` är `OLLAMA_BASE_URL=http://host.docker.internal:11434`, vilket gör att backend-containern når Ollama som kör lokalt på Windows.
+5. **Öppna appen**:
+   - Frontend: `http://localhost:8080`
+   - Backend API: `http://localhost:8001/docs`
+
+#### Vanliga kommandon
+```powershell
+# Starta i bakgrunden
+docker compose up -d --build
+
+# Se loggar
+docker compose logs -f
+
+# Stoppa och ta bort containrar
+docker compose down
 ```
 
 ---
+
+## 🤖 OpenAI-provider via backend + adminpanel (MVP)
+
+Backenden stöder nu både:
+1. **Bakåtkompatibel env-konfig** (`OPENAI_API_KEY`) och
+2. **Dynamisk admin-konfig** via API/UI (utan omstart i normalfallet).
+
+### Säkerhetsprinciper i denna MVP
+- API-nycklar skickas **aldrig** tillbaka i klartext till frontend.
+- API-nycklar lagras server-side i SQLite (`backend/data/provider_secrets.db`) och krypteras med Fernet.
+- Frontend visar bara status: `configured`/maskad suffix (`***1234`).
+- Admin-endpoints skyddas av header `X-Admin-Token` (enkel MVP-autentisering).
+
+> ⚠️ Sätt alltid `ADMIN_PANEL_TOKEN` i driftmiljö. Utan den är admin-API avstängt.
+
+### Starta backend
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Krävs för adminpanel
+export ADMIN_PANEL_TOKEN="byt-till-stark-hemlighet"
+
+# Rekommenderas i drift (stabil krypteringsnyckel)
+python - <<'PYKEY'
+from cryptography.fernet import Fernet
+print(Fernet.generate_key().decode())
+PYKEY
+export PROVIDER_ENCRYPTION_KEY="<nyckeln-från-kommandot-ovan>"
+
+# Valfritt fallback för första start / bakåtkompatibilitet
+export OPENAI_API_KEY="sk-..."
+export OPENAI_BASE_URL="https://api.openai.com/v1"
+
+uvicorn app.main:app --reload --port 8001
+```
+
+### Admin-API (exempel)
+
+```bash
+# 1) Lista providerstatus
+curl "http://localhost:8001/api/admin/providers"   -H "X-Admin-Token: byt-till-stark-hemlighet"
+
+# 2) Uppdatera OpenAI-nyckel + aktivera providern
+curl -X PATCH "http://localhost:8001/api/admin/providers/openai"   -H "Content-Type: application/json"   -H "X-Admin-Token: byt-till-stark-hemlighet"   -d '{
+    "enabled": true,
+    "api_key": "sk-...",
+    "base_url": "https://api.openai.com/v1"
+  }'
+
+# 3) Testa anslutning
+curl -X POST "http://localhost:8001/api/admin/providers/openai/test"   -H "X-Admin-Token: byt-till-stark-hemlighet"
+```
+
+### Admin-UI
+- Öppna frontend (`http://localhost:8000`).
+- Sektionen **"🔐 Admin – AI-provider"** finns ovanför promptlistan.
+- Fyll i admin-token, klicka **Ladda providers**, uppdatera OpenAI-inställningar och klicka **Spara OpenAI**.
+- Efter sparning används ny konfiguration direkt av backendens provider-resolver.
+
+### Framtida förbättringar
+- Byt MVP-token till riktig authn/authz (OIDC/SSO + roller).
+- Nyckelrotation med versionshantering och audit-logg.
+- Stöd för fler providers (Azure OpenAI, Ollama Cloud, Anthropic) via samma `ProviderConfigService`.
+- Flytta secrets till extern secret manager (Vault/KMS).
 
 ## 🌐 Deploy (GitHub Pages via Actions)
 
@@ -161,9 +275,11 @@ git push origin main
 ## 🛠️ Teknisk arkitektur
 
 - **Frontend:** Vanilla JavaScript (ingen ramverk)
+- **Backend:** FastAPI-gateway (`/api/providers`, `/api/models`, `/api/run`) för flera providers (lokal Ollama, Ollama Cloud, OpenAI)
+- **Providers:** Lokal Ollama + valfria molnproviders via backend-proxy (frontend anropar aldrig leverantörer direkt)
 - **Data:** JSON-config + txt-filer (gitbar)
 - **Copy-mekanik:** navigator.clipboard API
-- **Hosting:** GitHub Pages (static)
+- **Hosting:** Frontend statiskt + lokal backend-tjänst
 - **Design:** CSS Grid/Flexbox, responsiv, WCAG AA
 
 ### GDPR och fritextruta (egen roll)
@@ -188,6 +304,13 @@ git push origin main
 │   ├── klarsprak.txt
 │   ├── mejl.txt
 │   └── ... (14 filer totalt)
+├── backend/
+│   ├── app/
+│   │   ├── main.py           # FastAPI gateway mot flera LLM-providers
+│   │   ├── llm_clients.py    # Provider-klienter (Ollama/OpenAI)
+│   │   ├── prompt_repository.py
+│   │   └── schemas.py
+│   └── requirements.txt
 ├── LICENSE              # MIT-licensfil
 ├── README.md            # Detta dokument
 ├── AI-COMPLIANCE.md     # EU AI Act dokumentation

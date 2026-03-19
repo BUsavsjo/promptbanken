@@ -190,9 +190,11 @@
                 <h3>${prompt.title}</h3>
                 <p>${prompt.description}</p>
                 <div class="spacer-min-height"></div>
-                <div class="actions">
+                <div class="actions card-actions">
                     <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Anpassa prompt</button>
-                    <button class="secondary-btn copy-btn" data-prompt="${prompt.id}">Kopiera prompt</button>
+                    <button class="copy-btn copy-btn-primary" data-prompt="${prompt.id}">Kopiera prompt</button>
+                    <button class="secondary-btn local-chat-btn" data-chat-local="${prompt.id}">Chatta lokalt</button>
+                    <button class="secondary-btn direct-chat-btn" type="button" disabled aria-disabled="true" title="Kommer snart">Chatta direkt (kommer snart)</button>
                     <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
                 <textarea id="textarea-${prompt.id}">${combinedText}</textarea>
@@ -225,6 +227,11 @@
                 // Info button click
                 if (event.target.classList.contains('info-btn')) {
                     handleInfoClick(event.target);
+                }
+
+                if (event.target.classList.contains('local-chat-btn')) {
+                    const promptId = event.target.getAttribute('data-chat-local');
+                    navigateToLocalChat(promptId);
                 }
             });
         }
@@ -414,7 +421,7 @@
 
                 // Visual feedback
                 const originalText = button.textContent;
-                button.textContent = '✅ Kopierad!';
+                button.textContent = 'Kopierad';
                 button.classList.add('copied');
 
                 // Reset after 2 seconds
@@ -433,6 +440,31 @@
             return text
                 .replace(/\[klistra in här\]/gi, input)
                 .replace(/\[TEXT\]/gi, input);
+        }
+
+        function navigateToLocalChat(promptId) {
+            const textArea = document.getElementById(`textarea-${promptId}`);
+            const prompt = allPrompts.find((item) => item.id === promptId);
+            if (!textArea) {
+                showLocalRunError('Kunde inte hitta prompten för lokal chatt.');
+                return;
+            }
+
+            const preparedPrompt = replaceInputMarkers(textArea.value, quickInputText).trim();
+            const payload = {
+                promptId,
+                title: prompt?.title || 'Prompt',
+                prompt: preparedPrompt,
+                input: (quickInputText || '').trim()
+            };
+
+            try {
+                sessionStorage.setItem('promptbankenLocalChatSeed', JSON.stringify(payload));
+            } catch (error) {
+                console.warn('Kunde inte spara lokal chat-seed i sessionStorage:', error);
+            }
+
+            window.location.href = 'local-chat.html';
         }
 
         // Export settings
@@ -719,26 +751,718 @@
             }
         });
 
+        const localRunModal = document.getElementById('local-run-modal');
+        const localRunClose = document.getElementById('local-run-close');
+        const localRunTitle = document.getElementById('local-run-title');
+        const localModelSelect = document.getElementById('local-model-select');
+        const localUserInput = document.getElementById('local-user-input');
+        const localRunSubmit = document.getElementById('local-run-submit');
+        const localRunCancel = document.getElementById('local-run-cancel');
+        const localRunStatus = document.getElementById('local-run-status');
+        const localRunResult = document.getElementById('local-run-result');
+        const BACKEND_BASE_URL = window.PROMPTBANKEN_API_BASE_URL || window.location.origin.replace(/\/$/, '');
+        const localRunModalContent = document.getElementById('local-run-modal-content');
+        const localRunExpand = document.getElementById('local-run-expand');
+        const localCopyPromptBtn = document.getElementById('local-copy-prompt-btn');
+        const localChatInput = document.getElementById('local-chat-input');
+        const localChatSend = document.getElementById('local-chat-send');
+        const localExportDocxBtn = document.getElementById('local-export-docx');
+        const localExportPdfBtn = document.getElementById('local-export-pdf');
+        const quickInputFile = document.getElementById('quick-input-file');
+        const quickInputFileRow = document.querySelector('.quick-input-file-row');
+        let localRunAbortController = null;
+        let localConversationMessages = [];
+        let latestLocalRunResponse = '';
+        const supportedQuickInputExtensions = ['txt', 'md', 'csv', 'json', 'docx'];
+
+        function showQuickInputStatus(message, state = 'ready') {
+            const quickInputStatus = document.getElementById('quick-input-status');
+            if (!quickInputStatus) {
+                return;
+            }
+
+            const textNode = quickInputStatus.querySelector('span:last-child');
+            if (textNode) {
+                textNode.textContent = message;
+            }
+
+            quickInputStatus.classList.remove('is-ready', 'is-error');
+            quickInputStatus.classList.add(state === 'error' ? 'is-error' : 'is-ready');
+        }
+
+        function copyCodeBlock(button, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Kopierad';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 1200);
+            }).catch(() => {
+                button.textContent = 'Kunde inte kopiera';
+            });
+        }
+
+        function enhanceRenderedCodeBlocks() {
+            localRunResult.querySelectorAll('pre > code').forEach((codeBlock) => {
+                if (window.hljs) {
+                    window.hljs.highlightElement(codeBlock);
+                }
+
+                const pre = codeBlock.parentElement;
+                if (pre.querySelector('.code-copy-btn')) {
+                    return;
+                }
+
+                const copyButton = document.createElement('button');
+                copyButton.type = 'button';
+                copyButton.className = 'code-copy-btn';
+                copyButton.textContent = 'Kopiera';
+                copyButton.addEventListener('click', () => copyCodeBlock(copyButton, codeBlock.textContent));
+                pre.appendChild(copyButton);
+            });
+        }
+
+        function renderLocalRunResponse(responseText) {
+            if (!responseText) {
+                localRunResult.textContent = '(Tomt svar från modellen)';
+                return;
+            }
+
+            if (!window.marked || !window.DOMPurify) {
+                localRunResult.textContent = responseText;
+                return;
+            }
+
+            marked.setOptions({ gfm: true, breaks: true });
+            const rawHtml = marked.parse(responseText);
+            const safeHtml = window.DOMPurify.sanitize(rawHtml, {
+                USE_PROFILES: { html: true },
+                ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class']
+            });
+
+            localRunResult.innerHTML = safeHtml;
+            localRunResult.querySelectorAll('a').forEach((link) => {
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+            });
+            enhanceRenderedCodeBlocks();
+        }
+
+        let selectedPromptForLocalRun = null;
+
+        function setLocalRunStreamingState(isStreaming) {
+            localRunSubmit.disabled = isStreaming;
+            if (localRunCancel) {
+                localRunCancel.disabled = !isStreaming;
+            }
+            localRunResult.classList.toggle('is-streaming', isStreaming);
+        }
+
+        function appendStreamingChunk(chunk) {
+            localRunResult.textContent += chunk;
+            localRunResult.scrollTop = localRunResult.scrollHeight;
+        }
+
+
+        function resetConversationWithPrompt(initialUserInput) {
+            const promptText = getSelectedPromptText();
+            const finalPrompt = promptText
+                ? `System/Instruktion:
+${promptText.trim()}
+
+Användarens indata:
+${initialUserInput.trim()}`
+                : initialUserInput.trim();
+
+            localConversationMessages = [{ role: 'user', content: finalPrompt }];
+        }
+
+        function downloadBlob(filename, blob, mimeType) {
+            const safeBlob = blob instanceof Blob ? blob : new Blob([blob], { type: mimeType });
+            const url = URL.createObjectURL(safeBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportLocalResponseAsDocx() {
+            if (!latestLocalRunResponse.trim()) {
+                showLocalRunError('Det finns inget svar att exportera ännu.');
+                return;
+            }
+
+            const htmlContent = `<html><body><h1>Promptbanken svar</h1><p>${latestLocalRunResponse
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '</p><p>')}</p></body></html>`;
+
+            if (window.htmlDocx && typeof window.htmlDocx.asBlob === 'function') {
+                const docxBlob = window.htmlDocx.asBlob(htmlContent);
+                downloadBlob('promptbanken-svar.docx', docxBlob, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                showLocalRunStatus('DOCX exporterad.');
+                return;
+            }
+
+            const fallbackBlob = new Blob([latestLocalRunResponse], { type: 'text/plain;charset=utf-8' });
+            downloadBlob('promptbanken-svar.txt', fallbackBlob, 'text/plain;charset=utf-8');
+            showLocalRunStatus('DOCX-bibliotek saknas, exporterade TXT istället.');
+        }
+
+        function exportLocalResponseAsPdf() {
+            if (!latestLocalRunResponse.trim()) {
+                showLocalRunError('Det finns inget svar att exportera ännu.');
+                return;
+            }
+
+            const jsPdf = window.jspdf?.jsPDF;
+            if (!jsPdf) {
+                const fallbackBlob = new Blob([latestLocalRunResponse], { type: 'text/plain;charset=utf-8' });
+                downloadBlob('promptbanken-svar.txt', fallbackBlob, 'text/plain;charset=utf-8');
+                showLocalRunStatus('PDF-bibliotek saknas, exporterade TXT istället.');
+                return;
+            }
+
+            const doc = new jsPdf({ unit: 'pt', format: 'a4' });
+            const lines = doc.splitTextToSize(latestLocalRunResponse, 520);
+            doc.text(lines, 40, 60);
+            doc.save('promptbanken-svar.pdf');
+            showLocalRunStatus('PDF exporterad.');
+        }
+
+        async function extractTextFromFile(file) {
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (['txt', 'md', 'csv', 'json', 'log', 'rtf'].includes(extension)) {
+                return file.text();
+            }
+
+            if (extension === 'docx' && window.mammoth) {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await window.mammoth.extractRawText({ arrayBuffer });
+                return result.value || '';
+            }
+
+            if (extension === 'pdf') {
+                if (!window.pdfjsLib) {
+                    throw new Error('PDF-läsare är inte laddad ännu.');
+                }
+                throw new Error('PDF-uppladdning ar tillfalligt avstangd.');
+            }
+
+            throw new Error('Filformatet stöds inte ännu.');
+        }
+
+        async function handleQuickInputFile(file) {
+            if (!file || !quickInputTextarea) {
+                return;
+            }
+
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (!supportedQuickInputExtensions.includes(extension)) {
+                showLocalRunError(`Filtypen .${extension || 'okänd'} stöds inte. Stödjer: txt, md, csv, json, docx.`);
+                return;
+            }
+
+            try {
+                const extractedText = await extractTextFromFile(file);
+                quickInputTextarea.value = extractedText.slice(0, 5000);
+                quickInputText = quickInputTextarea.value;
+                quickInputTextarea.dispatchEvent(new Event('input'));
+                showLocalRunStatus(`Fil inläst: ${file.name}`);
+            } catch (error) {
+                showLocalRunError(`Kunde inte läsa filen (${file.name}): ${error.message}`);
+            }
+        }
+
+        async function handleQuickInputFile(file) {
+            if (!file || !quickInputTextarea) {
+                return;
+            }
+
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (!supportedQuickInputExtensions.includes(extension)) {
+                showQuickInputStatus(`Filtypen .${extension || 'okand'} stods inte. Stodjer: txt, md, csv, json, docx.`, 'error');
+                return;
+            }
+
+            try {
+                const extractedText = await extractTextFromFile(file);
+                quickInputTextarea.value = extractedText.slice(0, 5000);
+                quickInputText = quickInputTextarea.value;
+                quickInputTextarea.dispatchEvent(new Event('input'));
+                showQuickInputStatus(`Fil inlast: ${file.name}`);
+            } catch (error) {
+                showQuickInputStatus(`Kunde inte lasa filen (${file.name}): ${error.message}`, 'error');
+            }
+        }
+
+        async function sendFollowUpMessage() {
+            const followUpText = localChatInput?.value?.trim() || '';
+            const selectedModel = localModelSelect.value;
+            if (!followUpText) {
+                showLocalRunError('Skriv en följdfråga först.');
+                return;
+            }
+            if (!selectedModel) {
+                showLocalRunError('Välj en modell.');
+                return;
+            }
+
+            localConversationMessages.push({ role: 'user', content: followUpText });
+            localRunResult.textContent = '';
+            setLocalRunStreamingState(true);
+            showLocalRunStatus('Modellen skriver på följdfrågan...');
+            localRunAbortController = new AbortController();
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/chat/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: selectedModel, messages: localConversationMessages }),
+                    signal: localRunAbortController.signal
+                });
+
+                if (!response.ok || !response.body) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.detail?.message || data.detail || 'Följdfråga misslyckades.');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantResponse = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    if (!chunk) continue;
+                    assistantResponse += chunk;
+                    appendStreamingChunk(chunk);
+                }
+
+                const trailingChunk = decoder.decode();
+                if (trailingChunk) {
+                    assistantResponse += trailingChunk;
+                    appendStreamingChunk(trailingChunk);
+                }
+
+                localConversationMessages.push({ role: 'assistant', content: assistantResponse });
+                latestLocalRunResponse = assistantResponse;
+                renderLocalRunResponse(assistantResponse || '(Tomt svar från modellen)');
+                localChatInput.value = '';
+                showLocalRunStatus('Klart.');
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showLocalRunStatus('Avbruten.');
+                } else {
+                    showLocalRunError(error.message);
+                }
+            } finally {
+                localRunAbortController = null;
+                setLocalRunStreamingState(false);
+            }
+        }
+
+        async function fetchLocalModels() {
+            const response = await fetch(`${BACKEND_BASE_URL}/api/models`);
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.detail?.message || data.detail || 'Kunde inte hämta modeller från backend.');
+            }
+
+            const data = await response.json();
+            return data.models || [];
+        }
+
+        async function populateProviders() {
+            return populateLocalModels();
+        }
+
+        async function populateLocalModels() {
+            localModelSelect.innerHTML = '<option>Laddar modeller...</option>';
+
+            try {
+                const models = await fetchLocalModels();
+                if (!models.length) {
+                    localModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
+                    return;
+                }
+
+                localModelSelect.innerHTML = models
+                    .map(model => `<option value="${model.name}">${model.name}</option>`)
+                    .join('');
+            } catch (error) {
+                localModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
+                showLocalRunError(error.message);
+            }
+        }
+
+        function showLocalRunStatus(message) {
+            localRunStatus.textContent = message;
+            localRunStatus.classList.remove('error');
+        }
+
+        function showLocalRunError(message) {
+            localRunStatus.textContent = message;
+            localRunStatus.classList.add('error');
+        }
+
+        function openLocalRunModal(promptId) {
+            selectedPromptForLocalRun = allPrompts.find(prompt => prompt.id === promptId) || null;
+            localRunTitle.textContent = selectedPromptForLocalRun
+                ? `Kör med lokal modell – ${selectedPromptForLocalRun.title}`
+                : 'Kör med lokal modell';
+
+            localRunResult.innerHTML = '';
+            showLocalRunStatus('Välj modell, skriv text och klicka på Kör.');
+            localUserInput.value = quickInputText || '';
+            setLocalRunStreamingState(false);
+            latestLocalRunResponse = '';
+            localConversationMessages = [];
+            if (localChatInput) {
+                localChatInput.value = '';
+            }
+            populateLocalModels();
+            localRunModal.classList.add('active');
+        }
+
+
+        function getSelectedPromptText() {
+            if (!selectedPromptForLocalRun) {
+                return '';
+            }
+            const textarea = document.getElementById(`textarea-${selectedPromptForLocalRun.id}`);
+            return textarea ? textarea.value : '';
+        }
+
+        function copySelectedPromptToClipboard() {
+            const text = getSelectedPromptText();
+            if (!text) {
+                showLocalRunError('Ingen prompttext att kopiera.');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showLocalRunStatus('Prompt kopierad.');
+            }).catch(() => {
+                showLocalRunError('Kunde inte kopiera prompten.');
+            });
+        }
+
+        function toggleLocalRunFullscreen() {
+            if (!localRunModalContent) {
+                return;
+            }
+            const isFullscreen = localRunModalContent.classList.toggle('is-fullscreen');
+            if (localRunExpand) {
+                localRunExpand.textContent = isFullscreen ? '🗗' : '⛶';
+            }
+        }
+
+        function closeLocalRunModal() {
+            if (localRunAbortController) {
+                localRunAbortController.abort();
+            }
+            localRunModal.classList.remove('active');
+            selectedPromptForLocalRun = null;
+            if (localRunModalContent) {
+                localRunModalContent.classList.remove('is-fullscreen');
+            }
+            if (localRunExpand) {
+                localRunExpand.textContent = '⛶';
+            }
+        }
+
+        async function runWithLocalModel() {
+            if (!selectedPromptForLocalRun) {
+                showLocalRunError('Ingen prompt vald.');
+                return;
+            }
+
+            const payload = {
+                prompt_id: selectedPromptForLocalRun.id,
+                user_input: localUserInput.value,
+                model: localModelSelect.value,
+            };
+
+            if (!payload.user_input.trim()) {
+                showLocalRunError('Skriv in text innan du kör.');
+                return;
+            }
+
+            if (!payload.model) {
+                showLocalRunError('Välj en modell.');
+                return;
+            }
+
+            resetConversationWithPrompt(payload.user_input);
+            localRunResult.textContent = '';
+            setLocalRunStreamingState(true);
+            showLocalRunStatus('Modellen skriver...');
+            localRunAbortController = new AbortController();
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/run/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: localRunAbortController.signal
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    const detail = data.detail;
+                    if (detail && typeof detail === 'object') {
+                        console.error('Detaljerat provider-fel:', detail);
+                        const debugInfo = [
+                            detail.message,
+                            detail.request_id ? `request_id=${detail.request_id}` : null,
+                            detail.upstream_status ? `upstream_status=${detail.upstream_status}` : null,
+                            detail.error_type ? `error_type=${detail.error_type}` : null
+                        ].filter(Boolean).join(' | ');
+                        throw new Error(debugInfo || 'Körning misslyckades.');
+                    }
+                    throw new Error(detail || 'Körning misslyckades.');
+                }
+
+                if (!response.body) {
+                    throw new Error('Svarsstream saknas från backend.');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    if (!chunk) {
+                        continue;
+                    }
+
+                    fullResponse += chunk;
+                    appendStreamingChunk(chunk);
+                }
+
+                const trailingChunk = decoder.decode();
+                if (trailingChunk) {
+                    fullResponse += trailingChunk;
+                    appendStreamingChunk(trailingChunk);
+                }
+
+                latestLocalRunResponse = fullResponse || '(Tomt svar från modellen)';
+                localConversationMessages.push({ role: 'assistant', content: latestLocalRunResponse });
+                renderLocalRunResponse(latestLocalRunResponse);
+                showLocalRunStatus('Klart. Du kan nu ställa följdfrågor.');
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showLocalRunStatus('Avbruten.');
+                } else {
+                    showLocalRunError(error.message);
+                }
+            } finally {
+                localRunAbortController = null;
+                setLocalRunStreamingState(false);
+            }
+        }
+
+        if (localRunClose) {
+            localRunClose.addEventListener('click', closeLocalRunModal);
+        }
+
+        if (localRunModal) {
+            localRunModal.addEventListener('click', (event) => {
+                if (event.target === localRunModal) {
+                    closeLocalRunModal();
+                }
+            });
+        }
+
+        if (localRunSubmit) {
+            localRunSubmit.addEventListener('click', runWithLocalModel);
+        }
+
+        if (localCopyPromptBtn) {
+            localCopyPromptBtn.addEventListener('click', copySelectedPromptToClipboard);
+        }
+
+        if (localRunExpand) {
+            localRunExpand.addEventListener('click', toggleLocalRunFullscreen);
+        }
+
+        if (localRunCancel) {
+            localRunCancel.addEventListener('click', () => {
+                if (localRunAbortController) {
+                    localRunAbortController.abort();
+                }
+            });
+        }
+
+        if (localChatSend) {
+            localChatSend.addEventListener('click', sendFollowUpMessage);
+        }
+
+        if (localExportDocxBtn) {
+            localExportDocxBtn.addEventListener('click', exportLocalResponseAsDocx);
+        }
+
+        if (localExportPdfBtn) {
+            localExportPdfBtn.addEventListener('click', exportLocalResponseAsPdf);
+        }
+
+        const adminTokenInput = document.getElementById('admin-token-input');
+        const adminLoadBtn = document.getElementById('admin-load-btn');
+        const adminProviderList = document.getElementById('admin-provider-list');
+        const adminOpenAIKey = document.getElementById('admin-openai-key');
+        const adminOpenAIBaseUrl = document.getElementById('admin-openai-base-url');
+        const adminOpenAIEnabled = document.getElementById('admin-openai-enabled');
+        const adminSaveOpenAIBtn = document.getElementById('admin-save-openai-btn');
+        const adminTestOpenAIBtn = document.getElementById('admin-test-openai-btn');
+        const adminStatus = document.getElementById('admin-status');
+
+        function showAdminStatus(message, isError = false) {
+            if (!adminStatus) {
+                return;
+            }
+            adminStatus.textContent = message;
+            adminStatus.classList.toggle('error', isError);
+        }
+
+        function adminHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Admin-Token': adminTokenInput.value.trim()
+            };
+        }
+
+        function renderAdminProviderList(providers) {
+            if (!providers.length) {
+                adminProviderList.textContent = 'Inga providers registrerade i admin-API.';
+                return;
+            }
+
+            adminProviderList.innerHTML = providers.map((provider) => (
+                `<div><strong>${provider.name}</strong> | enabled=${provider.enabled} | configured=${provider.configured} | key=${provider.masked_key || 'ej satt'} | base_url=${provider.base_url}</div>`
+            )).join('');
+
+            const openai = providers.find((provider) => provider.name === 'openai');
+            if (openai) {
+                adminOpenAIEnabled.checked = openai.enabled;
+                adminOpenAIBaseUrl.value = openai.base_url || '';
+            }
+        }
+
+        async function loadAdminProviders() {
+            if (!adminTokenInput.value.trim()) {
+                showAdminStatus('Ange admin-token först.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/admin/providers`, {
+                    headers: adminHeaders()
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Kunde inte ladda admin providers.');
+                }
+                renderAdminProviderList(data.providers || []);
+                showAdminStatus('Providerstatus uppdaterad.');
+            } catch (error) {
+                showAdminStatus(error.message, true);
+            }
+        }
+
+        async function saveOpenAIConfig() {
+            if (!adminTokenInput.value.trim()) {
+                showAdminStatus('Ange admin-token först.', true);
+                return;
+            }
+
+            const payload = {
+                enabled: adminOpenAIEnabled.checked,
+                base_url: adminOpenAIBaseUrl.value.trim() || undefined
+            };
+
+            const apiKey = adminOpenAIKey.value.trim();
+            if (apiKey) {
+                payload.api_key = apiKey;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/admin/providers/openai`, {
+                    method: 'PATCH',
+                    headers: adminHeaders(),
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Kunde inte spara OpenAI-konfiguration.');
+                }
+
+                adminOpenAIKey.value = '';
+                renderAdminProviderList(data.providers || []);
+                showAdminStatus('OpenAI-konfiguration sparad.');
+                await populateProviders();
+            } catch (error) {
+                showAdminStatus(error.message, true);
+            }
+        }
+
+        async function testOpenAIConnection() {
+            if (!adminTokenInput.value.trim()) {
+                showAdminStatus('Ange admin-token först.', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_BASE_URL}/api/admin/providers/openai/test`, {
+                    method: 'POST',
+                    headers: adminHeaders()
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Kunde inte testa OpenAI-anslutning.');
+                }
+
+                showAdminStatus(data.detail, !data.ok);
+            } catch (error) {
+                showAdminStatus(error.message, true);
+            }
+        }
+
+        if (adminLoadBtn) {
+            adminLoadBtn.addEventListener('click', loadAdminProviders);
+        }
+        if (adminSaveOpenAIBtn) {
+            adminSaveOpenAIBtn.addEventListener('click', saveOpenAIConfig);
+        }
+        if (adminTestOpenAIBtn) {
+            adminTestOpenAIBtn.addEventListener('click', testOpenAIConnection);
+        }
+
         // Quick input state management
         let quickInputText = '';
         const quickInputTextarea = document.getElementById('quick-input-textarea');
         const quickInputClearBtn = document.getElementById('quick-input-clear-btn');
 
         function updateCopyButtonLabels() {
-            // Döljer alltid knappen (och labeln) när advancedModeEnabled är true, annars visas rätt label beroende på quickInputText
             const allCopyBtns = document.querySelectorAll('.copy-btn');
-            allCopyBtns.forEach(btn => {
+            allCopyBtns.forEach((btn) => {
                 if (advancedModeEnabled) {
                     btn.style.display = 'none';
                 } else {
                     btn.style.display = '';
-                    if (quickInputText.trim()) {
-                        btn.textContent = 'Kopiera prompt + text';
-                        btn.classList.add('with-text');
-                    } else {
-                        btn.textContent = 'Kopiera prompt';
-                        btn.classList.remove('with-text');
-                    }
+                    btn.textContent = 'Kopiera prompt';
+                    btn.classList.remove('with-text');
                 }
             });
         }
@@ -760,6 +1484,17 @@
             });
             // Initialize counter on load
             updateCharCounter();
+        }
+
+        if (quickInputFile) {
+            quickInputFile.addEventListener('change', async (event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                    await handleQuickInputFile(file);
+                }
+                event.target.value = '';
+            });
+
         }
 
         if (quickInputClearBtn && quickInputTextarea) {

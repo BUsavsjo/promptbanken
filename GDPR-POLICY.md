@@ -82,9 +82,7 @@ Du kan begära att vi begränsar vår behandling av dina data.
 
 **För frågor om dataskydd & GDPR:**
 
-📧 **E-post:** dataskyddssamordnare@kommun.se  
-📞 **Telefon:** [KOMMUN NUMMER]  
-📍 **Adress:** IT-avdelningen, Kommunhuset
+📧 **E-post:** peter@promptbanken.se
 
 ---
 

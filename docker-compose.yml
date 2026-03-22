@@ -3,9 +3,15 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    env_file:
+      - .env
     environment:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - MODEL_TIMEOUT_SECONDS=${MODEL_TIMEOUT_SECONDS:-300}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - ADMIN_PANEL_TOKEN=${ADMIN_PANEL_TOKEN:-}
+      - PROVIDER_ENCRYPTION_KEY=${PROVIDER_ENCRYPTION_KEY:-}
     ports:
       - "8001:8001"
     extra_hosts:

@@ -194,7 +194,7 @@
                     <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Anpassa prompt</button>
                     <button class="copy-btn copy-btn-primary" data-prompt="${prompt.id}">Kopiera prompt</button>
                     <button class="secondary-btn local-chat-btn" data-chat-local="${prompt.id}">Chatta lokalt</button>
-                    <button class="secondary-btn direct-chat-btn" type="button" disabled aria-disabled="true" title="Kommer snart">Chatta direkt (kommer snart)</button>
+                    <button class="secondary-btn direct-chat-btn" type="button" data-chat-direct="${prompt.id}">Chatta direkt</button>
                     <button class="info-btn" data-show-full="${prompt.id}" title="Se hela prompt">ℹ️ Se hela prompt</button>
                 </div>
                 <textarea id="textarea-${prompt.id}">${combinedText}</textarea>
@@ -232,6 +232,11 @@
                 if (event.target.classList.contains('local-chat-btn')) {
                     const promptId = event.target.getAttribute('data-chat-local');
                     navigateToLocalChat(promptId);
+                }
+
+                if (event.target.classList.contains('direct-chat-btn')) {
+                    const promptId = event.target.getAttribute('data-chat-direct');
+                    navigateToDirectChat(promptId);
                 }
             });
         }
@@ -465,6 +470,31 @@
             }
 
             window.location.href = 'local-chat.html';
+        }
+
+        function navigateToDirectChat(promptId) {
+            const textArea = document.getElementById(`textarea-${promptId}`);
+            const prompt = allPrompts.find((item) => item.id === promptId);
+            if (!textArea) {
+                showLocalRunError('Kunde inte hitta prompten for direkt chatt.');
+                return;
+            }
+
+            const preparedPrompt = replaceInputMarkers(textArea.value, quickInputText).trim();
+            const payload = {
+                promptId,
+                title: prompt?.title || 'Prompt',
+                prompt: preparedPrompt,
+                input: (quickInputText || '').trim()
+            };
+
+            try {
+                sessionStorage.setItem('promptbankenDirectChatSeed', JSON.stringify(payload));
+            } catch (error) {
+                console.warn('Kunde inte spara direkt chat-seed i sessionStorage:', error);
+            }
+
+            window.location.href = 'direct-chat.html';
         }
 
         // Export settings

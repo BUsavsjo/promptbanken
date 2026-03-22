@@ -68,14 +68,31 @@ Community Edition är local-first och använder endast Ollama via backend.
    git clone https://github.com/username/promptbanken.git
    cd promptbanken
    ```
-4. **Starta frontend + backend med Docker Compose**:
+4. **Skapa en egen miljöfil för Docker**:
+   ```powershell
+   copy .env.example .env
+   ```
+   Sätt minst:
+   - `OPENAI_API_KEY` om du vill använda `Chatta direkt`
+   - `ADMIN_PANEL_TOKEN` om du vill kunna spara/testa provider-inställningar via `providers.html`
+   - valfritt `PROVIDER_ENCRYPTION_KEY` för stabil kryptering av sparade provider-nycklar
+5. **Starta frontend + backend med Docker Compose**:
    ```powershell
    docker compose up --build
    ```
    > Standard i `docker-compose.yml` är `OLLAMA_BASE_URL=http://host.docker.internal:11434`, vilket gör att backend-containern når Ollama som kör lokalt på Windows.
-5. **Öppna appen**:
+6. **Öppna appen**:
    - Frontend: `http://localhost:8080`
    - Backend API: `http://localhost:8001/docs`
+
+#### OpenAI i Docker
+- `Chatta direkt` använder backendens `OPENAI_API_KEY`, aldrig en nyckel i frontend.
+- Rekommenderad driftmodell är att sätta nyckeln i `.env` och sedan starta om med:
+  ```powershell
+  docker compose up -d --build
+  ```
+- Om du också sätter `ADMIN_PANEL_TOKEN` kan du öppna `http://localhost:8080/providers.html` och testa eller uppdatera OpenAI-konfigurationen därifrån.
+- Om du vill att sparade provider-nycklar ska överleva container-omstarter på ett säkrare sätt bör du sätta `PROVIDER_ENCRYPTION_KEY` till en egen fast nyckel.
 
 #### Vanliga kommandon
 ```powershell
@@ -171,6 +188,7 @@ Denna plattform följer:
 
 - **Frontend:** Vanilla JavaScript (ingen ramverk)
 - **Backend:** FastAPI-gateway (`/api/providers`, `/api/models`, `/api/run`) för flera providers (lokal Ollama, Ollama Cloud, OpenAI)
+- **Direktchatt:** `direct-chat.html` skickar systeminstruktion + meddelanden till OpenAI via backendens proxy-endpoints
 - **Providers:** Lokal Ollama + valfria molnproviders via backend-proxy (frontend anropar aldrig leverantörer direkt)
 - **Data:** JSON-config + txt-filer (gitbar)
 - **Copy-mekanik:** navigator.clipboard API
@@ -203,10 +221,13 @@ Denna plattform följer:
 ├── backend/
 │   ├── app/
 │   │   ├── main.py         # API för modeller och chat/stream
-│   │   └── llm_clients.py  # Koppling mot Ollama/modellbackend
+│   │   └── llm_clients.py  # Koppling mot Ollama och OpenAI
 │   └── Dockerfile
+├── direct-chat.html        # Direktchatt via OpenAI
+├── direct-chat.js          # Logik för direktchatt
 ├── Dockerfile              # Frontend-container
 ├── docker-compose.yml      # Docker-setup
+├── .env.example            # Mall för Docker-miljövariabler
 ├── nginx.conf              # Reverse proxy för frontend/api
 ├── README.md
 ├── LICENSE

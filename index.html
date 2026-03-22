@@ -324,6 +324,7 @@
                 <div class="selected-prompt-actions">
                     <button class="primary-btn" id="selected-prompt-copy-btn" type="button">Kopiera prompt</button>
                     <button class="secondary-btn" id="selected-prompt-chat-btn" type="button">Chatta lokalt</button>
+                    <button class="secondary-btn" id="selected-prompt-direct-chat-btn" type="button">Chatta direkt</button>
                     <button class="secondary-btn advanced-only" id="selected-prompt-export-btn" type="button">Anpassa prompt</button>
                     <button class="info-btn" id="selected-prompt-view-btn" type="button">Visa prompt</button>
                 </div>
@@ -506,11 +507,12 @@
             const panelTitle = document.getElementById('selected-prompt-title');
             const panelDescription = document.getElementById('selected-prompt-description');
             const panelChatButton = document.getElementById('selected-prompt-chat-btn');
+            const panelDirectChatButton = document.getElementById('selected-prompt-direct-chat-btn');
             const panelCopyButton = document.getElementById('selected-prompt-copy-btn');
             const panelExportButton = document.getElementById('selected-prompt-export-btn');
             const panelViewButton = document.getElementById('selected-prompt-view-btn');
 
-            if (!grid || !panel || !panelTitle || !panelDescription || !panelChatButton || !panelCopyButton || !panelExportButton || !panelViewButton) {
+            if (!grid || !panel || !panelTitle || !panelDescription || !panelChatButton || !panelDirectChatButton || !panelCopyButton || !panelExportButton || !panelViewButton) {
                 return;
             }
 
@@ -669,6 +671,12 @@
             panelChatButton.addEventListener('click', () => {
                 if (selectedPromptId) {
                     triggerCardAction(selectedPromptId, '.local-chat-btn');
+                }
+            });
+
+            panelDirectChatButton.addEventListener('click', () => {
+                if (selectedPromptId) {
+                    triggerCardAction(selectedPromptId, '.direct-chat-btn');
                 }
             });
 

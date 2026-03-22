@@ -46,3 +46,21 @@ class ChatMessage(BaseModel):
 class ChatStreamRequest(BaseModel):
     model: str = Field(min_length=1, description="Model name")
     messages: list[ChatMessage] = Field(min_length=1)
+
+
+class ProviderStatus(BaseModel):
+    name: str
+    enabled: bool
+    configured: bool
+    masked_key: str | None = None
+    base_url: str | None = None
+
+
+class AdminProvidersResponse(BaseModel):
+    providers: list[ProviderStatus]
+
+
+class OpenAIConfigUpdateRequest(BaseModel):
+    enabled: bool | None = None
+    api_key: str | None = None
+    base_url: str | None = None

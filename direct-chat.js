@@ -5,7 +5,6 @@ const statusElement = document.getElementById('direct-chat-status');
 const messagesElement = document.getElementById('direct-chat-messages');
 const formElement = document.getElementById('direct-chat-form');
 const inputElement = document.getElementById('direct-chat-input');
-const systemInstructionElement = document.getElementById('direct-chat-system');
 const sendButton = document.getElementById('direct-chat-send');
 const stopButton = document.getElementById('direct-chat-stop');
 const resetButton = document.getElementById('direct-chat-reset');
@@ -13,11 +12,13 @@ const expandButton = document.getElementById('direct-chat-expand');
 const chatShellElement = document.querySelector('.local-chat-shell');
 const alertElement = document.getElementById('direct-chat-alert');
 const alertTextElement = document.getElementById('direct-chat-alert-text');
+const sessionModelElement = document.getElementById('direct-chat-session-model');
 
 const conversationMessages = [];
 let abortController = null;
 let isGenerating = false;
 let shouldAutoScroll = true;
+const DRAFT_STORAGE_KEY = 'promptbankenDirectChatDraft';
 
 function setStatus(state, text) {
     statusElement.dataset.state = state;
@@ -99,9 +100,61 @@ function getSeedData() {
     return window.__PROMPTBANKEN_DIRECT_CHAT_SEED__ || null;
 }
 
+function updateSessionModelLabel() {
+    if (!sessionModelElement) {
+        return;
+    }
+    sessionModelElement.textContent = modelSelect.value || 'Inte vald';
+}
+
+function resizeInput() {
+    if (!inputElement) {
+        return;
+    }
+    inputElement.style.height = 'auto';
+    const nextHeight = Math.min(Math.max(inputElement.scrollHeight, 84), 220);
+    inputElement.style.height = `${nextHeight}px`;
+}
+
+function saveDraft() {
+    try {
+        sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ input: inputElement.value || '' }));
+    } catch (_error) {
+        // Ignore storage failures.
+    }
+}
+
+function loadDraft() {
+    try {
+        const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) {
+            return;
+        }
+        const draft = JSON.parse(raw);
+        if (!inputElement.value.trim() && draft?.input) {
+            inputElement.value = draft.input;
+            resizeInput();
+        }
+    } catch (_error) {
+        // Ignore storage failures.
+    }
+}
+
+function clearDraft() {
+    try {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (_error) {
+        // Ignore storage failures.
+    }
+}
+
+function hasUnsavedDraft() {
+    return Boolean(inputElement?.value.trim()) && !isGenerating;
+}
+
 function buildRequestMessages() {
     const messages = [];
-    const systemInstruction = systemInstructionElement.value.trim();
+    const systemInstruction = String(getSeedData()?.prompt || '').trim();
     if (systemInstruction) {
         messages.push({ role: 'system', content: systemInstruction });
     }
@@ -112,7 +165,6 @@ function setGeneratingState(generating) {
     isGenerating = generating;
     sendButton.disabled = generating;
     modelSelect.disabled = generating;
-    systemInstructionElement.disabled = generating;
     stopButton.disabled = !generating;
 }
 
@@ -141,6 +193,7 @@ async function populateModels() {
         modelSelect.innerHTML = models
             .map((model) => `<option value="${model.name}">${model.name}</option>`)
             .join('');
+        updateSessionModelLabel();
     } catch (error) {
         modelSelect.innerHTML = '<option value="">Kunde inte hamta modeller</option>';
         setStatus('error', `Fel: ${error.message}`);
@@ -235,10 +288,15 @@ async function sendUserMessage(content) {
 
     appendMessage('user', text);
     conversationMessages.push({ role: 'user', content: text });
+    clearDraft();
     await streamAssistantReply();
+    inputElement.focus();
 }
 
 function resetChat() {
+    if (hasUnsavedDraft() && !window.confirm('Du har ett utkast i meddelandefaltet. Vill du verkligen starta en ny chatt?')) {
+        return;
+    }
     if (abortController) {
         abortController.abort();
     }
@@ -247,6 +305,8 @@ function resetChat() {
     setGeneratingState(false);
     setStatus('done', 'Klar');
     inputElement.value = '';
+    clearDraft();
+    resizeInput();
     shouldAutoScroll = true;
 }
 
@@ -274,9 +334,6 @@ function applySeedContext() {
     context.hidden = false;
     title.textContent = seed.title || 'Prompt';
     prompt.textContent = seed.prompt;
-    if (!systemInstructionElement.value.trim()) {
-        systemInstructionElement.value = seed.prompt;
-    }
     if (!inputElement.value.trim() && seed.input) {
         inputElement.value = seed.input;
     }
@@ -291,6 +348,7 @@ formElement.addEventListener('submit', async (event) => {
     event.preventDefault();
     const value = inputElement.value;
     inputElement.value = '';
+    resizeInput();
     await sendUserMessage(value);
 });
 
@@ -316,9 +374,25 @@ stopButton.addEventListener('click', () => {
 
 resetButton.addEventListener('click', resetChat);
 expandButton?.addEventListener('click', toggleMaximizedChat);
+modelSelect?.addEventListener('change', updateSessionModelLabel);
+inputElement?.addEventListener('input', () => {
+    resizeInput();
+    saveDraft();
+});
+
+window.addEventListener('beforeunload', (event) => {
+    if (!hasUnsavedDraft()) {
+        return;
+    }
+    event.preventDefault();
+    event.returnValue = '';
+});
 
 window.addEventListener('DOMContentLoaded', async () => {
     applySeedContext();
     await populateModels();
     setStatus('done', 'Klar');
+    updateSessionModelLabel();
+    loadDraft();
+    resizeInput();
 });

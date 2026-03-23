@@ -13,12 +13,14 @@ const expandButton = document.getElementById('local-chat-expand');
 const chatShellElement = document.querySelector('.local-chat-shell');
 const alertElement = document.getElementById('local-chat-alert');
 const alertTextElement = document.getElementById('local-chat-alert-text');
+const sessionModelElement = document.getElementById('local-chat-session-model');
 
 const conversationMessages = [];
 let abortController = null;
 let isGenerating = false;
 let shouldAutoScroll = true;
 let hasAppliedSeedPrompt = false;
+const DRAFT_STORAGE_KEY = 'promptbankenLocalChatDraft';
 
 function setStatus(state, text) {
     statusElement.dataset.state = state;
@@ -102,6 +104,58 @@ function getSeedData() {
     return window.__PROMPTBANKEN_LOCAL_CHAT_SEED__ || null;
 }
 
+function updateSessionModelLabel() {
+    if (!sessionModelElement) {
+        return;
+    }
+    sessionModelElement.textContent = modelSelect.value || 'Inte vald';
+}
+
+function resizeInput() {
+    if (!inputElement) {
+        return;
+    }
+    inputElement.style.height = 'auto';
+    const nextHeight = Math.min(Math.max(inputElement.scrollHeight, 84), 220);
+    inputElement.style.height = `${nextHeight}px`;
+}
+
+function saveDraft() {
+    try {
+        sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ input: inputElement.value || '' }));
+    } catch (_error) {
+        // Ignore storage failures.
+    }
+}
+
+function loadDraft() {
+    try {
+        const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) {
+            return;
+        }
+        const draft = JSON.parse(raw);
+        if (!inputElement.value.trim() && draft?.input) {
+            inputElement.value = draft.input;
+            resizeInput();
+        }
+    } catch (_error) {
+        // Ignore storage failures.
+    }
+}
+
+function clearDraft() {
+    try {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (_error) {
+        // Ignore storage failures.
+    }
+}
+
+function hasUnsavedDraft() {
+    return Boolean(inputElement?.value.trim()) && !isGenerating;
+}
+
 function buildUserMessageForRequest(content) {
     const text = String(content || '').trim();
     if (!text) {
@@ -149,6 +203,7 @@ async function populateModels() {
         modelSelect.innerHTML = models
             .map((model) => `<option value="${model.name}">${model.name}</option>`)
             .join('');
+        updateSessionModelLabel();
     } catch (error) {
         modelSelect.innerHTML = '<option value="">Kunde inte hamta modeller</option>';
         setStatus('error', `Fel: ${error.message}`);
@@ -243,10 +298,15 @@ async function sendUserMessage(content) {
 
     appendMessage('user', text);
     conversationMessages.push({ role: 'user', content: buildUserMessageForRequest(text) });
+    clearDraft();
     await streamAssistantReply();
+    inputElement.focus();
 }
 
 function resetChat() {
+    if (hasUnsavedDraft() && !window.confirm('Du har ett utkast i meddelandefaltet. Vill du verkligen starta en ny chatt?')) {
+        return;
+    }
     if (abortController) {
         abortController.abort();
     }
@@ -255,6 +315,8 @@ function resetChat() {
     setGeneratingState(false);
     setStatus('done', 'Klar');
     inputElement.value = '';
+    clearDraft();
+    resizeInput();
     shouldAutoScroll = true;
     hasAppliedSeedPrompt = false;
 }
@@ -293,6 +355,8 @@ function simulateDemoChat() {
     });
 
     inputElement.value = 'Kan du göra texten lite kortare också?';
+    saveDraft();
+    resizeInput();
     inputElement.focus();
     setStatus('done', 'Klar');
     scrollToBottom(true);
@@ -333,6 +397,7 @@ formElement.addEventListener('submit', async (event) => {
     event.preventDefault();
     const value = inputElement.value;
     inputElement.value = '';
+    resizeInput();
     await sendUserMessage(value);
 });
 
@@ -359,9 +424,25 @@ stopButton.addEventListener('click', () => {
 resetButton.addEventListener('click', resetChat);
 demoButton?.addEventListener('click', simulateDemoChat);
 expandButton?.addEventListener('click', toggleMaximizedChat);
+modelSelect?.addEventListener('change', updateSessionModelLabel);
+inputElement?.addEventListener('input', () => {
+    resizeInput();
+    saveDraft();
+});
+
+window.addEventListener('beforeunload', (event) => {
+    if (!hasUnsavedDraft()) {
+        return;
+    }
+    event.preventDefault();
+    event.returnValue = '';
+});
 
 window.addEventListener('DOMContentLoaded', async () => {
     await populateModels();
     setStatus('done', 'Klar');
     consumeSeedPrompt();
+    updateSessionModelLabel();
+    loadDraft();
+    resizeInput();
 });

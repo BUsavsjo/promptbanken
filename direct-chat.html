@@ -20,6 +20,24 @@
             font-size: 0.95rem;
         }
 
+        .local-chat-context-session {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0;
+            font-size: 0.88rem;
+            color: rgba(0, 0, 0, 0.72);
+        }
+
+        .local-chat-context-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.08);
+        }
+
         .local-chat-context details {
             border-top: 1px solid rgba(0, 0, 0, 0.1);
             padding-top: 0.5rem;
@@ -212,21 +230,6 @@
             max-width: 100%;
         }
 
-        .direct-chat-system-box {
-            margin-bottom: 0.75rem;
-        }
-
-        .direct-chat-system-box label {
-            display: block;
-            margin-bottom: 0.45rem;
-            font-weight: 600;
-        }
-
-        .direct-chat-system-box textarea {
-            width: 100%;
-            min-height: 120px;
-            resize: vertical;
-        }
     </style>
     <script>
         (() => {
@@ -265,15 +268,14 @@
 
             <div id="direct-chat-context" class="local-chat-context" hidden>
                 <p class="local-chat-context-meta"><strong>Vald prompt / uppgift:</strong> <span id="direct-chat-seed-title"></span></p>
+                <p class="local-chat-context-session">
+                    <span class="local-chat-context-pill">Modell: <span id="direct-chat-session-model">Inte vald</span></span>
+                    <span class="local-chat-context-pill">Instruktion: aktiv</span>
+                </p>
                 <details>
                     <summary>Visa instruktion</summary>
                     <pre id="direct-chat-seed-prompt"></pre>
                 </details>
-            </div>
-
-            <div class="direct-chat-system-box">
-                <label for="direct-chat-system">Systeminstruktion</label>
-                <textarea id="direct-chat-system" placeholder="Här anger du systeminstruktionen som ska skickas med till OpenAI."></textarea>
             </div>
 
             <div id="direct-chat-alert" class="local-chat-alert" role="alert" aria-live="assertive">
@@ -642,18 +644,14 @@
                 const title = document.getElementById('direct-chat-seed-title');
                 const prompt = document.getElementById('direct-chat-seed-prompt');
                 const input = document.getElementById('direct-chat-input');
-                const system = document.getElementById('direct-chat-system');
 
-                if (!seed || !seed.prompt || !context || !title || !prompt || !input || !system) {
+                if (!seed || !seed.prompt || !context || !title || !prompt || !input) {
                     return;
                 }
 
                 context.hidden = false;
                 title.textContent = seed.title || 'Prompt';
                 prompt.textContent = seed.prompt;
-                if (!system.value.trim()) {
-                    system.value = seed.prompt;
-                }
                 if (!input.value.trim() && seed.input) {
                     input.value = seed.input;
                 }

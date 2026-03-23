@@ -13,7 +13,7 @@ services:
       - ADMIN_PANEL_TOKEN=${ADMIN_PANEL_TOKEN:-}
       - PROVIDER_ENCRYPTION_KEY=${PROVIDER_ENCRYPTION_KEY:-}
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:8001"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -24,4 +24,4 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"

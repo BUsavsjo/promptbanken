@@ -1825,8 +1825,28 @@
                     promptCollapseButton.setAttribute('title', collapsed ? 'Visa uppgiftsval' : 'Dölj uppgiftsval');
                 }
 
+                function scrollToElementWithOffset(element, offset = 20) {
+                    if (!element) {
+                        return;
+                    }
+                    requestAnimationFrame(() => {
+                        const rect = element.getBoundingClientRect();
+                        const top = window.scrollY + rect.top - offset;
+                        window.scrollTo({
+                            top: Math.max(0, top),
+                            behavior: 'smooth'
+                        });
+                    });
+                }
+
                 function scrollToChatComposer() {
-                    chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const mobileOffset = window.innerWidth <= 640 ? 88 : 28;
+                    scrollToElementWithOffset(chatInput, mobileOffset);
+                }
+
+                function scrollToCustomInstructionField() {
+                    const mobileOffset = window.innerWidth <= 640 ? 88 : 28;
+                    scrollToElementWithOffset(customInstruction, mobileOffset);
                 }
 
                 function updateModeUi() {
@@ -1858,10 +1878,10 @@
                     });
                     updateTaskSummary();
                     updateModeUi();
-                    scrollToChatComposer();
                     if (window.innerWidth <= 640) {
                         setPromptPanelCollapsed(true);
                     }
+                    scrollToChatComposer();
                 }
 
                 function createPromptItem(prompt) {
@@ -1956,11 +1976,11 @@
                                 promptItem.classList.toggle('is-selected', isSelected);
                             });
                             updateModeUi();
-                            scrollToChatComposer();
-                            customInstruction.focus();
                             if (window.innerWidth <= 640) {
-                                setPromptPanelCollapsed(true);
+                                setPromptPanelCollapsed(false);
                             }
+                            scrollToCustomInstructionField();
+                            customInstruction.focus({ preventScroll: true });
                         });
 
                         return item;

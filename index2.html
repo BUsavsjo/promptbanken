@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promptbanken Mockup</title>
+    <style>
+        :root {
+            --bg: #f3f5ef;
+            --bg-accent: #e7ede0;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: #ffffff;
+            --surface-muted: #f7f8f4;
+            --border: rgba(34, 63, 41, 0.12);
+            --border-strong: rgba(34, 63, 41, 0.2);
+            --text: #182119;
+            --text-soft: #536055;
+            --primary: #1f6a52;
+            --primary-strong: #15513d;
+            --primary-soft: #e2f2ea;
+            --shadow: 0 18px 50px rgba(39, 58, 34, 0.08);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Aptos", "Segoe UI Variable", "IBM Plex Sans", "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(209, 232, 214, 0.95), transparent 32%),
+                radial-gradient(circle at top right, rgba(232, 221, 197, 0.82), transparent 28%),
+                linear-gradient(180deg, #f7f7f2 0%, var(--bg) 100%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .page-shell {
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 48px;
+        }
+
+        .hero {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(245, 248, 242, 0.85));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            padding: 28px;
+            backdrop-filter: blur(18px);
+        }
+
+        .hero-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 46px;
+            height: 46px;
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(145deg, #1f6a52, #7ab28f);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .brand-copy span {
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+        }
+
+        .brand-copy strong {
+            font-size: 1.1rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ghost-btn,
+        .primary-btn,
+        .mini-btn {
+            border: 0;
+            border-radius: 999px;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .ghost-btn,
+        .primary-btn {
+            padding: 12px 18px;
+            font-weight: 600;
+        }
+
+        .ghost-btn {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .primary-btn {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(31, 106, 82, 0.24);
+        }
+
+        .mini-btn {
+            padding: 9px 14px;
+            background: var(--surface-muted);
+            color: var(--text);
+            border: 1px solid var(--border);
+            font-size: 0.92rem;
+        }
+
+        .ghost-btn:hover,
+        .primary-btn:hover,
+        .mini-btn:hover,
+        .card:hover {
+            transform: translateY(-1px);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+            gap: 22px;
+            align-items: stretch;
+        }
+
+        .hero-copy h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2rem, 5vw, 3.6rem);
+            line-height: 0.98;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-copy p {
+            margin: 0;
+            max-width: 60ch;
+            color: var(--text-soft);
+            font-size: 1.04rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .pill {
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: var(--primary-soft);
+            color: var(--primary-strong);
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        .intro-card {
+            background: linear-gradient(180deg, rgba(248, 250, 246, 0.96), rgba(255, 255, 255, 0.92));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .intro-card h2,
+        .workspace-header h2,
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+
+        .intro-card p,
+        .workspace-header p,
+        .section-header p,
+        .preview-card p,
+        .card p,
+        .chat-bubble p {
+            margin: 0;
+            color: var(--text-soft);
+        }
+
+        .intro-box {
+            min-height: 126px;
+            resize: vertical;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: #fff;
+            padding: 16px;
+            font: inherit;
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        .section-block {
+            margin-top: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .section-header span {
+            display: inline-block;
+            margin-bottom: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary);
+        }
+
+        .featured-grid,
+        .library-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .featured-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .library-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            box-shadow: 0 8px 30px rgba(45, 61, 39, 0.06);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .card.is-featured {
+            background: linear-gradient(180deg, #ffffff 0%, #f5faf6 100%);
+            border-color: rgba(31, 106, 82, 0.18);
+        }
+
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: var(--surface-muted);
+            color: var(--text-soft);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .card h3 {
+            margin: 0 0 6px;
+            font-size: 1.05rem;
+            line-height: 1.25;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .card-link {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .workspace {
+            margin-top: 28px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+            gap: 18px;
+        }
+
+        .workspace-main,
+        .workspace-side {
+            display: grid;
+            gap: 18px;
+            align-content: start;
+        }
+
+        .workspace-panel,
+        .preview-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 22px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .workspace-stage {
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(246,248,243,0.94));
+            overflow: hidden;
+        }
+
+        .stage-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        .stage-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stage-label strong {
+            font-size: 1rem;
+        }
+
+        .stage-label span,
+        .meta-list li,
+        .preview-list li {
+            color: var(--text-soft);
+        }
+
+        .chat-feed {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .chat-bubble {
+            max-width: min(100%, 680px);
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: #fff;
+            border: 1px solid var(--border);
+        }
+
+        .chat-bubble.user {
+            margin-left: auto;
+            background: var(--primary-soft);
+            border-color: rgba(31, 106, 82, 0.18);
+        }
+
+        .chat-bubble strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .composer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.76);
+        }
+
+        .composer textarea {
+            width: 100%;
+            min-height: 118px;
+            resize: vertical;
+            border: 1px solid var(--border-strong);
+            border-radius: 18px;
+            padding: 16px;
+            background: #fff;
+            font: inherit;
+            color: var(--text);
+        }
+
+        .composer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preview-card {
+            gap: 18px;
+        }
+
+        .preview-card + .preview-card {
+            margin-top: 0;
+        }
+
+        .preview-pill {
+            display: inline-flex;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: var(--surface-muted);
+            color: var(--text-soft);
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .preview-list,
+        .meta-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .preview-list strong,
+        .meta-list strong {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.92rem;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--surface-muted);
+            color: var(--text-soft);
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .status-chip::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #94a397;
+        }
+
+        .status-chip.is-ready::before {
+            background: #1f6a52;
+        }
+
+        .status-chip.is-busy::before {
+            background: #c97f2a;
+        }
+
+        .empty-preview {
+            border: 1px dashed rgba(31, 106, 82, 0.24);
+            border-radius: 18px;
+            padding: 16px;
+            background: rgba(226, 242, 234, 0.45);
+        }
+
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 20;
+            max-width: 320px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(24, 33, 25, 0.92);
+            color: #fff;
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.18);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .toast.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 30;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(24, 33, 25, 0.32);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.is-open {
+            display: flex;
+        }
+
+        .modal-card {
+            width: min(720px, 100%);
+            max-height: min(82vh, 860px);
+            overflow: auto;
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 28px 60px rgba(16, 24, 18, 0.22);
+            padding: 22px;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .modal-body {
+            border: 1px solid var(--border);
+            background: var(--surface-muted);
+            border-radius: 18px;
+            padding: 16px;
+            color: var(--text);
+            white-space: pre-wrap;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 1100px) {
+            .hero-grid,
+            .workspace,
+            .featured-grid,
+            .library-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .page-shell {
+                width: min(100% - 20px, 100%);
+                padding-top: 18px;
+            }
+
+            .hero,
+            .workspace-panel,
+            .preview-card {
+                padding: 18px;
+                border-radius: 22px;
+            }
+
+            .hero-topbar,
+            .section-header,
+            .workspace-header,
+            .composer-actions,
+            .stage-bar {
+                align-items: start;
+                flex-direction: column;
+            }
+
+            .hero-copy h1 {
+                font-size: 2.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <section class="hero" aria-label="Introduktion">
+            <div class="hero-topbar">
+                <div class="brand">
+                    <div class="brand-mark">PB</div>
+                    <div class="brand-copy">
+                        <span>Mockup</span>
+                        <strong>Promptbanken på en sida</strong>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <button class="ghost-btn" id="history-btn" type="button">Historik</button>
+                    <button class="primary-btn" id="new-conversation-btn" type="button">Ny konversation</button>
+                </div>
+            </div>
+
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <h1>Enklare arbetsyta för prompts, skrivyta och direkt chatt.</h1>
+                    <p>Allt sker i samma vy. Välj en prompt, skriv din text och fortsätt i samma flöde utan att öppna nya ytor eller byta sida.</p>
+                    <div class="hero-meta">
+                        <span class="pill">Tre utvalda promptkort först</span>
+                        <span class="pill">En huvudinput</span>
+                        <span class="pill">Chatten integrerad</span>
+                    </div>
+                </div>
+
+                <div class="intro-card">
+                    <h2>Börja här</h2>
+                    <p>Klistra in underlag, skriv ett kort mål eller ge systemet kontext. Det här fältet är tänkt som den naturliga starten innan man väljer prompt.</p>
+                    <textarea class="intro-box" aria-label="Inledande text"></textarea>
+                    <div class="hero-actions">
+                        <button class="ghost-btn" id="direct-chat-btn" type="button">Chatta direkt</button>
+                        <button class="primary-btn" id="continue-btn" type="button">Fortsätt i arbetsytan</button>
+                        <button class="ghost-btn" id="show-all-btn" type="button">Visa alla prompts</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="featured-prompts-title">
+            <div class="section-header">
+                <div>
+                    <span>Utvalda</span>
+                    <h2 id="featured-prompts-title">Tre promptkort direkt under intro</h2>
+                    <p>De vanligaste valen ligger överst för att minska klick och ge en snabb start.</p>
+                </div>
+                <button class="ghost-btn" id="all-categories-btn" type="button">Alla kategorier</button>
+            </div>
+            <div id="featured-grid" class="featured-grid"></div>
+        </section>
+
+        <section class="workspace" id="workspace" aria-label="Samlad arbetsyta">
+            <div class="workspace-main">
+                <div class="workspace-panel">
+                    <div class="workspace-header">
+                        <div>
+                            <h2>Aktiv arbetsyta</h2>
+                            <p>Vald prompt, textinmatning och svar i samma yta.</p>
+                        </div>
+                        <button class="ghost-btn" id="change-prompt-btn" type="button">Byt prompt</button>
+                    </div>
+
+                    <div class="workspace-stage">
+                        <div class="stage-bar">
+                            <div class="stage-label">
+                                <strong id="selected-prompt-title">Skriv om till klarspråk</strong>
+                                <span id="selected-prompt-description">Gör text kortare och lättare att förstå för invånare.</span>
+                            </div>
+                            <button class="mini-btn" id="show-prompt-btn" type="button">Visa hela prompten</button>
+                        </div>
+
+                        <div class="chat-feed" id="chat-feed">
+                            <article class="chat-bubble user">
+                                <strong>Du</strong>
+                                <p>Kan du skriva om texten till ett kort informationsutskick med enkel svenska och tydliga nästa steg?</p>
+                            </article>
+                            <article class="chat-bubble">
+                                <strong>Promptbanken</strong>
+                                <p>Absolut. Jag utgår från prompten för klarspråk och håller tonen enkel, konkret och invånarnära. Du kan fortsätta skriva här utan att lämna sidan.</p>
+                            </article>
+                        </div>
+
+                        <div class="composer">
+                            <textarea id="composer-input" aria-label="Skriv i arbetsytan">Hej! Från och med 17 juni till 9 augusti har medborgarkontoret kortare öppettider. Besök bokas som vanligt via webb eller telefon.</textarea>
+                            <div class="composer-actions">
+                                <div class="quick-actions">
+                                    <button class="mini-btn quick-action-btn" data-action="shorter" type="button">Kortare</button>
+                                    <button class="mini-btn quick-action-btn" data-action="formal" type="button">Mer formellt</button>
+                                    <button class="mini-btn quick-action-btn" data-action="list" type="button">Punktlista</button>
+                                </div>
+                                <div class="hero-actions">
+                                    <button class="ghost-btn" id="save-draft-btn" type="button">Spara utkast</button>
+                                    <button class="primary-btn" id="send-btn" type="button">Skicka</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workspace-panel">
+                    <div class="section-header">
+                        <div>
+                            <span>Bibliotek</span>
+                            <h2>Fler promptkort</h2>
+                            <p>Resten av biblioteket ligger kvar på samma sida, men under arbetsytan.</p>
+                        </div>
+                    </div>
+                    <div id="library-grid" class="library-grid"></div>
+                </div>
+            </div>
+
+            <aside class="workspace-side">
+                <section class="preview-card">
+                    <span class="preview-pill">Vald prompt</span>
+                    <h2>Snabboversikt</h2>
+                    <p>En enkel sidopanel för sammanhang och handlingar, utan att flytta bort användaren från arbetsytan.</p>
+                    <ul class="preview-list">
+                        <li>
+                            <strong>Prompt</strong>
+                            <span id="selected-side-title">Skriv om till klarspråk</span>
+                        </li>
+                        <li>
+                            <strong>Format</strong>
+                            <span>Kort utskick, enkel svenska</span>
+                        </li>
+                        <li>
+                            <strong>Status</strong>
+                            <span id="selected-status">Klar att skickas till chatt eller kopieras</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="preview-card">
+                    <span class="preview-pill">Designprincip</span>
+                    <h2>Det här mockupen prioriterar</h2>
+                    <ul class="meta-list">
+                        <li><strong>En handling i taget</strong><span>Välj prompt, skriv, skicka.</span></li>
+                        <li><strong>Färre knappar</strong><span>Primär CTA syns tydligt, sekundära ligger lugnare.</span></li>
+                        <li><strong>Ingen ny vy för chatt</strong><span>Direkt chatt lever i samma arbetsyta.</span></li>
+                    </ul>
+                </section>
+
+                <section class="preview-card empty-preview">
+                    <span class="preview-pill">Nästa steg</span>
+                    <h2>Om du vill bygga vidare</h2>
+                    <p>Den här filen är en visuell riktning. Nästa steg är att mappa den mot befintlig `script.js` och ersätta separata chattknappar med ett enda integrerat arbetsflöde.</p>
+                </section>
+            </aside>
+        </section>
+    </div>
+
+    <div class="toast" id="demo-toast" aria-live="polite"></div>
+
+    <div class="modal" id="prompt-modal" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div>
+                    <span class="preview-pill">Förhandsvisning</span>
+                    <h2 id="modal-title">Prompt</h2>
+                </div>
+                <button class="ghost-btn" id="close-modal-btn" type="button">Stäng</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const promptData = [
+            {
+                id: "klarsprak",
+                title: "Skriv om till klarspråk",
+                description: "Gör text kortare och lättare att förstå för invånare.",
+                tag: "Populär",
+                preview: "Du är expert på klarspråk. Skriv om texten så att den blir kortare, tydligare och lätt att förstå för invånare. Behåll kärninnehållet, använd enkel svenska och gör nästa steg tydliga."
+            },
+            {
+                id: "mejl",
+                title: "Svar på medborgarmejl",
+                description: "Skriv ett vänligt och sakligt svar på mejl från invånare.",
+                tag: "Vanlig",
+                preview: "Skriv ett vänligt, tydligt och professionellt svar på ett mejl från en invånare. Bekräfta frågan, svara konkret och avsluta med vad personen kan göra härnäst."
+            },
+            {
+                id: "sammanfattning",
+                title: "Sammanfattning",
+                description: "Förkorta en längre text och lyft fram det viktigaste.",
+                tag: "Snabbt val",
+                preview: "Sammanfatta texten kortfattat. Lyft fram vad som har hänt, varför det är viktigt och vilka nästa steg som gäller. Använd enkel och rak svenska."
+            },
+            {
+                id: "faq",
+                title: "Gör en FAQ",
+                description: "Skapa frågor och svar utifrån ett dokument eller policy.",
+                tag: "Support",
+                preview: "Skapa en FAQ med tydliga frågor och korta svar baserat på underlaget. Prioritera det som invånare oftast undrar över."
+            },
+            {
+                id: "checklista",
+                title: "Skapa checklista",
+                description: "Omvandla text eller instruktioner till en tydlig checklista.",
+                tag: "Struktur",
+                preview: "Omvandla innehållet till en tydlig checklista med steg i logisk ordning. Håll varje punkt kort och handlingsbar."
+            },
+            {
+                id: "informationsutskick",
+                title: "Skapa informationsutskick",
+                description: "Skriv ett tydligt meddelande med rubrik, sammanfattning och nästa steg.",
+                tag: "Kommunikation",
+                preview: "Skriv ett informationsutskick med tydlig rubrik, kort inledning, viktig information och tydliga nästa steg. Tonen ska vara lugn, korrekt och lätt att förstå."
+            }
+        ];
+
+        const featuredIds = ["klarsprak", "mejl", "sammanfattning"];
+        const featuredGrid = document.getElementById("featured-grid");
+        const libraryGrid = document.getElementById("library-grid");
+        const selectedTitle = document.getElementById("selected-prompt-title");
+        const selectedDescription = document.getElementById("selected-prompt-description");
+        const selectedSideTitle = document.getElementById("selected-side-title");
+        const selectedStatus = document.getElementById("selected-status");
+        const chatFeed = document.getElementById("chat-feed");
+        const composerInput = document.getElementById("composer-input");
+        const toast = document.getElementById("demo-toast");
+        const modal = document.getElementById("prompt-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalBody = document.getElementById("modal-body");
+        const continueBtn = document.getElementById("continue-btn");
+        const directChatBtn = document.getElementById("direct-chat-btn");
+        const showPromptBtn = document.getElementById("show-prompt-btn");
+        const sendBtn = document.getElementById("send-btn");
+        const saveDraftBtn = document.getElementById("save-draft-btn");
+        const closeModalBtn = document.getElementById("close-modal-btn");
+        const newConversationBtn = document.getElementById("new-conversation-btn");
+        const changePromptBtn = document.getElementById("change-prompt-btn");
+        const allCategoriesBtn = document.getElementById("all-categories-btn");
+        const showAllBtn = document.getElementById("show-all-btn");
+        const historyBtn = document.getElementById("history-btn");
+        let activePrompt = promptData[0];
+        let toastTimer = null;
+
+        function createCard(prompt, isFeatured) {
+            const card = document.createElement("article");
+            card.className = `card${isFeatured ? " is-featured" : ""}`;
+            card.innerHTML = `
+                <div class="card-head">
+                    <div>
+                        <div class="card-kicker">${prompt.tag}</div>
+                    </div>
+                    <button class="mini-btn" type="button">Välj</button>
+                </div>
+                <h3>${prompt.title}</h3>
+                <p>${prompt.description}</p>
+                <div class="card-footer">
+                    <button class="mini-btn preview-btn" type="button">Förhandsvisa</button>
+                    <a class="card-link" href="#workspace">Använd direkt</a>
+                </div>
+            `;
+
+            const buttons = card.querySelectorAll("button");
+            buttons[0].addEventListener("click", () => {
+                applyPrompt(prompt);
+                showToast(`Valde "${prompt.title}" i demoarbetsytan.`);
+            });
+            buttons[1].addEventListener("click", () => openPreview(prompt));
+
+            card.querySelector(".card-link").addEventListener("click", () => {
+                applyPrompt(prompt);
+            });
+
+            return card;
+        }
+
+        function applyPrompt(prompt) {
+            activePrompt = prompt;
+            selectedTitle.textContent = prompt.title;
+            selectedDescription.textContent = prompt.description;
+            selectedSideTitle.textContent = prompt.title;
+            selectedStatus.textContent = "Prompt vald. Klar att testa i arbetsytan.";
+        }
+
+        function openPreview(prompt = activePrompt) {
+            modalTitle.textContent = prompt.title;
+            modalBody.textContent = prompt.preview;
+            modal.classList.add("is-open");
+            modal.setAttribute("aria-hidden", "false");
+        }
+
+        function closePreview() {
+            modal.classList.remove("is-open");
+            modal.setAttribute("aria-hidden", "true");
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add("is-visible");
+            window.clearTimeout(toastTimer);
+            toastTimer = window.setTimeout(() => {
+                toast.classList.remove("is-visible");
+            }, 2200);
+        }
+
+        function appendBubble(role, text) {
+            const article = document.createElement("article");
+            article.className = `chat-bubble${role === "user" ? " user" : ""}`;
+            article.innerHTML = `
+                <strong>${role === "user" ? "Du" : "Promptbanken"}</strong>
+                <p>${text}</p>
+            `;
+            chatFeed.appendChild(article);
+            article.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+
+        function buildDemoReply(userText) {
+            const trimmed = userText.trim();
+            const shortSample = trimmed.length > 160 ? `${trimmed.slice(0, 160)}...` : trimmed;
+            return `Demorespons för "${activePrompt.title}": Jag skulle bearbeta texten i den här riktningen och ge ett mer strukturerat svar direkt här i arbetsytan. Underlaget jag utgår från är: "${shortSample}"`;
+        }
+
+        function resetConversation() {
+            chatFeed.innerHTML = `
+                <article class="chat-bubble user">
+                    <strong>Du</strong>
+                    <p>Kan du skriva om texten till ett kort informationsutskick med enkel svenska och tydliga nästa steg?</p>
+                </article>
+                <article class="chat-bubble">
+                    <strong>Promptbanken</strong>
+                    <p>Absolut. Jag utgår från prompten för klarspråk och håller tonen enkel, konkret och invånarnära. Du kan fortsätta skriva här utan att lämna sidan.</p>
+                </article>
+            `;
+            composerInput.value = "Hej! Från och med 17 juni till 9 augusti har medborgarkontoret kortare öppettider. Besök bokas som vanligt via webb eller telefon.";
+            applyPrompt(promptData[0]);
+            selectedStatus.textContent = "Ny demosession startad.";
+            showToast("Demosessionen är återställd.");
+        }
+
+        const featuredPrompts = promptData.filter((prompt) => featuredIds.includes(prompt.id));
+        const otherPrompts = promptData.filter((prompt) => !featuredIds.includes(prompt.id));
+
+        featuredPrompts.forEach((prompt) => featuredGrid.appendChild(createCard(prompt, true)));
+        otherPrompts.forEach((prompt) => libraryGrid.appendChild(createCard(prompt, false)));
+
+        document.querySelectorAll(".quick-action-btn").forEach((button) => {
+            button.addEventListener("click", () => {
+                if (button.dataset.action === "shorter") {
+                    composerInput.value = "Kort version: Medborgarkontoret har sommaröppet 17 juni till 9 augusti. Boka besök via webb eller telefon.";
+                }
+                if (button.dataset.action === "formal") {
+                    composerInput.value = "Medborgarkontoret har justerade öppettider under perioden 17 juni till 9 augusti. Bokning av besök sker fortsatt via webbplats eller telefon.";
+                }
+                if (button.dataset.action === "list") {
+                    composerInput.value = "Sommaröppet:\n- Gäller 17 juni till 9 augusti\n- Medborgarkontoret har kortare öppettider\n- Besök bokas via webb eller telefon";
+                }
+                selectedStatus.textContent = "Texten har justerats i demoskrivytan.";
+                showToast("Snabbval applicerat i demoarbetsytan.");
+            });
+        });
+
+        continueBtn.addEventListener("click", () => {
+            document.getElementById("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+            selectedStatus.textContent = "Arbetsytan är aktiv. Välj prompt eller skicka text direkt.";
+        });
+
+        directChatBtn.addEventListener("click", () => {
+            document.getElementById("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+            composerInput.focus();
+            selectedStatus.textContent = "Direktchatt aktiv i demon. Skriv och skicka i samma vy.";
+            showToast("Direktchatt öppnad i demoarbetsytan.");
+        });
+
+        showPromptBtn.addEventListener("click", () => openPreview(activePrompt));
+        closeModalBtn.addEventListener("click", closePreview);
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) {
+                closePreview();
+            }
+        });
+
+        sendBtn.addEventListener("click", () => {
+            const text = composerInput.value.trim();
+            if (!text) {
+                showToast("Skriv något i arbetsytan först.");
+                return;
+            }
+
+            appendBubble("user", text);
+            selectedStatus.textContent = "Demorespons genereras...";
+            showToast("Skickar demosvar.");
+
+            window.setTimeout(() => {
+                appendBubble("assistant", buildDemoReply(text));
+                selectedStatus.textContent = "Demorespons klar.";
+            }, 500);
+        });
+
+        saveDraftBtn.addEventListener("click", () => {
+            selectedStatus.textContent = "Utkast sparat lokalt i demon.";
+            showToast("Utkast sparat i demon.");
+        });
+
+        newConversationBtn.addEventListener("click", resetConversation);
+        changePromptBtn.addEventListener("click", () => {
+            document.getElementById("featured-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+            showToast("Välj ett nytt promptkort i demon.");
+        });
+        allCategoriesBtn.addEventListener("click", () => {
+            document.getElementById("library-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        showAllBtn.addEventListener("click", () => {
+            document.getElementById("library-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        historyBtn.addEventListener("click", () => {
+            showToast("Historik är bara visuell i den här demon.");
+        });
+
+        applyPrompt(activePrompt);
+    </script>
+</body>
+</html>

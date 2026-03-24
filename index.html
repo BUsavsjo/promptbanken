@@ -8,34 +8,272 @@
     <link rel="stylesheet" href="local-run.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
     <style>
-        .workflow-step-shell {
-            margin-bottom: 1rem;
+        .single-flow-shell {
+            width: min(1120px, calc(100% - 2rem));
+            margin: 1.25rem auto 0;
+            display: grid;
+            gap: 1rem;
         }
 
+        .single-flow-card {
+            background: #ffffff;
+            border: 1px solid #d7e0ea;
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            padding: 1.15rem;
+        }
+
+        .single-flow-hero {
+            background: linear-gradient(135deg, #f7fbff 0%, #eef7f1 100%);
+            border: 1px solid #cfe0d8;
+        }
+
+        .single-flow-kicker,
         .workflow-step-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
-            padding: 0.2rem 0.55rem;
+            padding: 0.25rem 0.65rem;
             border-radius: 999px;
-            background: #e8f1ff;
-            color: #1f5fbf;
+            background: #dceefc;
+            color: #0f4f7a;
             font-size: 0.82rem;
             font-weight: 700;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
-            margin-bottom: 0.45rem;
         }
 
+        .single-flow-hero h2,
         .workflow-step-title {
-            margin: 0;
-            font-size: 1.3rem;
+            margin: 0.55rem 0 0;
         }
 
-        .workflow-step-helper {
-            margin: 0.4rem 0 0;
+        .single-flow-hero p,
+        .workflow-step-helper,
+        .single-flow-selection-summary {
+            margin: 0.45rem 0 0;
             color: #475467;
-            max-width: 70ch;
+            max-width: 72ch;
+        }
+
+        .single-flow-mode-switch {
+            display: none;
+        }
+
+        .single-flow-mode-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            padding: 0.95rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .single-flow-mode-option input {
+            margin-top: 0.2rem;
+        }
+
+        .single-flow-mode-option strong,
+        .single-flow-section-title {
+            display: block;
+            color: #101828;
+        }
+
+        .single-flow-mode-option span {
+            display: block;
+            margin-top: 0.15rem;
+            color: #475467;
+            font-size: 0.95rem;
+        }
+
+        .single-flow-mode-option:has(input:checked) {
+            border-color: #2a6cbc;
+            box-shadow: 0 0 0 3px rgba(42, 108, 188, 0.12);
+            background: #f8fbff;
+        }
+
+        .single-flow-task-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .single-flow-hero-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            align-items: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .single-flow-hero.is-collapsed .single-flow-mode-switch,
+        .single-flow-hero.is-collapsed .single-flow-task-grid {
+            display: none;
+        }
+
+        .single-flow-preset-group,
+        .single-flow-custom-group {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .single-flow-preset-group {
+            border: 0;
+            padding: 0;
+            margin: 0;
+            min-width: 0;
+        }
+
+        .single-flow-preset-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .single-flow-prompt-more {
+            margin-top: 0.75rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .single-flow-prompt-more summary {
+            cursor: pointer;
+            padding: 0.9rem 1rem;
+            font-weight: 600;
+            color: #0f4f7a;
+        }
+
+        .single-flow-prompt-more-body {
+            padding: 0 0.75rem 0.75rem;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .single-flow-prompt-item {
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .single-flow-prompt-item.is-selected {
+            border-color: #2a6cbc;
+            box-shadow: 0 0 0 3px rgba(42, 108, 188, 0.12);
+            background: #f8fbff;
+        }
+
+        .single-flow-prompt-item summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 1rem;
+        }
+
+        .single-flow-prompt-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .single-flow-prompt-summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .single-flow-prompt-summary h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #101828;
+        }
+
+        .single-flow-prompt-summary p {
+            margin: 0.35rem 0 0;
+            color: #475467;
+        }
+
+        .single-flow-prompt-toggle {
+            color: #2a6cbc;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .single-flow-prompt-body {
+            padding: 0 1rem 1rem;
+            display: grid;
+            gap: 0.75rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .single-flow-prompt-preview {
+            margin: 0;
+            padding: 0.9rem;
+            border-radius: 12px;
+            background: #f8fafc;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #334155;
+            max-height: 240px;
+            overflow: auto;
+        }
+
+        .single-flow-prompt-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+
+        .single-flow-prompt-empty {
+            padding: 1rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #475467;
+        }
+
+        .single-flow-custom-group textarea {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            font: inherit;
+            background: #fff;
+        }
+
+        .single-flow-custom-group textarea {
+            min-height: 170px;
+            resize: vertical;
+        }
+
+        .single-flow-custom-group {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 1rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .single-flow-custom-group.is-active {
+            display: grid;
+        }
+
+        .settings-radio-list {
+            display: grid;
+            gap: 0.45rem;
+            margin-top: 0.45rem;
+        }
+
+        .settings-radio-list label {
+            display: flex;
+            gap: 0.45rem;
+            align-items: center;
+        }
+
+        .workflow-step-shell {
+            margin: 0;
         }
 
         .quick-input-container.workflow-step-shell {
@@ -71,12 +309,12 @@
             font-weight: 500;
         }
 
-        .quick-input-status.is-ready {
+        .quick-input-status.is-ready,
+        .quick-input-status.is-error {
             display: inline-flex;
         }
 
         .quick-input-status.is-error {
-            display: inline-flex;
             border-color: #f3c7c7;
             background: #fef2f2;
             color: #b42318;
@@ -94,130 +332,527 @@
             background: #dc2626;
         }
 
-        .quick-input-helper-row.compact-helper {
-            margin-top: 0;
-            padding: 0.7rem 0.8rem;
-            border-radius: 10px;
-            background: #f8fafc;
-            color: #475467;
-        }
-
-        .quick-input-helper-row.compact-helper .quick-input-lock-icon {
-            font-size: 1rem;
-        }
-
-        .prompt-stage-shell {
-            display: flex;
-            flex-direction: column;
+        .single-flow-chat-shell {
+            display: grid;
             gap: 1rem;
-            margin-bottom: 1rem;
         }
 
-        .selected-prompt-panel {
-            border: 1px solid #bfd3f2;
-            background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 100%);
-            border-radius: 14px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .selected-prompt-panel[hidden] {
-            display: none;
-        }
-
-        .selected-prompt-summary {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .selected-prompt-label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #1f5fbf;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-
-        .selected-prompt-title {
-            margin: 0;
-            font-size: 1.15rem;
-        }
-
-        .selected-prompt-description {
-            margin: 0;
-            color: #475467;
-        }
-
-        .selected-prompt-actions {
+        .single-flow-chat-toolbar {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.65rem;
+            gap: 0.75rem;
             align-items: center;
         }
 
-        .selected-prompt-actions .secondary-btn,
-        .selected-prompt-actions .primary-btn {
-            width: auto;
+        .single-flow-chat-toolbar label {
+            font-weight: 600;
         }
 
-        .selected-prompt-actions .secondary-btn.is-copied {
-            background: #ecfdf3;
-            border-color: #86d19f;
-            color: #067647;
+        .single-flow-chat-toolbar-copy-hint {
+            color: #475467;
+            font-size: 0.9rem;
         }
 
-        .selected-prompt-meta {
-            font-size: 0.92rem;
+        .single-flow-chat-toolbar-group,
+        .single-flow-chat-context-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .single-flow-chat-toolbar select {
+            min-width: min(320px, 100%);
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 0.7rem 0.9rem;
+            font: inherit;
+        }
+
+        .single-flow-icon-btn {
+            width: 2.6rem;
+            height: 2.6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .single-flow-icon-btn:hover {
+            background: #f8fafc;
+        }
+
+        .single-flow-icon-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .single-flow-chat-status {
+            color: #475467;
+            font-weight: 500;
+        }
+
+        .single-flow-chat-status.is-error {
+            color: #b42318;
+        }
+
+        .single-flow-chat-context {
+            padding: 0.9rem 1rem;
+            border: 1px solid #dbe5ef;
+            border-radius: 14px;
+            background: #f8fbff;
+        }
+
+        .single-flow-chat-context p {
+            margin: 0.35rem 0 0;
             color: #475467;
         }
 
-        .prompt-grid .prompt-card {
-            position: relative;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        .single-flow-chat-context-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
         }
 
-        .prompt-grid .prompt-card.workflow-selected {
-            border-color: #1f5fbf;
-            box-shadow: 0 0 0 3px rgba(31, 95, 191, 0.12);
-            transform: translateY(-1px);
-        }
-
-        .prompt-grid .prompt-card .card-actions {
+        .single-flow-chat-context-session {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .single-flow-chat-context-pill {
+            display: inline-flex;
             align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.08);
+            color: #334155;
+            font-size: 0.88rem;
         }
 
-        .prompt-grid .prompt-card .card-actions .export-btn,
-        .prompt-grid .prompt-card .card-actions .copy-btn,
-        .prompt-grid .prompt-card .card-actions .local-chat-btn,
-        .prompt-grid .prompt-card .card-actions .direct-chat-btn {
-            display: none !important;
+        .single-flow-chat-context details {
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            padding-top: 0.65rem;
+            margin-top: 0.75rem;
         }
 
-        .prompt-grid .prompt-card .select-prompt-btn {
-            width: auto;
+        .single-flow-chat-context summary {
+            cursor: pointer;
+            font-weight: 600;
         }
 
-        .prompt-grid .prompt-card .info-btn {
-            opacity: 0.78;
+        .single-flow-chat-context pre {
+            margin: 0.5rem 0 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: inherit;
         }
 
-        .prompt-grid .prompt-card.workflow-selected .select-prompt-btn {
-            background: #e8f1ff;
-            color: #1f5fbf;
-            border-color: #bfd3f2;
+        .single-flow-chat-alert {
+            display: none;
+            border: 1px solid #f3c7c7;
+            border-radius: 10px;
+            padding: 0.8rem 0.9rem;
+            background: #fef2f2;
+            color: #b42318;
         }
 
-        @media (max-width: 700px) {
-            .selected-prompt-actions {
-                flex-direction: column;
+        .single-flow-chat-alert.is-visible {
+            display: block;
+        }
+
+        .single-flow-chat-alert.is-copy-mode {
+            display: block;
+            border-color: #cfe0d8;
+            background: #eef7f1;
+            color: #245c3f;
+        }
+
+        .single-flow-chat-shell {
+            display: grid;
+            grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+            gap: 1rem;
+            min-height: 760px;
+            overflow: hidden;
+        }
+
+        .single-flow-chat-messages {
+            min-height: 0;
+            max-height: 560px;
+            overflow: auto;
+            border: 1px solid #dbe5ef;
+            border-radius: 16px;
+            background: #f8fafc;
+            padding: 1rem;
+            display: grid;
+            gap: 0.8rem;
+            overscroll-behavior: contain;
+        }
+
+        .single-flow-chat-empty {
+            color: #64748b;
+            text-align: center;
+            align-self: center;
+        }
+
+        .single-flow-chat-empty strong {
+            display: block;
+            color: #101828;
+            margin-bottom: 0.35rem;
+        }
+
+        .single-flow-chat-message.is-draft {
+            opacity: 0.84;
+        }
+
+        .single-flow-chat-message.is-draft .single-flow-chat-bubble {
+            background: #eef6ff;
+            border-style: dashed;
+            border-color: #7aa6d9;
+            color: #0f4f7a;
+        }
+
+        .single-flow-chat-message {
+            display: flex;
+            min-width: 0;
+        }
+
+        .single-flow-chat-message.is-user {
+            justify-content: flex-end;
+        }
+
+        .single-flow-chat-bubble {
+            width: 100%;
+            max-width: min(780px, 100%);
+            min-width: 0;
+            padding: 0.9rem 1rem;
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid #dbe5ef;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            box-sizing: border-box;
+        }
+
+        .single-flow-chat-message.is-user .single-flow-chat-bubble {
+            background: #0f4f7a;
+            color: #fff;
+            border-color: #0f4f7a;
+        }
+
+        .single-flow-chat-markdown {
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+
+        .single-flow-chat-markdown p,
+        .single-flow-chat-markdown li,
+        .single-flow-chat-markdown strong,
+        .single-flow-chat-markdown span {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .single-flow-chat-markdown ol,
+        .single-flow-chat-markdown ul {
+            margin: 0.65rem 0;
+            padding-left: 1.2rem;
+        }
+
+        .single-flow-chat-markdown li + li {
+            margin-top: 0.35rem;
+        }
+
+        .single-flow-chat-markdown pre {
+            margin: 0.75rem 0;
+            padding: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+
+        .single-flow-chat-code-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.4rem 0.65rem;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+            font-size: 0.8rem;
+        }
+
+        .single-flow-chat-code-copy,
+        .single-flow-chat-quick-actions button {
+            border: 1px solid rgba(148, 163, 184, 0.55);
+            background: rgba(15, 23, 42, 0.6);
+            color: #f8fafc;
+            border-radius: 6px;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .single-flow-chat-markdown :not(pre) > code {
+            background: rgba(15, 23, 42, 0.08);
+            border-radius: 4px;
+            padding: 0.1rem 0.3rem;
+        }
+
+        .single-flow-chat-markdown table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.75rem 0;
+            font-size: 0.92rem;
+            display: block;
+            overflow-x: auto;
+        }
+
+        .single-flow-chat-markdown th,
+        .single-flow-chat-markdown td {
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            padding: 0.35rem 0.5rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .single-flow-chat-markdown blockquote {
+            margin: 0.75rem 0;
+            border-left: 4px solid rgba(148, 163, 184, 0.7);
+            padding-left: 0.75rem;
+        }
+
+        .single-flow-chat-assistant-tools {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .single-flow-chat-quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.6rem;
+        }
+
+        .single-flow-chat-copy-btn {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 8px;
+            padding: 0.3rem 0.55rem;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+
+        .single-flow-chat-input textarea {
+            width: 100%;
+            min-height: 120px;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            font: inherit;
+            resize: vertical;
+        }
+
+        .single-flow-chat-input {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .single-flow-chat-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .single-flow-chat-quickstart {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .single-flow-chat-quickstart button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 999px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .single-flow-chat-shell.is-maximized {
+            position: fixed;
+            inset: 1rem;
+            z-index: 1000;
+            margin: 0;
+            min-height: auto;
+            height: calc(100dvh - 2rem);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+            background: #fff;
+        }
+
+        .single-flow-chat-shell.is-maximized .single-flow-chat-messages {
+            max-height: none;
+        }
+
+        body.single-flow-chat-lock-scroll {
+            overflow: hidden;
+        }
+
+        #single-flow-chat-send-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.9rem;
+            min-width: 2.9rem;
+            height: 2.9rem;
+            border-radius: 999px;
+            padding: 0;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .legacy-workflow-shell {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .single-flow-task-grid,
+            .single-flow-preset-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .single-flow-shell {
+                width: min(100% - 1rem, 1120px);
+                margin-top: 0.75rem;
+            }
+
+            .single-flow-card {
+                padding: 1rem;
+                border-radius: 16px;
+            }
+
+            .single-flow-mode-switch {
+                grid-template-columns: 1fr;
+            }
+
+            .single-flow-hero-actions {
                 align-items: stretch;
             }
+
+            .single-flow-chat-toolbar {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                align-items: center;
+                gap: 0.65rem;
+            }
+
+            .single-flow-chat-toolbar label,
+            .single-flow-chat-toolbar select,
+            .single-flow-chat-toolbar-copy-hint,
+            .single-flow-chat-status {
+                grid-column: 1 / -1;
+            }
+
+            .single-flow-chat-toolbar select {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .single-flow-chat-toolbar-group {
+                justify-content: flex-end;
+            }
+
+            .single-flow-chat-context {
+                padding: 0.85rem;
+            }
+
+            .single-flow-chat-context-head,
+            .single-flow-chat-context-session {
+                gap: 0.55rem;
+            }
+
+            .single-flow-chat-context-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .single-flow-chat-messages {
+                padding: 0.8rem;
+                gap: 0.65rem;
+            }
+
+            .single-flow-chat-bubble {
+                padding: 0.8rem 0.85rem;
+                border-radius: 14px;
+            }
+
+            .single-flow-chat-input textarea {
+                min-height: 104px;
+            }
+
+            .single-flow-chat-quickstart {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .single-flow-chat-quickstart button {
+                width: 100%;
+                text-align: left;
+            }
+
+            .quick-input-file-row {
+                display: grid;
+                gap: 0.45rem;
+            }
+
+            .single-flow-chat-actions {
+                position: sticky;
+                bottom: 0;
+                margin: 0 -1rem -1rem;
+                padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+                background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 30%);
+            }
+
+            .single-flow-chat-shell {
+                min-height: calc(100dvh - 9rem);
+            }
+
+            .single-flow-chat-shell.is-maximized {
+                inset: 0;
+                height: 100dvh;
+                border-radius: 0;
+                padding: 0.9rem;
+                padding-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+                box-shadow: none;
+            }
+
+            .single-flow-chat-shell.is-maximized .single-flow-chat-messages {
+                border-radius: 14px;
+            }
+
         }
     </style>
 </head>
@@ -246,58 +881,176 @@
                     <p class="settings-helper">Spara och visa favoriter</p>
                 </div>
                 <div class="settings-option">
-                    <span class="settings-link settings-link-disabled" aria-disabled="true">⚙️ Multiprovider-inställningar</span>
-                    <p class="settings-helper">Kommer i PRO-versionen (hosted)</p>
+                    <span class="settings-link">Chattläge</span>
+                    <div class="settings-radio-list" role="radiogroup" aria-label="Välj chattläge">
+                        <label for="provider-mode-auto"><input type="radio" id="provider-mode-auto" name="provider-mode" value="auto" checked> Auto</label>
+                        <label for="provider-mode-openai"><input type="radio" id="provider-mode-openai" name="provider-mode" value="openai"> OpenAI</label>
+                        <label for="provider-mode-ollama"><input type="radio" id="provider-mode-ollama" name="provider-mode" value="ollama"> Ollama</label>
+                        <label for="provider-mode-copy"><input type="radio" id="provider-mode-copy" name="provider-mode" value="copy"> Kopiera</label>
+                    </div>
+                    <p class="settings-helper">Välj om chatten ska köra via OpenAI, Ollama eller bara kopiera prompten till valfri LLM.</p>
                 </div>
 
             </div>
         </div>
     </div>
 
-    <div class="quick-input-container workflow-step-shell">
-        <div class="quick-input-header">
-            <div class="quick-input-header-copy">
-                <span class="workflow-step-kicker">Steg 1</span>
-                <h3 class="workflow-step-title">Vilken text vill du arbeta med?</h3>
-                <p class="workflow-step-helper">Klistra in brevet, anteckningarna eller underlaget här. Du väljer uppgift i nästa steg.</p>
+    <main class="single-flow-shell">
+        <section class="single-flow-card single-flow-hero" aria-labelledby="single-flow-heading">
+            <span class="single-flow-kicker">Textbearbetning</span>
+            <h2 id="single-flow-heading">Välj uppgift, klistra in texten och kör direkt på samma sida</h2>
+            <p>Färdiga uppgifter och fri instruktion ligger i samma arbetsyta. Resultatet visas direkt nedanför utan att du behöver gå vidare till ett nytt steg.</p>
+
+            <div class="single-flow-mode-switch" role="radiogroup" aria-labelledby="single-flow-heading">
+                <label class="single-flow-mode-option" for="task-mode-preset">
+                    <input type="radio" name="task-mode" id="task-mode-preset" value="preset" checked>
+                    <span>
+                        <strong>Färdig uppgift</strong>
+                        <span>Välj en tydlig standarduppgift för snabb bearbetning.</span>
+                    </span>
+                </label>
+                <label class="single-flow-mode-option" for="task-mode-custom">
+                    <input type="radio" name="task-mode" id="task-mode-custom" value="custom">
+                    <span>
+                        <strong>Fri instruktion</strong>
+                        <span>Skriv din egen instruktion när de färdiga uppgifterna inte räcker.</span>
+                    </span>
+                </label>
             </div>
-            <h3>✍️ Snabbinmatning</h3>
-            <button class="quick-input-clear-btn" id="quick-input-clear-btn">🗑️ Rensa</button>
-        </div>
-        <textarea 
-            id="quick-input-textarea" 
-            class="quick-input-textarea" 
-            maxlength="5000"
-            placeholder="Klistra in eller skriv din text här... När du sedan kopierar en prompt kommer din text automatiskt att inkluderas. (Ingen data lagras, allt sker lokalt)"
-            aria-label="Snabbinmatning för text"></textarea>
-        <div class="quick-input-info-row">
-            <span>Max 5 000 tecken. Undvik personuppgifter. <button id="show-anon-examples" class="example-btn" type="button">Visa exempel</button></span>
-            <span id="quick-input-char-counter">0 / 5 000 tecken</span>
-        </div>
-        <div class="quick-input-helper-row">
-            <span class="quick-input-lock-icon">🔒</span>
-            <span>Anonymisera alltid personuppgifter innan du exporterar eller kopierar! Kontrollera att namn, personnummer, adresser och känsliga uppgifter är borttagna.</span>
-        </div>
-        <div class="quick-input-file-row">
-            <label for="quick-input-file" class="quick-input-file-label">Välj fil</label>
-            <input id="quick-input-file" type="file" accept=".txt,.md,.csv,.json,.docx,.rtf,.odt,.log,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-            <span class="quick-input-file-help">Stödjer: txt, md, csv, json, docx</span>
-        </div>
-        <div id="anon-examples-modal">
-            <strong>Exempel på vad du ska ta bort:</strong>
-            <ul>
-                <li>Namn på personer (t.ex. 'Anna Andersson')</li>
-                <li>Personnummer eller födelsedatum</li>
-                <li>Adress, telefonnummer, e-post</li>
-                <li>Specifika ärendenummer eller diarienummer</li>
-                <li>Hälsoinformation eller känsliga uppgifter</li>
-            </ul>
-            <button id="close-anon-examples" class="example-btn anon-examples-close">Stäng</button>
-        </div>
-    </div>
 
+            <div class="single-flow-task-grid">
+                <div class="single-flow-preset-panel" id="single-flow-preset-panel">
+                    <fieldset class="single-flow-preset-group" aria-describedby="single-flow-preset-help">
+                        <legend class="single-flow-section-title">Färdiga uppgifter</legend>
+                        <p id="single-flow-preset-help" class="single-flow-selection-summary">Alla promptar laddas här och kan expanderas för att läsa instruktionen innan du väljer. `Egen instruktion` ligger sist i listan.</p>
+                        <div class="single-flow-preset-options" id="single-flow-prompt-list">
+                            <div class="single-flow-prompt-empty">Laddar uppgifter...</div>
+                        </div>
+                        <details class="single-flow-prompt-more" id="single-flow-prompt-more" hidden>
+                            <summary>Visa fler uppgifter</summary>
+                            <div class="single-flow-prompt-more-body" id="single-flow-prompt-more-list"></div>
+                        </details>
+                    </fieldset>
+                </div>
 
-    <main>
+                <div class="single-flow-custom-group" id="single-flow-custom-group">
+                    <label class="single-flow-section-title" for="custom-instruction-textarea">Egen instruktion</label>
+                    <p class="single-flow-selection-summary">Skriv instruktionen här när du väljer alternativet `Egen instruktion` längst ned i promptlistan.</p>
+                    <textarea id="custom-instruction-textarea" placeholder="Skriv din egen instruktion här..." aria-describedby="custom-instruction-help"></textarea>
+                    <p id="custom-instruction-help" class="single-flow-selection-summary">Instruktionen används som kontext för chatten när `Egen instruktion` är vald.</p>
+                </div>
+            </div>
+
+            <div class="single-flow-hero-actions">
+                <p class="single-flow-selection-summary" id="task-selection-summary" aria-live="polite">Aktiv uppgift: Klarspråk.</p>
+                <button class="single-flow-icon-btn" id="single-flow-prompt-collapse-btn" type="button" aria-expanded="true" aria-label="Dölj eller visa uppgiftsval" title="Dölj eller visa uppgiftsval">▴</button>
+            </div>
+        </section>
+
+        <section class="single-flow-card" aria-labelledby="single-flow-chat-title">
+            <div class="single-flow-chat-shell">
+                <div>
+                    <span class="workflow-step-kicker">Direktchatt</span>
+                    <h2 id="single-flow-chat-title">Skriv och chatta direkt på sidan</h2>
+                    <p class="single-flow-selection-summary">Vald prompt eller fri instruktion följer automatiskt med som kontext. Skriv din text eller följdfråga direkt i chatten, bifoga filer och fortsätt i samma tråd.</p>
+                </div>
+
+                <div class="single-flow-chat-toolbar">
+                    <label for="single-flow-chat-model-select">Nivå</label>
+                    <select id="single-flow-chat-model-select">
+                        <option value="">Laddar nivåer...</option>
+                    </select>
+                    <div class="single-flow-chat-toolbar-group">
+                        <button class="single-flow-icon-btn" id="single-flow-chat-expand-btn" type="button" aria-pressed="false" aria-label="Maximera chatt" title="Maximera chatt">⤢</button>
+                        <button class="single-flow-icon-btn" id="single-flow-chat-reset-btn" type="button" aria-label="Ny chatt" title="Ny chatt">↺</button>
+                        <button class="single-flow-icon-btn" id="single-flow-chat-stop-btn" type="button" aria-label="Stoppa generering" title="Stoppa generering" disabled>■</button>
+                    </div>
+                    <span class="single-flow-chat-toolbar-copy-hint" id="single-flow-chat-toolbar-copy-hint" hidden>Kopiera-läge aktivt</span>
+                    <span class="single-flow-chat-status" id="single-flow-chat-status" aria-live="polite">Klar</span>
+                </div>
+
+                <div class="single-flow-chat-context" id="single-flow-chat-context">
+                    <div class="single-flow-chat-context-head">
+                        <div>
+                            <strong id="single-flow-chat-context-title">Aktiv kontext: Klarspråk</strong>
+                            <p id="single-flow-chat-context-text">Vald prompt används som systeminstruktion för chatten.</p>
+                        </div>
+                        <div class="single-flow-chat-context-actions">
+                            <button class="single-flow-icon-btn" id="single-flow-chat-change-prompt-btn" type="button" aria-label="Byt uppgift" title="Byt uppgift">⌘</button>
+                            <button class="single-flow-icon-btn" id="single-flow-chat-show-prompt-btn" type="button" aria-label="Visa instruktion" title="Visa instruktion">≡</button>
+                        </div>
+                    </div>
+                    <div class="single-flow-chat-context-session">
+                        <span class="single-flow-chat-context-pill">Modell: <span id="single-flow-chat-session-model">Inte vald</span></span>
+                        <span class="single-flow-chat-context-pill">Instruktion: aktiv</span>
+                    </div>
+                    <details>
+                        <summary>Visa instruktion</summary>
+                        <pre id="single-flow-chat-context-prompt"></pre>
+                    </details>
+                </div>
+
+                <div id="single-flow-chat-alert" class="single-flow-chat-alert" role="alert" aria-live="assertive">
+                    Kan inte nå vald provider just nu. Kontrollera backend och försök igen.
+                </div>
+
+                <div id="single-flow-chat-messages" class="single-flow-chat-messages" aria-live="polite">
+                    <div class="single-flow-chat-empty" id="single-flow-chat-empty">Chat</div>
+                </div>
+
+                <div class="single-flow-chat-input">
+                    <textarea 
+                        id="quick-input-textarea" 
+                        class="quick-input-textarea" 
+                        maxlength="5000"
+                        placeholder="Skriv din text eller följdfråga här..."
+                        aria-label="Chattmeddelande"></textarea>
+                    <div class="quick-input-info-row">
+                        <span>Max 5 000 tecken. Undvik personuppgifter. <button id="show-anon-examples" class="example-btn" type="button">Visa exempel</button></span>
+                        <span id="quick-input-char-counter">0 / 5 000 tecken</span>
+                    </div>
+                    <div class="single-flow-chat-quickstart" aria-label="Snabbval för första meddelandet">
+                        <button type="button" data-chat-starter="klarsprak">Skriv om till klarspråk</button>
+                        <button type="button" data-chat-starter="sammanfattning">Sammanfatta text</button>
+                        <button type="button" data-chat-starter="forbattra">Förbättra tonen</button>
+                    </div>
+                    <div class="quick-input-helper-row">
+                        <span class="quick-input-lock-icon">🔒</span>
+                        <span>Anonymisera alltid personuppgifter innan du skickar i chatten. Kontrollera att namn, personnummer, adresser och känsliga uppgifter är borttagna.</span>
+                    </div>
+                    <div class="quick-input-file-row">
+                        <label for="quick-input-file" class="quick-input-file-label">Bifoga fil eller bild</label>
+                        <input id="quick-input-file" type="file" accept=".txt,.md,.csv,.json,.docx,.rtf,.odt,.log,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" />
+                        <span class="quick-input-file-help">Stödjer: txt, md, csv, json, docx samt bilder för visuell referens</span>
+                        <div class="quick-input-image-preview" id="quick-input-image-preview" hidden>
+                            <div class="quick-input-image-preview-head">
+                                <strong id="quick-input-image-name">Vald bild</strong>
+                                <button class="example-btn" id="quick-input-image-clear" type="button">Ta bort bild</button>
+                            </div>
+                            <img id="quick-input-image-tag" alt="Förhandsvisning av uppladdad bild" />
+                        </div>
+                    </div>
+                    <div id="anon-examples-modal">
+                        <strong>Exempel på vad du ska ta bort:</strong>
+                        <ul>
+                            <li>Namn på personer (t.ex. 'Anna Andersson')</li>
+                            <li>Personnummer eller födelsedatum</li>
+                            <li>Adress, telefonnummer, e-post</li>
+                            <li>Specifika ärendenummer eller diarienummer</li>
+                            <li>Hälsoinformation eller känsliga uppgifter</li>
+                        </ul>
+                        <button id="close-anon-examples" class="example-btn anon-examples-close">Stäng</button>
+                    </div>
+                    <div class="single-flow-chat-actions">
+                        <button class="single-flow-icon-btn" id="quick-input-clear-btn" type="button" aria-label="Rensa utkast" title="Rensa utkast">⌫</button>
+                        <button class="primary-btn" id="single-flow-chat-send-btn" type="button" aria-label="Skicka meddelande" title="Skicka meddelande">↑</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <main class="legacy-workflow-shell" aria-hidden="true">
         <div class="favorites-menu hidden favorites-only" id="favorites-menu">
             <div class="favorites-header">
                 <h2>⭐ Mina Favoriter</h2>
@@ -713,6 +1466,1522 @@
                 enhanceStepOne();
                 enhanceExistingCards();
             });
+        })();
+    </script>
+    <script>
+        (() => {
+            const backendBaseUrl = window.PROMPTBANKEN_API_BASE_URL || window.location.origin.replace(/\/$/, '');
+            const CHAT_DRAFT_STORAGE_KEY = 'promptbankenSingleFlowChatDraft';
+
+            function renderSingleFlow() {
+                const modeInputs = document.querySelectorAll('input[name="task-mode"]');
+                const presetPanel = document.getElementById('single-flow-preset-panel');
+                const promptList = document.getElementById('single-flow-prompt-list');
+                const promptMore = document.getElementById('single-flow-prompt-more');
+                const promptMoreList = document.getElementById('single-flow-prompt-more-list');
+                const customGroup = document.getElementById('single-flow-custom-group');
+                const customInstruction = document.getElementById('custom-instruction-textarea');
+                const taskSummary = document.getElementById('task-selection-summary');
+                const heroSection = document.querySelector('.single-flow-hero');
+                const promptCollapseButton = document.getElementById('single-flow-prompt-collapse-btn');
+                const textInput = document.getElementById('quick-input-textarea');
+                const quickInputTitle = document.querySelector('.single-flow-chat-input .quick-input-header-copy .workflow-step-title');
+                const quickInputHelper = document.querySelector('.single-flow-chat-input .quick-input-header-copy .workflow-step-helper');
+                const quickStartButtons = document.querySelectorAll('[data-chat-starter]');
+                const providerModeInputs = document.querySelectorAll('input[name="provider-mode"]');
+                const chatModelLabel = document.querySelector('label[for="single-flow-chat-model-select"]');
+                const chatModelSelect = document.getElementById('single-flow-chat-model-select');
+                const chatToolbarCopyHint = document.getElementById('single-flow-chat-toolbar-copy-hint');
+                const chatExpandButton = document.getElementById('single-flow-chat-expand-btn');
+                const chatStatusNode = document.getElementById('single-flow-chat-status');
+                const chatContextTitle = document.getElementById('single-flow-chat-context-title');
+                const chatContextText = document.getElementById('single-flow-chat-context-text');
+                const chatContextPrompt = document.getElementById('single-flow-chat-context-prompt');
+                const chatChangePromptButton = document.getElementById('single-flow-chat-change-prompt-btn');
+                const chatShowPromptButton = document.getElementById('single-flow-chat-show-prompt-btn');
+                const chatSessionModel = document.getElementById('single-flow-chat-session-model');
+                const chatAlert = document.getElementById('single-flow-chat-alert');
+                const chatMessages = document.getElementById('single-flow-chat-messages');
+                const chatEmpty = document.getElementById('single-flow-chat-empty');
+                const clearChatDraftButton = document.getElementById('quick-input-clear-btn');
+                const chatSendButton = document.getElementById('single-flow-chat-send-btn');
+                const chatStopButton = document.getElementById('single-flow-chat-stop-btn');
+                const chatResetButton = document.getElementById('single-flow-chat-reset-btn');
+                const chatShell = document.querySelector('.single-flow-chat-shell');
+
+                const chatInput = textInput;
+
+                if (!modeInputs.length || !presetPanel || !promptList || !promptMore || !promptMoreList || !customGroup || !customInstruction || !taskSummary || !heroSection || !promptCollapseButton || !textInput || !chatModelSelect || !chatToolbarCopyHint || !chatExpandButton || !chatStatusNode || !chatContextTitle || !chatContextText || !chatContextPrompt || !chatChangePromptButton || !chatShowPromptButton || !chatSessionModel || !chatAlert || !chatMessages || !chatEmpty || !clearChatDraftButton || !chatInput || !chatSendButton || !chatStopButton || !chatResetButton || !chatShell) {
+                    return;
+                }
+                if (quickInputTitle) {
+                    quickInputTitle.textContent = 'Skriv direkt i chatten';
+                }
+                if (quickInputHelper) {
+                    quickInputHelper.textContent = 'Klistra in text, skriv din fråga eller ladda upp en fil så fylls fältet med innehållet.';
+                }
+                textInput.placeholder = 'Skriv din text eller följdfråga här...';
+
+                let quickInputStatus = document.getElementById('quick-input-status');
+                if (!quickInputStatus) {
+                    quickInputStatus = document.createElement('div');
+                    quickInputStatus.id = 'quick-input-status';
+                    quickInputStatus.className = 'quick-input-status';
+                    quickInputStatus.setAttribute('aria-live', 'polite');
+                    quickInputStatus.innerHTML = '<span class="quick-input-status-dot" aria-hidden="true"></span><span></span>';
+                    textInput.insertAdjacentElement('afterend', quickInputStatus);
+                }
+
+                const state = {
+                    mode: 'preset',
+                    presetId: 'klarsprak',
+                    promptCache: {},
+                    promptMeta: {},
+                    chatAbortController: null,
+                    chatMessages: [],
+                    chatModelValue: '',
+                    chatModelProvider: '',
+                    chatModelName: '',
+                    shouldAutoScroll: true,
+                    draftPreviewRow: null,
+                    isCopyMode: false,
+                    providerPreference: 'auto'
+                };
+
+                function decodeHtmlEntities(value) {
+                    const textarea = document.createElement('textarea');
+                    textarea.innerHTML = String(value || '');
+                    return textarea.value;
+                }
+
+                function escapeHtml(text) {
+                    return String(text || '')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                }
+
+                function parseInline(text) {
+                    let output = escapeHtml(text);
+                    output = output.replace(/`([^`]+)`/g, '<code>$1</code>');
+                    output = output.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                    output = output.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                    output = output.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+                    return output;
+                }
+
+                function parseMarkdown(text) {
+                    const source = String(text || '').replace(/\r\n/g, '\n');
+                    const lines = source.split('\n');
+                    const html = [];
+                    let inCodeBlock = false;
+                    let codeLanguage = '';
+                    let codeBuffer = [];
+                    let paragraph = [];
+                    let listStack = [];
+
+                    function closeParagraph() {
+                        if (!paragraph.length) return;
+                        html.push(`<p>${parseInline(paragraph.join(' '))}</p>`);
+                        paragraph = [];
+                    }
+
+                    function closeLists() {
+                        while (listStack.length) {
+                            html.push(`</${listStack.pop()}>`);
+                        }
+                    }
+
+                    for (let i = 0; i < lines.length; i += 1) {
+                        const line = lines[i];
+
+                        if (line.trim().startsWith('```')) {
+                            closeParagraph();
+                            closeLists();
+                            if (!inCodeBlock) {
+                                inCodeBlock = true;
+                                codeLanguage = line.trim().slice(3).trim();
+                                codeBuffer = [];
+                            } else {
+                                html.push(`<pre data-lang="${escapeHtml(codeLanguage || 'text')}"><code>${escapeHtml(codeBuffer.join('\n'))}</code></pre>`);
+                                inCodeBlock = false;
+                                codeLanguage = '';
+                                codeBuffer = [];
+                            }
+                            continue;
+                        }
+
+                        if (inCodeBlock) {
+                            codeBuffer.push(line);
+                            continue;
+                        }
+
+                        if (!line.trim()) {
+                            closeParagraph();
+                            closeLists();
+                            continue;
+                        }
+
+                        const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+                        if (headingMatch) {
+                            closeParagraph();
+                            closeLists();
+                            const level = headingMatch[1].length;
+                            html.push(`<h${level}>${parseInline(headingMatch[2])}</h${level}>`);
+                            continue;
+                        }
+
+                        const orderedMatch = line.match(/^\s*\d+\.\s+(.+)$/);
+                        const bulletMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+                        if (orderedMatch || bulletMatch) {
+                            closeParagraph();
+                            const desiredType = orderedMatch ? 'ol' : 'ul';
+                            if (!listStack.length || listStack[listStack.length - 1] !== desiredType) {
+                                closeLists();
+                                html.push(`<${desiredType}>`);
+                                listStack.push(desiredType);
+                            }
+                            html.push(`<li>${parseInline(orderedMatch ? orderedMatch[1] : bulletMatch[1])}</li>`);
+                            continue;
+                        }
+
+                        if (/^>\s?/.test(line)) {
+                            closeParagraph();
+                            closeLists();
+                            html.push(`<blockquote><p>${parseInline(line.replace(/^>\s?/, ''))}</p></blockquote>`);
+                            continue;
+                        }
+
+                        paragraph.push(line.trim());
+                    }
+
+                    closeParagraph();
+                    closeLists();
+                    if (inCodeBlock) {
+                        html.push(`<pre data-lang="${escapeHtml(codeLanguage || 'text')}"><code>${escapeHtml(codeBuffer.join('\n'))}</code></pre>`);
+                    }
+                    return html.join('');
+                }
+
+                function setConnectionAlert(message = '') {
+                    if (!message) {
+                        chatAlert.classList.remove('is-visible');
+                        chatAlert.classList.remove('is-copy-mode');
+                        chatAlert.textContent = 'Kan inte nå vald provider just nu. Kontrollera backend och försök igen.';
+                        return;
+                    }
+                    chatAlert.textContent = message;
+                    chatAlert.classList.add('is-visible');
+                }
+
+                function setCopyModeAlert(message = '') {
+                    if (!message) {
+                        chatAlert.classList.remove('is-visible');
+                        chatAlert.classList.remove('is-copy-mode');
+                        chatAlert.textContent = 'Kopiera-lÃ¤get Ã¤r inte aktivt.';
+                        return;
+                    }
+                    chatAlert.textContent = message;
+                    chatAlert.classList.add('is-visible');
+                    chatAlert.classList.add('is-copy-mode');
+                }
+
+                function setChatStatus(message, isError = false) {
+                    chatStatusNode.textContent = message;
+                    chatStatusNode.classList.toggle('is-error', Boolean(isError));
+                }
+
+                function updateChatSessionModelLabel() {
+                    chatSessionModel.textContent = state.isCopyMode
+                        ? 'Kopiera till valfri LLM'
+                        : (state.chatModelValue || 'Inte vald');
+                }
+
+                function updateChatModeUi() {
+                    chatToolbarCopyHint.hidden = !state.isCopyMode;
+                    chatModelSelect.disabled = state.isCopyMode;
+                    chatStopButton.disabled = true;
+                    chatSendButton.setAttribute('aria-label', state.isCopyMode ? 'Kopiera prompt och text' : 'Skicka meddelande');
+                    chatSendButton.setAttribute('title', state.isCopyMode ? 'Kopiera prompt och text' : 'Skicka meddelande');
+                    chatSendButton.textContent = state.isCopyMode ? '⧉' : '↑';
+                    updateChatSessionModelLabel();
+                }
+
+                function resizeChatInput() {
+                    chatInput.style.height = 'auto';
+                    const nextHeight = Math.min(Math.max(chatInput.scrollHeight, 96), 220);
+                    chatInput.style.height = `${nextHeight}px`;
+                }
+
+                function saveChatDraft() {
+                    try {
+                        sessionStorage.setItem(CHAT_DRAFT_STORAGE_KEY, JSON.stringify({ input: chatInput.value || '' }));
+                    } catch (_error) {
+                    }
+                }
+
+                function loadChatDraft() {
+                    try {
+                        const raw = sessionStorage.getItem(CHAT_DRAFT_STORAGE_KEY);
+                        if (!raw) return;
+                        const draft = JSON.parse(raw);
+                        if (!chatInput.value.trim() && draft?.input) {
+                            chatInput.value = draft.input;
+                            resizeChatInput();
+                        }
+                    } catch (_error) {
+                    }
+                }
+
+                function clearChatDraft() {
+                    try {
+                        sessionStorage.removeItem(CHAT_DRAFT_STORAGE_KEY);
+                    } catch (_error) {
+                    }
+                }
+
+                function scrollChatToBottom(force = false) {
+                    if (!force && !state.shouldAutoScroll) {
+                        return;
+                    }
+                    requestAnimationFrame(() => {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    });
+                }
+
+                function updateDraftPreview() {
+                    const draftText = chatInput.value.trim();
+
+                    if (!draftText) {
+                        if (state.draftPreviewRow) {
+                            state.draftPreviewRow.remove();
+                            state.draftPreviewRow = null;
+                        }
+                        chatEmpty.hidden = state.chatMessages.length > 0;
+                        return;
+                    }
+
+                    chatEmpty.hidden = true;
+                    let row = state.draftPreviewRow;
+                    if (!row) {
+                        row = document.createElement('div');
+                        row.className = 'single-flow-chat-message is-user is-draft';
+                        const bubble = document.createElement('div');
+                        bubble.className = 'single-flow-chat-bubble';
+                        row.appendChild(bubble);
+                        state.draftPreviewRow = row;
+                    }
+
+                    const bubble = row.querySelector('.single-flow-chat-bubble');
+                    if (bubble) {
+                        bubble.textContent = draftText;
+                    }
+
+                    chatMessages.appendChild(row);
+                    scrollChatToBottom();
+                }
+
+                function updateQuickInputStatus() {
+                    if (!textInput.value.trim()) {
+                        quickInputStatus.classList.remove('is-ready', 'is-error');
+                        return;
+                    }
+
+                    const activeLabel = state.mode === 'preset'
+                        ? state.promptMeta[state.presetId]?.label || 'vald uppgift'
+                        : 'fri instruktion';
+                    const textNode = quickInputStatus.querySelector('span:last-child');
+                    if (textNode) {
+                        textNode.textContent = `Text inlagd. Aktivt val: ${activeLabel}.`;
+                    }
+                    quickInputStatus.classList.remove('is-error');
+                    quickInputStatus.classList.add('is-ready');
+                }
+
+                function updateTaskSummary() {
+                    taskSummary.textContent = state.mode === 'preset'
+                        ? `Aktiv uppgift: ${state.promptMeta[state.presetId]?.label || 'Färdig uppgift'}.`
+                        : 'Aktiv uppgift: Egen instruktion.';
+                    if (state.mode === 'preset') {
+                        chatContextTitle.textContent = `Aktiv kontext: ${state.promptMeta[state.presetId]?.label || 'Färdig uppgift'}`;
+                        chatContextText.textContent = 'Vald prompt används som systeminstruktion för chatten.';
+                        chatContextPrompt.textContent = state.promptCache[state.presetId] || '';
+                    } else {
+                        chatContextTitle.textContent = 'Aktiv kontext: Egen instruktion';
+                        chatContextText.textContent = 'Din egen instruktion används som systeminstruktion för chatten.';
+                        chatContextPrompt.textContent = customInstruction.value.trim();
+                    }
+                    if (state.isCopyMode) {
+                        chatContextText.textContent = 'Ingen modell Ã¤r tillgÃ¤nglig. Kopiera prompten och texten till valfri LLM.';
+                    }
+                    updateQuickInputStatus();
+                    updateChatModeUi();
+                }
+
+                function setPromptPanelCollapsed(collapsed) {
+                    heroSection.classList.toggle('is-collapsed', collapsed);
+                    promptCollapseButton.textContent = collapsed ? '▾' : '▴';
+                    promptCollapseButton.setAttribute('aria-expanded', String(!collapsed));
+                    promptCollapseButton.setAttribute('title', collapsed ? 'Visa uppgiftsval' : 'Dölj uppgiftsval');
+                }
+
+                function scrollToChatComposer() {
+                    chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                function updateModeUi() {
+                    const isPresetMode = state.mode === 'preset';
+                    customGroup.classList.toggle('is-active', !isPresetMode);
+                    customInstruction.disabled = isPresetMode;
+                    document.querySelectorAll('[data-select-prompt]').forEach((button) => {
+                        button.disabled = false;
+                    });
+                    updateTaskSummary();
+                }
+
+                function selectPreset(presetId) {
+                    const isChangingDuringChat = state.chatMessages.length > 0 && state.presetId !== presetId;
+                    if (isChangingDuringChat && !window.confirm('Du byter uppgift mitt i en pågående chatt. Vill du fortsätta med den nya uppgiften i samma chatt?')) {
+                        return;
+                    }
+                    document.getElementById('task-mode-preset').checked = true;
+                    state.mode = 'preset';
+                    state.presetId = presetId;
+                    document.querySelectorAll('.single-flow-prompt-item').forEach((item) => {
+                        const isSelected = item.dataset.promptId === presetId;
+                        item.classList.toggle('is-selected', isSelected);
+                        const button = item.querySelector('[data-select-prompt]');
+                        if (button) {
+                            button.textContent = isSelected ? 'Vald uppgift' : 'Välj uppgift';
+                            button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+                        }
+                    });
+                    updateTaskSummary();
+                    updateModeUi();
+                    scrollToChatComposer();
+                    if (window.innerWidth <= 640) {
+                        setPromptPanelCollapsed(true);
+                    }
+                }
+
+                function createPromptItem(prompt) {
+                        const item = document.createElement('details');
+                        item.className = 'single-flow-prompt-item';
+                        item.dataset.promptId = prompt.id;
+
+                        const summary = document.createElement('summary');
+                        summary.innerHTML = `
+                            <div class="single-flow-prompt-summary">
+                                <div>
+                                    <h3>${prompt.title}</h3>
+                                    <p>${prompt.description}</p>
+                                </div>
+                                <span class="single-flow-prompt-toggle">Visa mer</span>
+                            </div>
+                        `;
+
+                        const body = document.createElement('div');
+                        body.className = 'single-flow-prompt-body';
+                        body.innerHTML = `
+                            <pre class="single-flow-prompt-preview">${prompt.text}</pre>
+                            <div class="single-flow-prompt-actions">
+                                <button class="primary-btn" type="button" data-select-prompt="${prompt.id}" aria-pressed="false">Välj uppgift</button>
+                            </div>
+                        `;
+
+                        item.appendChild(summary);
+                        item.appendChild(body);
+
+                        summary.addEventListener('click', () => {
+                            setTimeout(() => {
+                                const toggle = item.querySelector('.single-flow-prompt-toggle');
+                                if (toggle) {
+                                    toggle.textContent = item.open ? 'Dölj' : 'Visa mer';
+                                }
+                            }, 0);
+                        });
+
+                        body.querySelector('[data-select-prompt]')?.addEventListener('click', () => {
+                            document.getElementById('task-mode-preset').checked = true;
+                            state.mode = 'preset';
+                            selectPreset(prompt.id);
+                            updateModeUi();
+                        });
+
+                        return item;
+                }
+
+                function createCustomInstructionItem() {
+                        const item = document.createElement('details');
+                        item.className = 'single-flow-prompt-item';
+                        item.dataset.promptId = 'custom-instruction';
+
+                        const summary = document.createElement('summary');
+                        summary.innerHTML = `
+                            <div class="single-flow-prompt-summary">
+                                <div>
+                                    <h3>Egen instruktion</h3>
+                                    <p>Skriv en egen instruktion när de färdiga uppgifterna inte räcker.</p>
+                                </div>
+                                <span class="single-flow-prompt-toggle">Visa mer</span>
+                            </div>
+                        `;
+
+                        const body = document.createElement('div');
+                        body.className = 'single-flow-prompt-body';
+                        body.innerHTML = `
+                            <pre class="single-flow-prompt-preview">Beskriv vad modellen ska göra med texten. Exempel: skriv om för invånare, gör texten kortare eller strukturera om innehållet.</pre>
+                            <div class="single-flow-prompt-actions">
+                                <button class="primary-btn" type="button" data-select-custom-instruction="true">Välj egen instruktion</button>
+                            </div>
+                        `;
+
+                        item.appendChild(summary);
+                        item.appendChild(body);
+
+                        summary.addEventListener('click', () => {
+                            setTimeout(() => {
+                                const toggle = item.querySelector('.single-flow-prompt-toggle');
+                                if (toggle) {
+                                    toggle.textContent = item.open ? 'Dölj' : 'Visa mer';
+                                }
+                            }, 0);
+                        });
+
+                        body.querySelector('[data-select-custom-instruction]')?.addEventListener('click', () => {
+                            document.getElementById('task-mode-custom').checked = true;
+                            state.mode = 'custom';
+                            document.querySelectorAll('.single-flow-prompt-item').forEach((promptItem) => {
+                                const isSelected = promptItem.dataset.promptId === 'custom-instruction';
+                                promptItem.classList.toggle('is-selected', isSelected);
+                            });
+                            updateModeUi();
+                            scrollToChatComposer();
+                            customInstruction.focus();
+                            if (window.innerWidth <= 640) {
+                                setPromptPanelCollapsed(true);
+                            }
+                        });
+
+                        return item;
+                }
+
+                function buildPromptList(prompts) {
+                    promptList.innerHTML = '';
+                    promptMoreList.innerHTML = '';
+
+                    const topPrompts = prompts.slice(0, 3);
+                    const morePrompts = prompts.slice(3);
+
+                    topPrompts.forEach((prompt) => {
+                        promptList.appendChild(createPromptItem(prompt));
+                    });
+
+                    if (morePrompts.length) {
+                        promptMore.hidden = false;
+                        morePrompts.forEach((prompt) => {
+                            promptMoreList.appendChild(createPromptItem(prompt));
+                        });
+                        promptMoreList.appendChild(createCustomInstructionItem());
+                    } else {
+                        promptMore.hidden = true;
+                        promptList.appendChild(createCustomInstructionItem());
+                    }
+
+                    if (state.promptMeta[state.presetId]) {
+                        selectPreset(state.presetId);
+                    }
+                }
+
+                async function loadPromptLibrary() {
+                    promptList.innerHTML = '<div class="single-flow-prompt-empty">Laddar uppgifter...</div>';
+                    try {
+                        const response = await fetch('prompts.json');
+                        if (!response.ok) {
+                            throw new Error('Kunde inte ladda promptlistan.');
+                        }
+
+                        const data = await response.json();
+                        const prompts = data.prompts || [];
+                        const loadedPrompts = [];
+
+                        for (const prompt of prompts) {
+                            const promptResponse = await fetch(prompt.file);
+                            if (!promptResponse.ok) {
+                                continue;
+                            }
+                            const promptText = await promptResponse.text();
+                            const meta = {
+                                id: prompt.id,
+                                label: decodeHtmlEntities(prompt.title).trim(),
+                                title: decodeHtmlEntities(prompt.title),
+                                description: decodeHtmlEntities(prompt.description),
+                                text: promptText
+                            };
+                            state.promptMeta[prompt.id] = meta;
+                            state.promptCache[prompt.id] = promptText;
+                            loadedPrompts.push(meta);
+                        }
+
+                        if (!loadedPrompts.length) {
+                            promptList.innerHTML = '<div class="single-flow-prompt-empty">Inga uppgifter kunde laddas.</div>';
+                            return;
+                        }
+
+                        if (!state.promptMeta[state.presetId] && loadedPrompts[0]) {
+                            state.presetId = loadedPrompts[0].id;
+                        }
+
+                        buildPromptList(loadedPrompts);
+                        updateTaskSummary();
+                    } catch (error) {
+                        promptList.innerHTML = `<div class="single-flow-prompt-empty">${error.message}</div>`;
+                    }
+                }
+
+                async function loadPresetPrompt(presetId) {
+                    const preset = state.promptMeta[presetId];
+                    if (!preset) {
+                        throw new Error('Okänd uppgift.');
+                    }
+                    if (state.promptCache[presetId]) {
+                        return state.promptCache[presetId];
+                    }
+
+                    if (preset.text) {
+                        state.promptCache[presetId] = preset.text;
+                        return preset.text;
+                    }
+
+                    throw new Error(`Kunde inte ladda uppgiften ${preset.label.toLowerCase()}.`);
+                }
+
+                async function populateChatModels() {
+                    chatModelSelect.innerHTML = '<option value="">Laddar nivåer...</option>';
+
+                    try {
+                        const [ollamaResponse, openAiResponse] = await Promise.allSettled([
+                            fetch(`${backendBaseUrl}/api/models`),
+                            fetch(`${backendBaseUrl}/api/openai/models`)
+                        ]);
+
+                        const modelOptions = [];
+                        let openAiOk = false;
+                        let ollamaOk = false;
+
+                        if (ollamaResponse.status === 'fulfilled') {
+                            const data = await ollamaResponse.value.json().catch(() => ({}));
+                            if (ollamaResponse.value.ok) {
+                                (data.models || []).forEach((model) => {
+                                    modelOptions.push({ provider: 'ollama', name: model.name, label: `ollama: ${model.name}` });
+                                });
+                                ollamaOk = true;
+                            }
+                        }
+
+                        if (openAiResponse.status === 'fulfilled') {
+                            const data = await openAiResponse.value.json().catch(() => ({}));
+                            if (openAiResponse.value.ok) {
+                                (data.models || []).forEach((model) => {
+                                    modelOptions.push({ provider: 'openai', name: model.name, label: `openai: ${model.name}` });
+                                });
+                                openAiOk = true;
+                            }
+                        }
+
+                        if (!modelOptions.length) {
+                            chatModelSelect.innerHTML = '<option value="">Inga modeller hittades</option>';
+                            setChatStatus('Inga modeller hittades.', true);
+                            setConnectionAlert('Varken Ollama eller OpenAI kunde hämtas via backend.');
+                            return;
+                        }
+
+                        chatModelSelect.innerHTML = modelOptions
+                            .map((model) => `<option value="${model.label}" data-provider="${model.provider}" data-model="${model.name}">${model.label}</option>`)
+                            .join('');
+                        const first = modelOptions[0];
+                        state.chatModelValue = first.label;
+                        state.chatModelProvider = first.provider;
+                        state.chatModelName = first.name;
+                        chatModelSelect.value = first.label;
+                        updateChatSessionModelLabel();
+                        setChatStatus('Klar');
+                        setConnectionAlert(openAiOk || ollamaOk ? '' : 'Kunde inte hämta modeller från vald provider.');
+                    } catch (error) {
+                        chatModelSelect.innerHTML = '<option value="">Kunde inte hämta modeller</option>';
+                        setChatStatus(error.message, true);
+                        setConnectionAlert('Kunde inte hämta modeller från backend.');
+                    }
+                }
+
+                async function populateChatModels() {
+                    chatModelSelect.innerHTML = '<option value="">Laddar nivåer...</option>';
+
+                    try {
+                        const openAiResponse = await fetch(`${backendBaseUrl}/api/openai/models`);
+                        const data = await openAiResponse.json().catch(() => ({}));
+                        const availableModels = new Set((data.models || []).map((model) => model.name));
+                        const levelOptions = [
+                            { value: 'standard', label: 'Standard', model: 'gpt-5-mini' },
+                            { value: 'high', label: 'Hög kvalitet', model: 'gpt-5' },
+                            { value: 'budget', label: 'Snabbt/lågbudget', model: 'gpt-5-nano' }
+                        ].filter((option) => availableModels.has(option.model));
+
+                        if (!openAiResponse.ok || !levelOptions.length) {
+                            state.isCopyMode = true;
+                            state.chatModelValue = '';
+                            state.chatModelProvider = '';
+                            state.chatModelName = '';
+                            chatModelSelect.innerHTML = '<option value="">Kopiera till valfri LLM</option>';
+                            setChatStatus('Kopiera-läge');
+                            setCopyModeAlert('Inga modeller är tillgängliga. Du kan fortfarande kopiera vald prompt och din text till valfri LLM.');
+                            updateChatModeUi();
+                            return;
+                        }
+
+                        state.isCopyMode = false;
+                        chatModelSelect.innerHTML = levelOptions
+                            .map((option) => `<option value="${option.value}" data-provider="openai" data-model="${option.model}">${option.label}</option>`)
+                            .join('');
+                        const first = levelOptions[0];
+                        state.chatModelValue = first.label;
+                        state.chatModelProvider = 'openai';
+                        state.chatModelName = first.model;
+                        chatModelSelect.value = first.value;
+                        setChatStatus('Klar');
+                        setConnectionAlert('');
+                        updateChatModeUi();
+                    } catch (_error) {
+                        state.isCopyMode = true;
+                        state.chatModelValue = '';
+                        state.chatModelProvider = '';
+                        state.chatModelName = '';
+                        chatModelSelect.innerHTML = '<option value="">Kopiera till valfri LLM</option>';
+                        setChatStatus('Kopiera-läge');
+                        setCopyModeAlert('Inga modeller är tillgängliga. Du kan fortfarande kopiera vald prompt och din text till valfri LLM.');
+                        updateChatModeUi();
+                    }
+                }
+
+                function ensureCodeBlockTools(container) {
+                    const blocks = container.querySelectorAll('pre');
+                    blocks.forEach((pre) => {
+                        if (pre.dataset.decorated === 'true') {
+                            return;
+                        }
+                        pre.dataset.decorated = 'true';
+                        const lang = pre.dataset.lang || 'text';
+                        const header = document.createElement('div');
+                        header.className = 'single-flow-chat-code-head';
+                        header.innerHTML = `<span>${lang}</span>`;
+                        const copyButton = document.createElement('button');
+                        copyButton.type = 'button';
+                        copyButton.className = 'single-flow-chat-code-copy';
+                        copyButton.textContent = 'Kopiera kod';
+                        copyButton.addEventListener('click', async () => {
+                            const codeText = pre.querySelector('code')?.textContent || '';
+                            try {
+                                await navigator.clipboard.writeText(codeText);
+                                copyButton.textContent = 'Kopierat';
+                            } catch (_error) {
+                                copyButton.textContent = 'Fel';
+                            }
+                            setTimeout(() => {
+                                copyButton.textContent = 'Kopiera kod';
+                            }, 1200);
+                        });
+                        header.appendChild(copyButton);
+                        pre.prepend(header);
+                    });
+                }
+
+                function createAssistantTools(rawSource) {
+                    const tools = document.createElement('div');
+                    tools.className = 'single-flow-chat-assistant-tools';
+
+                    const copyButton = document.createElement('button');
+                    copyButton.type = 'button';
+                    copyButton.className = 'single-flow-chat-copy-btn';
+                    copyButton.textContent = 'Kopiera';
+                    copyButton.addEventListener('click', async () => {
+                        try {
+                            await navigator.clipboard.writeText(rawSource);
+                            copyButton.textContent = 'Kopierat';
+                        } catch (_error) {
+                            copyButton.textContent = 'Fel';
+                        }
+                        setTimeout(() => {
+                            copyButton.textContent = 'Kopiera';
+                        }, 1200);
+                    });
+                    tools.appendChild(copyButton);
+
+                    const quickActions = document.createElement('div');
+                    quickActions.className = 'single-flow-chat-quick-actions';
+                    [
+                        ['Gör kortare', 'Gör ditt senaste svar kortare och behåll det viktigaste.'],
+                        ['Förtydliga', 'Förtydliga ditt senaste svar med tydligare steg och exempel.'],
+                        ['Mer formellt', 'Skriv om ditt senaste svar i en mer formell ton.'],
+                        ['Förklara', 'Förklara ditt senaste svar enklare, steg för steg.']
+                    ].forEach(([label, prompt]) => {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.textContent = label;
+                        button.addEventListener('click', () => {
+                            chatInput.value = prompt;
+                            resizeChatInput();
+                            saveChatDraft();
+                            sendChatMessage(prompt);
+                        });
+                        quickActions.appendChild(button);
+                    });
+                    tools.appendChild(quickActions);
+
+                    return tools;
+                }
+
+                function renderChatMessage(role, content, rawContent = content) {
+                    chatEmpty.hidden = true;
+                    const row = document.createElement('div');
+                    row.className = `single-flow-chat-message ${role === 'user' ? 'is-user' : 'is-assistant'}`;
+                    const bubble = document.createElement('div');
+                    bubble.className = 'single-flow-chat-bubble';
+                    if (role === 'assistant') {
+                        const markdown = document.createElement('div');
+                        markdown.className = 'single-flow-chat-markdown';
+                        markdown.innerHTML = parseMarkdown(rawContent);
+                        ensureCodeBlockTools(markdown);
+                        bubble.appendChild(markdown);
+                        bubble.appendChild(createAssistantTools(rawContent));
+                    } else {
+                        bubble.textContent = content;
+                    }
+                    row.appendChild(bubble);
+                    chatMessages.appendChild(row);
+                    scrollChatToBottom();
+                    return bubble;
+                }
+
+                function resetChat() {
+                    state.chatAbortController?.abort();
+                    state.chatMessages = [];
+                    state.draftPreviewRow = null;
+                    chatMessages.innerHTML = '';
+                    chatMessages.appendChild(chatEmpty);
+                    chatEmpty.hidden = false;
+                    chatInput.value = '';
+                    clearChatDraft();
+                    chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    resizeChatInput();
+                    if (state.isCopyMode) {
+                        setChatStatus('Kopiera-läge');
+                        setCopyModeAlert('Inga modeller är tillgängliga. Du kan fortfarande kopiera vald prompt och din text till valfri LLM.');
+                    } else {
+                        setChatStatus('Klar');
+                        setConnectionAlert('');
+                    }
+                }
+
+                async function getActiveSystemInstruction() {
+                    if (state.mode === 'custom') {
+                        const instruction = customInstruction.value.trim();
+                        if (!instruction) {
+                            throw new Error('Skriv en fri instruktion innan du chattar.');
+                        }
+                        return instruction;
+                    }
+                    return loadPresetPrompt(state.presetId);
+                }
+
+                function buildChatRequestMessages() {
+                    const systemInstruction = state.mode === 'preset'
+                        ? (state.promptCache[state.presetId] || '')
+                        : customInstruction.value.trim();
+
+                    const messages = [];
+                    if (systemInstruction) {
+                        messages.push({ role: 'system', content: systemInstruction });
+                    }
+                    return messages.concat(state.chatMessages);
+                }
+
+                async function buildCopyPayload(messageText) {
+                    const systemInstruction = await getActiveSystemInstruction();
+                    return [
+                        'Instruktion:',
+                        systemInstruction.trim(),
+                        '',
+                        'Text:',
+                        String(messageText || '').trim()
+                    ].join('\n');
+                }
+
+                async function sendChatMessage(messageText) {
+                    const trimmed = String(messageText || '').trim();
+                    if (!trimmed) {
+                        setChatStatus('Skriv ett meddelande först.', true);
+                        return;
+                    }
+
+                    if (!chatModelSelect.value) {
+                        setChatStatus('Välj en modell först.', true);
+                        return;
+                    }
+
+                    try {
+                        await getActiveSystemInstruction();
+                    } catch (error) {
+                        setChatStatus(error.message, true);
+                        return;
+                    }
+
+                    if (state.draftPreviewRow) {
+                        state.draftPreviewRow.remove();
+                        state.draftPreviewRow = null;
+                    }
+
+                    renderChatMessage('user', trimmed);
+                    state.chatMessages.push({ role: 'user', content: trimmed });
+                    chatInput.value = '';
+                    clearChatDraft();
+                    chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    resizeChatInput();
+
+                    const assistantBubble = renderChatMessage('assistant', 'Laddar svar...', 'Laddar svar...');
+                    state.chatAbortController = new AbortController();
+                    chatSendButton.disabled = true;
+                    chatStopButton.disabled = false;
+                    chatModelSelect.disabled = true;
+                    setChatStatus('Skickar...');
+                    setConnectionAlert('');
+
+                    try {
+                        const endpoint = state.chatModelProvider === 'openai'
+                            ? `${backendBaseUrl}/api/openai/chat/stream`
+                            : `${backendBaseUrl}/api/chat/stream`;
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                model: state.chatModelName,
+                                messages: buildChatRequestMessages()
+                            }),
+                            signal: state.chatAbortController.signal
+                        });
+
+                        if (!response.ok || !response.body) {
+                            const data = await response.json().catch(() => ({}));
+                            throw new Error(data.detail?.message || data.detail || 'Chatten misslyckades.');
+                        }
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let responseText = '';
+                        let hasReceivedChunk = false;
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                break;
+                            }
+                            const chunk = decoder.decode(value, { stream: true });
+                            if (!chunk) {
+                                continue;
+                            }
+                            if (!hasReceivedChunk) {
+                                hasReceivedChunk = true;
+                                setChatStatus('Modellen skriver...');
+                            }
+                            responseText += chunk;
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                            scrollChatToBottom();
+                        }
+
+                        const trailing = decoder.decode();
+                        if (trailing) {
+                            responseText += trailing;
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                        }
+
+                        if (!responseText.trim()) {
+                            assistantBubble.textContent = '(Tomt svar från modellen)';
+                        } else {
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                            assistantBubble.appendChild(createAssistantTools(responseText));
+                        }
+
+                        state.chatMessages.push({ role: 'assistant', content: responseText || assistantBubble.textContent });
+                        setChatStatus('Klar');
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            if (!assistantBubble.textContent.trim()) {
+                                assistantBubble.textContent = '(Genereringen avbröts)';
+                            }
+                            setChatStatus('Avbruten');
+                        } else {
+                            assistantBubble.textContent = `Fel: ${error.message}`;
+                            setChatStatus(error.message, true);
+                            setConnectionAlert(`Kunde inte nå ${state.chatModelProvider || 'vald provider'} under körning.`);
+                        }
+                    } finally {
+                        state.chatAbortController = null;
+                        chatSendButton.disabled = false;
+                        chatStopButton.disabled = true;
+                        chatModelSelect.disabled = false;
+                        scrollChatToBottom(true);
+                    }
+                }
+
+                async function sendChatMessage(messageText) {
+                    const trimmed = String(messageText || '').trim();
+                    if (!trimmed) {
+                        setChatStatus('Skriv ett meddelande först.', true);
+                        return;
+                    }
+
+                    try {
+                        await getActiveSystemInstruction();
+                    } catch (error) {
+                        setChatStatus(error.message, true);
+                        return;
+                    }
+
+                    if (state.isCopyMode) {
+                        try {
+                            const copyPayload = await buildCopyPayload(trimmed);
+                            await navigator.clipboard.writeText(copyPayload);
+                            setChatStatus('Kopierat');
+                            setCopyModeAlert('Prompten och texten är kopierade. Klistra in dem i valfri LLM.');
+                            chatInput.value = '';
+                            clearChatDraft();
+                            chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            resizeChatInput();
+                        } catch (_error) {
+                            setChatStatus('Kunde inte kopiera.', true);
+                        }
+                        return;
+                    }
+
+                    if (!chatModelSelect.value) {
+                        setChatStatus('Välj en nivå först.', true);
+                        return;
+                    }
+
+                    if (state.draftPreviewRow) {
+                        state.draftPreviewRow.remove();
+                        state.draftPreviewRow = null;
+                    }
+
+                    renderChatMessage('user', trimmed);
+                    state.chatMessages.push({ role: 'user', content: trimmed });
+                    chatInput.value = '';
+                    clearChatDraft();
+                    chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    resizeChatInput();
+
+                    const assistantBubble = renderChatMessage('assistant', 'Laddar svar...', 'Laddar svar...');
+                    state.chatAbortController = new AbortController();
+                    chatSendButton.disabled = true;
+                    chatStopButton.disabled = false;
+                    chatModelSelect.disabled = true;
+                    setChatStatus('Skickar...');
+                    setConnectionAlert('');
+
+                    try {
+                        const response = await fetch(`${backendBaseUrl}/api/openai/chat/stream`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                model: state.chatModelName,
+                                messages: buildChatRequestMessages()
+                            }),
+                            signal: state.chatAbortController.signal
+                        });
+
+                        if (!response.ok || !response.body) {
+                            const data = await response.json().catch(() => ({}));
+                            throw new Error(data.detail?.message || data.detail || 'Chatten misslyckades.');
+                        }
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let responseText = '';
+                        let hasReceivedChunk = false;
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                break;
+                            }
+                            const chunk = decoder.decode(value, { stream: true });
+                            if (!chunk) {
+                                continue;
+                            }
+                            if (!hasReceivedChunk) {
+                                hasReceivedChunk = true;
+                                setChatStatus('Modellen skriver...');
+                            }
+                            responseText += chunk;
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                            scrollChatToBottom();
+                        }
+
+                        const trailing = decoder.decode();
+                        if (trailing) {
+                            responseText += trailing;
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                        }
+
+                        if (!responseText.trim()) {
+                            assistantBubble.textContent = '(Tomt svar från modellen)';
+                        } else {
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                            assistantBubble.appendChild(createAssistantTools(responseText));
+                        }
+
+                        state.chatMessages.push({ role: 'assistant', content: responseText || assistantBubble.textContent });
+                        setChatStatus('Klar');
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            if (!assistantBubble.textContent.trim()) {
+                                assistantBubble.textContent = '(Genereringen avbröts)';
+                            }
+                            setChatStatus('Avbruten');
+                        } else {
+                            assistantBubble.textContent = `Fel: ${error.message}`;
+                            setChatStatus(error.message, true);
+                            setConnectionAlert('Kunde inte nå OpenAI under körning.');
+                        }
+                    } finally {
+                        state.chatAbortController = null;
+                        chatSendButton.disabled = false;
+                        chatStopButton.disabled = true;
+                        chatModelSelect.disabled = state.isCopyMode;
+                        scrollChatToBottom(true);
+                    }
+                }
+
+                function getSelectedProviderPreference() {
+                    return document.querySelector('input[name="provider-mode"]:checked')?.value || 'auto';
+                }
+
+                async function populateChatModels() {
+                    const providerPreference = getSelectedProviderPreference();
+                    state.providerPreference = providerPreference;
+                    state.isCopyMode = false;
+                    chatModelSelect.innerHTML = '<option value="">Laddar...</option>';
+                    if (chatModelLabel) {
+                        chatModelLabel.textContent = providerPreference === 'ollama' ? 'Modell' : 'Nivå';
+                    }
+
+                    if (providerPreference === 'copy') {
+                        if (chatModelLabel) {
+                            chatModelLabel.textContent = 'Läge';
+                        }
+                        state.isCopyMode = true;
+                        state.chatModelValue = '';
+                        state.chatModelProvider = 'copy';
+                        state.chatModelName = '';
+                        chatModelSelect.innerHTML = '<option value="">Kopiera till valfri LLM</option>';
+                        setChatStatus('Kopiera-läge');
+                        setCopyModeAlert('Kopiera-läge är aktivt. Du kan kopiera vald prompt och din text till valfri LLM.');
+                        updateTaskSummary();
+                        return;
+                    }
+
+                    const loadOpenAiLevels = async () => {
+                        const response = await fetch(`${backendBaseUrl}/api/openai/models`);
+                        const data = await response.json().catch(() => ({}));
+                        const availableModels = new Set((data.models || []).map((model) => model.name));
+                        const levelOptions = [
+                            { value: 'standard', label: 'Standard', model: 'gpt-5-mini' },
+                            { value: 'high', label: 'Hög kvalitet', model: 'gpt-5' },
+                            { value: 'budget', label: 'Snabbt/lågbudget', model: 'gpt-5-nano' }
+                        ].filter((option) => availableModels.has(option.model));
+                        if (!response.ok || !levelOptions.length) {
+                            throw new Error('openai_unavailable');
+                        }
+                        return levelOptions;
+                    };
+
+                    const loadOllamaModels = async () => {
+                        const response = await fetch(`${backendBaseUrl}/api/models`);
+                        const data = await response.json().catch(() => ({}));
+                        const modelOptions = (data.models || []).map((model) => ({
+                            value: model.name,
+                            label: model.name,
+                            model: model.name
+                        }));
+                        if (!response.ok || !modelOptions.length) {
+                            throw new Error('ollama_unavailable');
+                        }
+                        return modelOptions;
+                    };
+
+                    try {
+                        let provider = providerPreference;
+                        let options = [];
+
+                        if (providerPreference === 'auto') {
+                            try {
+                                options = await loadOpenAiLevels();
+                                provider = 'openai';
+                            } catch (_error) {
+                                try {
+                                    options = await loadOllamaModels();
+                                    provider = 'ollama';
+                                } catch (_error2) {
+                                    provider = 'copy';
+                                }
+                            }
+                        } else if (providerPreference === 'openai') {
+                            options = await loadOpenAiLevels();
+                            provider = 'openai';
+                        } else if (providerPreference === 'ollama') {
+                            options = await loadOllamaModels();
+                            provider = 'ollama';
+                        }
+
+                        if (provider === 'copy' || !options.length) {
+                            if (chatModelLabel) {
+                                chatModelLabel.textContent = 'Läge';
+                            }
+                            state.isCopyMode = true;
+                            state.chatModelValue = '';
+                            state.chatModelProvider = 'copy';
+                            state.chatModelName = '';
+                            chatModelSelect.innerHTML = '<option value="">Kopiera till valfri LLM</option>';
+                            setChatStatus('Kopiera-läge');
+                            setCopyModeAlert('Inga modeller är tillgängliga. Du kan fortfarande kopiera vald prompt och din text till valfri LLM.');
+                            updateTaskSummary();
+                            return;
+                        }
+
+                        state.isCopyMode = false;
+                        if (chatModelLabel) {
+                            chatModelLabel.textContent = provider === 'ollama' ? 'Modell' : 'Nivå';
+                        }
+                        state.chatModelProvider = provider;
+                        chatModelSelect.innerHTML = options
+                            .map((option) => `<option value="${option.value}" data-provider="${provider}" data-model="${option.model}">${option.label}</option>`)
+                            .join('');
+                        const first = options[0];
+                        chatModelSelect.value = first.value;
+                        state.chatModelValue = first.label;
+                        state.chatModelName = first.model;
+                        setConnectionAlert('');
+                        setChatStatus('Klar');
+                        updateTaskSummary();
+                    } catch (_error) {
+                        if (chatModelLabel) {
+                            chatModelLabel.textContent = 'Läge';
+                        }
+                        state.isCopyMode = true;
+                        state.chatModelValue = '';
+                        state.chatModelProvider = 'copy';
+                        state.chatModelName = '';
+                        chatModelSelect.innerHTML = '<option value="">Kopiera till valfri LLM</option>';
+                        setChatStatus('Kopiera-läge');
+                        setCopyModeAlert('Inga modeller är tillgängliga. Du kan fortfarande kopiera vald prompt och din text till valfri LLM.');
+                        updateTaskSummary();
+                    }
+                }
+
+                async function sendChatMessage(messageText) {
+                    const trimmed = String(messageText || '').trim();
+                    if (!trimmed) {
+                        setChatStatus('Skriv ett meddelande först.', true);
+                        return;
+                    }
+
+                    try {
+                        await getActiveSystemInstruction();
+                    } catch (error) {
+                        setChatStatus(error.message, true);
+                        return;
+                    }
+
+                    if (state.isCopyMode) {
+                        try {
+                            const copyPayload = await buildCopyPayload(trimmed);
+                            await navigator.clipboard.writeText(copyPayload);
+                            setChatStatus('Kopierat');
+                            setCopyModeAlert('Prompten och texten är kopierade. Klistra in dem i valfri LLM.');
+                            chatInput.value = '';
+                            clearChatDraft();
+                            chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            resizeChatInput();
+                        } catch (_error) {
+                            setChatStatus('Kunde inte kopiera.', true);
+                        }
+                        return;
+                    }
+
+                    if (!chatModelSelect.value) {
+                        setChatStatus(state.chatModelProvider === 'ollama' ? 'Välj en modell först.' : 'Välj en nivå först.', true);
+                        return;
+                    }
+
+                    if (state.draftPreviewRow) {
+                        state.draftPreviewRow.remove();
+                        state.draftPreviewRow = null;
+                    }
+
+                    renderChatMessage('user', trimmed);
+                    state.chatMessages.push({ role: 'user', content: trimmed });
+                    chatInput.value = '';
+                    clearChatDraft();
+                    chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    resizeChatInput();
+
+                    const assistantBubble = renderChatMessage('assistant', 'Laddar svar...', 'Laddar svar...');
+                    state.chatAbortController = new AbortController();
+                    chatSendButton.disabled = true;
+                    chatStopButton.disabled = false;
+                    chatModelSelect.disabled = true;
+                    setChatStatus('Skickar...');
+                    setConnectionAlert('');
+
+                    try {
+                        const endpoint = state.chatModelProvider === 'ollama'
+                            ? `${backendBaseUrl}/api/chat/stream`
+                            : `${backendBaseUrl}/api/openai/chat/stream`;
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                model: state.chatModelName,
+                                messages: buildChatRequestMessages()
+                            }),
+                            signal: state.chatAbortController.signal
+                        });
+
+                        if (!response.ok || !response.body) {
+                            const data = await response.json().catch(() => ({}));
+                            throw new Error(data.detail?.message || data.detail || 'Chatten misslyckades.');
+                        }
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let responseText = '';
+                        let hasReceivedChunk = false;
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            const chunk = decoder.decode(value, { stream: true });
+                            if (!chunk) continue;
+                            if (!hasReceivedChunk) {
+                                hasReceivedChunk = true;
+                                setChatStatus('Modellen skriver...');
+                            }
+                            responseText += chunk;
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                            scrollChatToBottom();
+                        }
+
+                        const trailing = decoder.decode();
+                        if (trailing) {
+                            responseText += trailing;
+                        }
+
+                        if (!responseText.trim()) {
+                            assistantBubble.textContent = '(Tomt svar från modellen)';
+                        } else {
+                            assistantBubble.innerHTML = '';
+                            const markdown = document.createElement('div');
+                            markdown.className = 'single-flow-chat-markdown';
+                            markdown.innerHTML = parseMarkdown(responseText);
+                            ensureCodeBlockTools(markdown);
+                            assistantBubble.appendChild(markdown);
+                            assistantBubble.appendChild(createAssistantTools(responseText));
+                        }
+
+                        state.chatMessages.push({ role: 'assistant', content: responseText || assistantBubble.textContent });
+                        setChatStatus('Klar');
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            if (!assistantBubble.textContent.trim()) {
+                                assistantBubble.textContent = '(Genereringen avbröts)';
+                            }
+                            setChatStatus('Avbruten');
+                        } else {
+                            assistantBubble.textContent = `Fel: ${error.message}`;
+                            setChatStatus(error.message, true);
+                            setConnectionAlert(`Kunde inte nå ${state.chatModelProvider || 'vald provider'} under körning.`);
+                        }
+                    } finally {
+                        state.chatAbortController = null;
+                        chatSendButton.disabled = false;
+                        chatStopButton.disabled = true;
+                        chatModelSelect.disabled = state.isCopyMode;
+                        scrollChatToBottom(true);
+                    }
+                }
+
+                modeInputs.forEach((input) => {
+                    input.addEventListener('change', (event) => {
+                        state.mode = event.target.value;
+                        updateModeUi();
+                    });
+                });
+
+                providerModeInputs.forEach((input) => {
+                    input.addEventListener('change', () => {
+                        populateChatModels();
+                    });
+                });
+
+                textInput.addEventListener('input', updateQuickInputStatus);
+                customInstruction.addEventListener('input', updateTaskSummary);
+
+                chatMessages.addEventListener('scroll', () => {
+                    const distanceFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
+                    state.shouldAutoScroll = distanceFromBottom < 40;
+                });
+
+                chatSendButton.addEventListener('click', () => {
+                    sendChatMessage(chatInput.value);
+                });
+
+                chatInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        sendChatMessage(chatInput.value);
+                    }
+                });
+
+                chatStopButton.addEventListener('click', () => {
+                    state.chatAbortController?.abort();
+                });
+
+                chatResetButton.addEventListener('click', resetChat);
+                clearChatDraftButton.addEventListener('click', () => {
+                    chatInput.value = '';
+                    clearChatDraft();
+                    resizeChatInput();
+                    updateQuickInputStatus();
+                    updateDraftPreview();
+                    chatInput.focus();
+                });
+                promptCollapseButton.addEventListener('click', () => {
+                    setPromptPanelCollapsed(!heroSection.classList.contains('is-collapsed'));
+                });
+                chatChangePromptButton.addEventListener('click', () => {
+                    setPromptPanelCollapsed(false);
+                    heroSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                chatShowPromptButton.addEventListener('click', () => {
+                    const details = chatContextPrompt.closest('details');
+                    if (details) {
+                        details.open = true;
+                    }
+                    chatContextPrompt.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+                chatExpandButton.addEventListener('click', () => {
+                    const isMaximized = chatShell.classList.toggle('is-maximized');
+                    document.body.classList.toggle('single-flow-chat-lock-scroll', isMaximized);
+                    chatExpandButton.textContent = isMaximized ? '⤡' : '⤢';
+                    chatExpandButton.setAttribute('aria-pressed', String(isMaximized));
+                    chatExpandButton.setAttribute('title', isMaximized ? 'Minimera chatt' : 'Maximera chatt');
+                    scrollChatToBottom(true);
+                });
+                chatModelSelect.addEventListener('change', () => {
+                    const option = chatModelSelect.selectedOptions[0];
+                    state.chatModelValue = option?.textContent?.trim() || '';
+                    state.chatModelProvider = option?.dataset.provider || '';
+                    state.chatModelName = option?.dataset.model || '';
+                    updateChatSessionModelLabel();
+                });
+                chatInput.addEventListener('input', () => {
+                    resizeChatInput();
+                    saveChatDraft();
+                    updateDraftPreview();
+                });
+                quickStartButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const starter = button.getAttribute('data-chat-starter');
+                        if (starter === 'klarsprak') {
+                            document.getElementById('task-mode-preset').checked = true;
+                            state.mode = 'preset';
+                            selectPreset('klarsprak');
+                            updateModeUi();
+                            chatInput.placeholder = 'Klistra in texten du vill skriva om till klarspråk...';
+                        } else if (starter === 'sammanfattning') {
+                            document.getElementById('task-mode-preset').checked = true;
+                            state.mode = 'preset';
+                            selectPreset('sammanfattning');
+                            updateModeUi();
+                            chatInput.placeholder = 'Klistra in texten du vill sammanfatta...';
+                        } else if (starter === 'forbattra') {
+                            document.getElementById('task-mode-custom').checked = true;
+                            state.mode = 'custom';
+                            customInstruction.value = 'Förbättra tonen i texten så att den blir tydligare, mer professionell och lättare att läsa utan att ändra budskapet.';
+                            updateModeUi();
+                            chatInput.placeholder = 'Klistra in texten du vill förbättra...';
+                        }
+                        chatInput.focus();
+                    });
+                });
+                window.addEventListener('beforeunload', (event) => {
+                    if (!chatInput.value.trim() || state.chatAbortController) {
+                        return;
+                    }
+                    event.preventDefault();
+                    event.returnValue = '';
+                });
+
+                updateModeUi();
+                setPromptPanelCollapsed(false);
+                updateQuickInputStatus();
+                loadPromptLibrary();
+                populateChatModels();
+                loadChatDraft();
+                updateQuickInputStatus();
+                updateDraftPreview();
+                resizeChatInput();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', renderSingleFlow, { once: true });
+            } else {
+                renderSingleFlow();
+            }
         })();
     </script>
 </body>

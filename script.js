@@ -800,10 +800,46 @@
         const localExportPdfBtn = document.getElementById('local-export-pdf');
         const quickInputFile = document.getElementById('quick-input-file');
         const quickInputFileRow = document.querySelector('.quick-input-file-row');
+        const quickInputImagePreview = document.getElementById('quick-input-image-preview');
+        const quickInputImageTag = document.getElementById('quick-input-image-tag');
+        const quickInputImageName = document.getElementById('quick-input-image-name');
+        const quickInputImageClear = document.getElementById('quick-input-image-clear');
         let localRunAbortController = null;
         let localConversationMessages = [];
         let latestLocalRunResponse = '';
         const supportedQuickInputExtensions = ['txt', 'md', 'csv', 'json', 'docx'];
+
+        function clearQuickInputImagePreview() {
+            if (quickInputImageTag) {
+                quickInputImageTag.removeAttribute('src');
+            }
+            if (quickInputImageName) {
+                quickInputImageName.textContent = 'Vald bild';
+            }
+            if (quickInputImagePreview) {
+                quickInputImagePreview.hidden = true;
+            }
+        }
+
+        function renderQuickInputImagePreview(file) {
+            if (!file || !quickInputImagePreview || !quickInputImageTag) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                quickInputImageTag.src = String(reader.result || '');
+                if (quickInputImageName) {
+                    quickInputImageName.textContent = `Bild vald: ${file.name}`;
+                }
+                quickInputImagePreview.hidden = false;
+                showQuickInputStatus(`Bild inläst: ${file.name}. Du kan använda den som visuell referens.`, 'ready');
+            };
+            reader.onerror = () => {
+                showQuickInputStatus(`Kunde inte läsa bilden (${file.name}).`, 'error');
+            };
+            reader.readAsDataURL(file);
+        }
 
         function showQuickInputStatus(message, state = 'ready') {
             const quickInputStatus = document.getElementById('quick-input-status');
@@ -1010,6 +1046,11 @@ ${initialUserInput.trim()}`
 
         async function handleQuickInputFile(file) {
             if (!file || !quickInputTextarea) {
+                return;
+            }
+
+            if (file.type.startsWith('image/')) {
+                renderQuickInputImagePreview(file);
                 return;
             }
 
@@ -1532,11 +1573,19 @@ ${initialUserInput.trim()}`
             quickInputClearBtn.addEventListener('click', () => {
                 quickInputTextarea.value = '';
                 quickInputText = '';
+                clearQuickInputImagePreview();
                 console.log('Quick input cleared');
                 updateCopyButtonLabels();
                 // Nollställ teckenräknaren
                 const quickInputCharCounter = document.getElementById('quick-input-char-counter');
                 if (quickInputCharCounter) quickInputCharCounter.textContent = '0 / 5 000 tecken';
+            });
+        }
+
+        if (quickInputImageClear) {
+            quickInputImageClear.addEventListener('click', () => {
+                clearQuickInputImagePreview();
+                showQuickInputStatus('Bild borttagen. Du kan välja en ny fil eller bild.', 'ready');
             });
         }
 

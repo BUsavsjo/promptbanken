@@ -60,6 +60,8 @@ class OllamaClient:
                     if not line:
                         continue
                     payload = json.loads(line)
+                    if payload.get("done"):
+                        break
                     message = payload.get("message") or {}
                     content = message.get("content")
                     if content:
@@ -87,6 +89,8 @@ class OllamaClient:
                     if not line:
                         continue
                     payload = json.loads(line)
+                    if payload.get("done"):
+                        break
                     message = payload.get("message") or {}
                     content = message.get("content")
                     if content:

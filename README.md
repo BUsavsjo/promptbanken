@@ -99,6 +99,50 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8001
 ```
 
+### Starta lokal MCP skill router
+
+Promptbanken kan också köras som en lokal MCP-server som exponerar promptarna som skills. Den kör ingen modell själv, utan levererar metadata, routing och prompttext till MCP-klienten.
+
+```bash
+cd promptbanken
+python -m venv backend/.venv
+source backend/.venv/bin/activate
+npm run setup:python
+npm run dev
+```
+
+På Windows med PowerShell:
+
+```powershell
+cd "C:\path\to\promptbanken"
+python -m venv backend\.venv
+backend\.venv\Scripts\Activate.ps1
+npm run setup:python
+npm run dev
+```
+
+Exempel på MCP-konfiguration för en lokal klient:
+
+```json
+{
+  "mcpServers": {
+    "promptbanken": {
+      "command": "npm",
+      "args": ["run", "--silent", "dev"],
+      "cwd": "/path/to/promptbanken"
+    }
+  }
+}
+```
+
+MCP-tools:
+
+- `list_skills` - listar alla skills utan full prompttext
+- `get_skill` - hämtar en skill och valfritt prompttext
+- `route_skill` - föreslår bästa skill utifrån uppgift, roll och målgrupp
+- `compile_skill_prompt` - bygger en färdig prompt av skill och användarens kontext
+- `check_input_risk` - enkel kontroll av vanliga personuppgiftsmönster
+
 ### Framtida förbättringar
 - Byt MVP-token till riktig authn/authz (OIDC/SSO + roller).
 - Nyckelrotation med versionshantering och audit-logg.

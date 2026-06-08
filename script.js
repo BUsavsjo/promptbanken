@@ -106,6 +106,38 @@
             informationsutskick: { icon: '!', category: 'Svara och kommunicera', audiences: ['invånare', 'medarbetare', 'allmänhet'], roles: ['kommunikatör', 'handläggare', 'chef'], risk: 'Medelrisk', example: 'Nyheter, driftinformation och utskick.', phrase: 'Skriv ett informationsutskick.' }
         };
 
+        const categoryIconMap = {
+            'Beslut och rutiner': 'clipboard',
+            'Skriva och förbättra text': 'pencil',
+            'Svara och kommunicera': 'message',
+            'Sammanfatta och strukturera': 'list',
+            'Möten och workshops': 'users',
+            'Alla kategorier': 'library'
+        };
+
+        const promptIconMap = {
+            klarsprak: 'pencil',
+            mejl: 'message',
+            faq: 'help',
+            checklista: 'clipboard',
+            kallelse: 'users',
+            beslutsunderlag: 'clipboard',
+            rutin: 'clipboard',
+            tvaversioner: 'pencil',
+            reflektion: 'users',
+            samtalskompas: 'users',
+            sammanfattning: 'list',
+            anteckningar: 'list',
+            diskussionsfragor: 'users',
+            nyckelord: 'search',
+            informationsutskick: 'message',
+            tydlighetskoll: 'shield'
+        };
+
+        function getIconName(promptId, category) {
+            return promptIconMap[promptId] || categoryIconMap[category] || 'library';
+        }
+
         function getPromptMeta(prompt) {
             const mcpMeta = mcpPromptMeta[prompt.id];
             if (mcpMeta) {
@@ -476,6 +508,7 @@
             selectedPromptId = promptId;
             const prompt = allPrompts.find((item) => item.id === promptId);
             if (!prompt) return;
+            document.body.classList.remove('detail-panel-closed');
 
             const meta = getPromptMeta(prompt);
             const title = stripLeadingIcon(prompt.title);
@@ -499,7 +532,10 @@
 
             if (fields.title) fields.title.textContent = title;
             if (fields.description) fields.description.textContent = prompt.description;
-            if (fields.icon) fields.icon.textContent = meta.icon;
+            if (fields.icon) {
+                fields.icon.textContent = '';
+                fields.icon.dataset.icon = getIconName(promptId, meta.category);
+            }
             if (fields.risk) {
                 fields.risk.textContent = meta.risk;
                 fields.risk.dataset.risk = meta.risk.toLowerCase();
@@ -526,6 +562,16 @@
                     .map((item) => `<button type="button" data-related-prompt="${item.id}">${stripLeadingIcon(item.title)}</button>`)
                     .join('');
             }
+        }
+
+        function closePromptDetailPanel() {
+            selectedPromptId = null;
+            document.body.classList.add('detail-panel-closed');
+            grid.querySelectorAll('.prompt-card.selected').forEach((card) => {
+                card.classList.remove('selected');
+            });
+            document.querySelectorAll('#selected-prompt-chat-btn, #selected-prompt-copy-btn, #selected-prompt-view-btn, #selected-prompt-export-btn')
+                .forEach((button) => button.setAttribute('disabled', 'disabled'));
         }
 
         function loadLocalChatMode() {
@@ -572,7 +618,7 @@
                 <button class="favorite-btn favorites-only" data-favorite="${prompt.id}" title="Markera som favorit">☆</button>
                 <span class="selected-check" aria-hidden="true">✓</span>
                 <div class="card-title-row">
-                    <span class="card-icon" aria-hidden="true">${meta.icon}</span>
+                    <span class="card-icon app-icon" aria-hidden="true" data-icon="${getIconName(prompt.id, meta.category)}"></span>
                     <div>
                         <span class="card-kicker">${meta.category}</span>
                         <h3>${title}</h3>
@@ -762,8 +808,21 @@
 
         // Set up clear favorites button
         clearFavoritesBtn.addEventListener('click', clearAllFavorites);
+        const detailCloseBtn = document.getElementById('detail-close');
+        if (detailCloseBtn) {
+            detailCloseBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                closePromptDetailPanel();
+            });
+        }
 
         document.addEventListener('click', (event) => {
+            if (event.target.closest('#detail-close')) {
+                closePromptDetailPanel();
+                return;
+            }
+
             const relatedButton = event.target.closest('[data-related-prompt]');
             if (relatedButton) {
                 selectPrompt(relatedButton.getAttribute('data-related-prompt'));

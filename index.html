@@ -260,17 +260,11 @@
                 <label class="search-box" for="prompt-search">
                     <span aria-hidden="true">⌕</span>
                     <input id="prompt-search" type="search" placeholder="Sök prompter, exempel eller kategori..." autocomplete="off">
-                    <kbd>⌘ K</kbd>
                 </label>
 
                 <div class="topbar-actions">
                     <a class="help-btn" href="help.html">? Hjälp</a>
                     <a class="help-btn mcp-top-link" href="mcp.html">MCP</a>
-                    <div class="info-class">
-                        <span class="shield" aria-hidden="true">◇</span>
-                        <span><small>Informationsklass</small><strong><span class="status-dot"></span>Öppen</strong></span>
-                        <span aria-hidden="true">⌄</span>
-                    </div>
                     <div class="settings-menu">
             <button class="settings-gear" id="settings-gear" aria-label="Inställningar">⚙</button>
             <div class="settings-dropdown hidden" id="settings-dropdown">
@@ -324,6 +318,21 @@
                         <p>Färdiga prompter för offentliga verksamheter.</p>
                     </div>
                 </div>
+
+                <ol class="workflow-strip" aria-label="Arbetsflöde">
+                    <li class="is-current">
+                        <span>1</span>
+                        <strong>Välj prompt</strong>
+                    </li>
+                    <li>
+                        <span>2</span>
+                        <strong>Anonymisera text</strong>
+                    </li>
+                    <li>
+                        <span>3</span>
+                        <strong>Använd</strong>
+                    </li>
+                </ol>
 
                 <div class="filter-row" aria-label="Filter">
                     <label class="filter-control" for="category-filter">
@@ -392,6 +401,10 @@
                     <span class="risk-badge" id="detail-risk">Låg risk</span>
                 </div>
                 <p id="selected-prompt-description">Klicka på ett promptkort för att se detaljer, exempel och prompttext här.</p>
+                <div class="detail-safety-banner">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span>Använd endast anonymiserad och öppen information.</span>
+                </div>
                 <div class="detail-meta">
                     <span>Målgrupp <b id="detail-audience">Intern & extern</b></span>
                     <span>Roller <b id="detail-role">Alla roller</b></span>
@@ -435,12 +448,12 @@
                         <button id="close-anon-examples" class="example-btn anon-examples-close">Stäng</button>
                     </div>
                 </div>
-                <div class="detail-section">
-                    <h3>Prompt kopieringsbar</h3>
+                <div class="detail-section prompt-preview-section">
+                    <h3>Prompt</h3>
                     <pre class="prompt-preview" id="detail-prompt-preview">Välj en prompt för att visa texten.</pre>
                 </div>
                 <div class="detail-actions selected-prompt-actions">
-                    <button class="primary-btn" id="selected-prompt-copy-btn" type="button" disabled>Använd</button>
+                    <button class="primary-btn" id="selected-prompt-copy-btn" type="button" disabled>Kopiera</button>
                     <button class="secondary-btn local-chat-only" id="selected-prompt-chat-btn" type="button" disabled>Chatta lokalt</button>
                     <button class="secondary-btn" id="selected-prompt-view-btn" type="button" disabled>Förhandsvisa</button>
                     <button class="secondary-btn advanced-only" id="selected-prompt-export-btn" type="button" disabled>Anpassa</button>
@@ -645,11 +658,11 @@
                     clearTimeout(copyFeedbackTimer);
                 }
 
-                panelCopyButton.textContent = 'Kopierad';
+                panelCopyButton.textContent = 'Kopierat';
                 panelCopyButton.classList.add('is-copied');
 
                 copyFeedbackTimer = setTimeout(() => {
-                    panelCopyButton.textContent = 'Kopiera prompt';
+                    panelCopyButton.textContent = 'Kopiera';
                     panelCopyButton.classList.remove('is-copied');
                     copyFeedbackTimer = null;
                 }, 1800);

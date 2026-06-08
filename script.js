@@ -511,7 +511,13 @@
             if (fields.preview) fields.preview.textContent = getPromptText(promptId) || 'Prompttext saknas.';
 
             document.querySelectorAll('#selected-prompt-chat-btn, #selected-prompt-copy-btn, #selected-prompt-view-btn, #selected-prompt-export-btn')
-                .forEach((button) => button.removeAttribute('disabled'));
+                .forEach((button) => {
+                    button.removeAttribute('disabled');
+                    if (button.id === 'selected-prompt-copy-btn') {
+                        button.textContent = 'Kopiera';
+                        button.classList.remove('copied', 'is-copied');
+                    }
+                });
 
             if (fields.related) {
                 fields.related.innerHTML = allPrompts
@@ -567,17 +573,22 @@
                 <span class="selected-check" aria-hidden="true">✓</span>
                 <div class="card-title-row">
                     <span class="card-icon" aria-hidden="true">${meta.icon}</span>
-                    <h3>${title}</h3>
+                    <div>
+                        <span class="card-kicker">${meta.category}</span>
+                        <h3>${title}</h3>
+                    </div>
                 </div>
                 <p>${prompt.description}</p>
                 <div class="card-tags">
+                    <span class="risk-chip" data-risk="${meta.risk.toLowerCase()}">${meta.risk}</span>
                     <span>${meta.audience}</span>
                     <span>${meta.role}</span>
                 </div>
                 <p class="card-example">Exempel: "${meta.phrase}"</p>
                 <div class="actions card-actions">
                     <button class="primary-btn export-btn advanced-only" data-export="${prompt.id}">Anpassa prompt</button>
-                    <button class="copy-btn copy-btn-primary" data-prompt="${prompt.id}">Använd</button>
+                    <button class="select-prompt-btn" type="button">Välj</button>
+                    <button class="copy-btn copy-btn-primary" data-prompt="${prompt.id}" type="button" hidden>Kopiera</button>
                     <button class="secondary-btn info-btn" data-show-full="${prompt.id}" title="Förhandsvisa">Förhandsvisa</button>
                     <button class="secondary-btn local-chat-btn" data-chat-local="${prompt.id}">Chatta lokalt</button>
                     <button class="secondary-btn direct-chat-btn" type="button" disabled aria-disabled="true" title="Kommer snart">Chatta direkt (kommer snart)</button>
@@ -767,7 +778,7 @@
 
             if (event.target.id === 'selected-prompt-copy-btn') {
                 const cardButton = grid.querySelector(`.copy-btn[data-prompt="${selectedPromptId}"]`);
-                if (cardButton) handleCopyClick(cardButton, event);
+                if (cardButton) handleCopyClick(cardButton, event, event.target);
             }
 
             if (event.target.id === 'selected-prompt-view-btn') {
@@ -834,7 +845,7 @@
             }
         }
 
-        async function handleCopyClick(button, clickEvent) {
+        async function handleCopyClick(button, clickEvent, feedbackButton = button) {
             if (clickEvent) clickEvent.preventDefault();
             const promptId = button.getAttribute('data-prompt');
             const textArea = document.getElementById(`textarea-${promptId}`);
@@ -850,14 +861,14 @@
                 await navigator.clipboard.writeText(textToCopy);
 
                 // Visual feedback
-                const originalText = button.textContent;
-                button.textContent = 'Kopierad';
-                button.classList.add('copied');
+                const originalText = feedbackButton.textContent;
+                feedbackButton.textContent = 'Kopierat';
+                feedbackButton.classList.add('copied', 'is-copied');
 
                 // Reset after 2 seconds
                 setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
+                    feedbackButton.textContent = originalText;
+                    feedbackButton.classList.remove('copied', 'is-copied');
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy:', err);
@@ -1895,7 +1906,7 @@ ${initialUserInput.trim()}`
                     btn.style.display = 'none';
                 } else {
                     btn.style.display = '';
-                    btn.textContent = 'Använd';
+                    btn.textContent = 'Kopiera';
                     btn.classList.remove('with-text');
                 }
             });

@@ -3,4 +3,5 @@ __pycache__/
 *.pyc
 .venv/
 mcp-server/.venv/
+.env
 backend/data/provider_secrets.db

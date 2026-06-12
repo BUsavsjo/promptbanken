@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Promptbanken</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="workspace-page">
+    <header class="workspace-topbar">
+        <a class="workspace-brand" href="index.html">Promptbanken</a>
+        <nav aria-label="Admin">
+            <a href="promptbanken.html">Promptbanken</a>
+            <button type="button" data-logout>Logga ut</button>
+        </nav>
+    </header>
+
+    <main class="workspace-shell" aria-labelledby="admin-title">
+        <p class="workspace-status" role="status" data-admin-status>Laddar...</p>
+
+        <section class="workspace-empty" data-no-profile hidden>
+            <h1 id="admin-title">Adminyta</h1>
+            <p>Ditt konto är skapat men inte kopplat till en workspace ännu.</p>
+        </section>
+
+        <section data-admin-dashboard hidden>
+            <div class="workspace-heading">
+                <div>
+                    <p class="workspace-kicker">Skyddad adminyta</p>
+                    <h1 id="admin-title">Din workspace</h1>
+                </div>
+            </div>
+
+            <div class="workspace-facts" aria-label="Workspace och roll">
+                <article>
+                    <span>Anvandare</span>
+                    <strong data-user-email>-</strong>
+                </article>
+                <article>
+                    <span>Workspace</span>
+                    <strong data-workspace-name>-</strong>
+                </article>
+                <article>
+                    <span>Typ</span>
+                    <strong data-workspace-type>-</strong>
+                </article>
+                <article>
+                    <span>Plan</span>
+                    <strong data-workspace-plan>-</strong>
+                </article>
+                <article>
+                    <span>Roll</span>
+                    <strong data-profile-role>-</strong>
+                </article>
+            </div>
+
+            <section class="workspace-mode" aria-labelledby="role-mode-title">
+                <h2 id="role-mode-title">Dashboardlage</h2>
+                <p data-role-summary></p>
+                <p data-role-mode="viewer" hidden>Viewer-lage: fokus pa att lasa publicerat organisationsinnehall.</p>
+                <p data-role-mode="editor" hidden>Editor-lage: forberett for egna utkast och redigering i kommande fas.</p>
+                <p data-role-mode="workspace_admin" hidden>Workspace admin-lage: forberett for publicering och enklare administration.</p>
+                <p data-role-mode="workspace_owner" hidden>Workspace owner-lage: forberett for agarskap och workspace-installningar.</p>
+                <p data-role-mode="platform_owner" hidden>Platform owner-lage: forberett for plattformsoversikt.</p>
+            </section>
+
+            <section class="workspace-section" data-can-edit>
+                <div class="workspace-section-heading">
+                    <h2>Mina prompts</h2>
+                    <button type="button" data-refresh>Uppdatera</button>
+                </div>
+                <form class="workspace-form" data-prompt-form>
+                    <label>
+                        Titel
+                        <input name="title" required>
+                    </label>
+                    <label>
+                        Slug
+                        <input name="slug" placeholder="skapas från titel om tom">
+                    </label>
+                    <label>
+                        Synlighet
+                        <select name="visibility">
+                            <option value="workspace">Workspace</option>
+                            <option value="private">Privat</option>
+                            <option value="public">Publik efter publicering</option>
+                        </select>
+                    </label>
+                    <label>
+                        Kategori
+                        <input name="category">
+                    </label>
+                    <label>
+                        Målgrupp
+                        <input name="audience">
+                    </label>
+                    <label class="workspace-form-wide">
+                        Sammanfattning
+                        <input name="summary">
+                    </label>
+                    <label class="workspace-form-wide">
+                        Prompttext
+                        <textarea name="content" rows="5" required></textarea>
+                    </label>
+                    <button type="submit">Spara utkast</button>
+                </form>
+                <div class="workspace-table-wrap">
+                    <table class="workspace-table">
+                        <thead>
+                            <tr>
+                                <th>Titel</th>
+                                <th>Status</th>
+                                <th>Synlighet</th>
+                                <th>Uppdaterad</th>
+                                <th>Åtgärd</th>
+                            </tr>
+                        </thead>
+                        <tbody data-my-prompts></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="workspace-section">
+                <div class="workspace-section-heading">
+                    <h2>Organisationens bibliotek</h2>
+                    <button type="button" data-refresh>Uppdatera</button>
+                </div>
+                <div class="workspace-table-wrap">
+                    <table class="workspace-table">
+                        <thead>
+                            <tr>
+                                <th>Titel</th>
+                                <th>Synlighet</th>
+                                <th>Kategori</th>
+                                <th>Målgrupp</th>
+                                <th>Publicerad</th>
+                            </tr>
+                        </thead>
+                        <tbody data-library-prompts></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="workspace-section">
+                <div class="workspace-section-heading">
+                    <h2>Medlemmar</h2>
+                    <button type="button" data-refresh>Uppdatera</button>
+                </div>
+                <div class="workspace-table-wrap">
+                    <table class="workspace-table">
+                        <thead>
+                            <tr>
+                                <th>Användar-ID</th>
+                                <th>Roll</th>
+                                <th>Tillagd</th>
+                            </tr>
+                        </thead>
+                        <tbody data-members></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="workspace-section" data-admin-only>
+                <div class="workspace-section-heading">
+                    <h2>API-nycklar</h2>
+                    <button type="button" data-refresh>Uppdatera</button>
+                </div>
+                <form class="workspace-form compact" data-api-key-form>
+                    <label>
+                        Namn
+                        <input name="name" required>
+                    </label>
+                    <label>
+                        Scopes
+                        <input name="scopes" value="read">
+                    </label>
+                    <button type="submit">Skapa API-nyckel</button>
+                </form>
+                <p class="workspace-secret" data-new-api-key></p>
+                <div class="workspace-table-wrap">
+                    <table class="workspace-table">
+                        <thead>
+                            <tr>
+                                <th>Namn</th>
+                                <th>Prefix</th>
+                                <th>Scopes</th>
+                                <th>Status</th>
+                                <th>Skapad</th>
+                                <th>Åtgärd</th>
+                            </tr>
+                        </thead>
+                        <tbody data-api-keys></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </main>
+    <script type="module" src="/src/admin.js"></script>
+</body>
+</html>

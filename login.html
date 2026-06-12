@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logga in | Promptbanken</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-shell" aria-labelledby="login-title">
+        <section class="auth-panel">
+            <a class="auth-brand" href="index.html">Promptbanken</a>
+            <p class="auth-kicker">Inloggat lage</p>
+            <h1 id="login-title">Logga in</h1>
+            <form class="auth-form" data-login-form>
+                <label>
+                    E-post
+                    <input type="email" autocomplete="email" required data-login-email>
+                </label>
+                <label>
+                    Losenord
+                    <input type="password" autocomplete="current-password" required data-login-password>
+                </label>
+                <button type="submit">Logga in</button>
+                <p class="auth-status" role="status" data-login-status></p>
+            </form>
+        </section>
+    </main>
+    <script type="module" src="/src/login.js"></script>
+</body>
+</html>

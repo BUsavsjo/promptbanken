@@ -28,6 +28,16 @@ async function handleLogin(event) {
     password: passwordInput.value
   };
 
+  if (authMode === 'reset') {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(credentials.email);
+    if (resetError) {
+      setStatus(resetError.message || 'Kunde inte skicka återställningslänk.', true);
+    } else {
+      setStatus('Återställningslänk skickad — kolla din e-post.');
+    }
+    return;
+  }
+
   const { data, error } = authMode === 'signup'
     ? await supabase.auth.signUp(credentials)
     : await supabase.auth.signInWithPassword(credentials);
@@ -58,8 +68,17 @@ function setAuthMode(nextMode) {
   modeButtons.forEach((button) => {
     button.classList.toggle('active', button.dataset.authMode === authMode);
   });
-  submitButton.textContent = authMode === 'signup' ? 'Skapa free-konto' : 'Logga in';
-  passwordInput.autocomplete = authMode === 'signup' ? 'new-password' : 'current-password';
+  const passwordField = document.querySelector('[data-password-field]');
+  if (authMode === 'reset') {
+    submitButton.textContent = 'Skicka återställningslänk';
+    passwordInput.required = false;
+    if (passwordField) passwordField.hidden = true;
+  } else {
+    submitButton.textContent = authMode === 'signup' ? 'Skapa free-konto' : 'Logga in';
+    passwordInput.required = true;
+    if (passwordField) passwordField.hidden = false;
+    passwordInput.autocomplete = authMode === 'signup' ? 'new-password' : 'current-password';
+  }
   setStatus('');
 }
 

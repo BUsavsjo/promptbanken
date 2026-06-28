@@ -16,13 +16,14 @@
             <div class="auth-tabs" aria-label="Inloggningsläge">
                 <button type="button" class="active" data-auth-mode="login">Logga in</button>
                 <button type="button" data-auth-mode="signup">Skapa free-konto</button>
+                <button type="button" data-auth-mode="reset">Glömt lösenord</button>
             </div>
             <form class="auth-form" data-login-form>
                 <label>
                     E-post
                     <input type="email" autocomplete="email" required data-login-email>
                 </label>
-                <label>
+                <label data-password-field>
                     Lösenord
                     <input type="password" autocomplete="current-password" required data-login-password>
                 </label>

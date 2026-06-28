@@ -85,6 +85,22 @@ body {
     --icon-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.1 9a3 3 0 1 1 5.8 1c-.5.9-1.5 1.3-2.1 2-.5.5-.8 1-.8 2'/%3E%3Cpath d='M12 18h.01'/%3E%3C/svg%3E");
 }
 
+.app-icon[data-icon="image"] {
+    --icon-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='8.5' cy='9.5' r='1.5'/%3E%3Cpath d='m21 16-5-5L5 20'/%3E%3C/svg%3E");
+}
+
+.app-icon[data-icon="chart"] {
+    --icon-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19V5'/%3E%3Cpath d='M4 19h16'/%3E%3Crect x='7' y='11' width='3' height='5' rx='0.5'/%3E%3Crect x='12' y='7' width='3' height='9' rx='0.5'/%3E%3Crect x='17' y='9' width='3' height='7' rx='0.5'/%3E%3C/svg%3E");
+}
+
+.app-icon[data-icon="sparkles"] {
+    --icon-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 3 1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z'/%3E%3Cpath d='m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z'/%3E%3Cpath d='m5 13 .8 1.7L7.5 15.5l-1.7.7L5 18l-.8-1.8-1.7-.7 1.7-.8L5 13Z'/%3E%3C/svg%3E");
+}
+
+.app-icon[data-icon="accessibility"] {
+    --icon-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='4' r='2'/%3E%3Cpath d='M4 9h16'/%3E%3Cpath d='M12 9v12'/%3E%3Cpath d='m8 21 4-8 4 8'/%3E%3C/svg%3E");
+}
+
         /* Header */
         header {
             background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
@@ -3833,4 +3849,128 @@ body.detail-panel-closed .prompt-detail-panel {
 
 .quick-input-lock-icon.app-icon {
     --icon-size: 1rem;
+}
+
+/* ── Plan info section ─────────────────────────────────────── */
+.workspace-plan-section {
+    margin-block: 1.5rem;
+}
+
+.plan-info-grid {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.plan-badge-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 80px;
+}
+
+.plan-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #e9f0fb;
+    color: #1d4ed8;
+}
+
+.plan-badge[data-plan="pro"] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.plan-badge-desc {
+    font-size: 0.78rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.plan-feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.plan-feature-list li {
+    font-size: 0.85rem;
+}
+
+.plan-feature-on {
+    color: #15803d;
+}
+
+.plan-feature-off {
+    color: #9ca3af;
+}
+
+.plan-locked-note {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    font-style: italic;
+    margin: 0.5rem 0;
+}
+
+/* ── Login plan comparison ─────────────────────────────────── */
+.auth-plan-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.auth-plan-col {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.auth-plan-col--pro {
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.auth-plan-col strong {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #374151;
+}
+
+.auth-plan-col--pro strong {
+    color: #92400e;
+}
+
+.auth-plan-col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.auth-plan-col li {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.auth-plan-col li:first-of-type {
+    color: #374151;
 }

@@ -15,7 +15,8 @@ const state = {
   workspace: null,
   prompts: [],
   members: [],
-  apiKeys: []
+  apiKeys: [],
+  mcpKeys: []
 };
 
 const statusElement = document.querySelector('[data-admin-status]');
@@ -24,6 +25,7 @@ const noProfileElement = document.querySelector('[data-no-profile]');
 const logoutButton = document.querySelector('[data-logout]');
 const promptForm = document.querySelector('[data-prompt-form]');
 const apiKeyForm = document.querySelector('[data-api-key-form]');
+const mcpKeyForm = document.querySelector('[data-mcp-key-form]');
 const refreshButtons = document.querySelectorAll('[data-refresh]');
 const visibilitySelect = promptForm?.querySelector('select[name="visibility"]');
 
@@ -41,6 +43,18 @@ function canEdit(role) {
 
 function isPersonalFreeWorkspace() {
   return state.workspace?.type === 'personal' && state.workspace?.plan === 'free';
+}
+
+function isPlanPro() {
+  return state.workspace?.plan === 'pro';
+}
+
+function apiEnabled() {
+  return state.workspace?.api_enabled === true;
+}
+
+function maxPrompts() {
+  return state.workspace?.max_prompts ?? 3;
 }
 
 function allowedVisibilityOptions() {
@@ -120,6 +134,44 @@ function renderCapabilityState() {
   document.querySelectorAll('[data-platform-only]').forEach((element) => {
     element.hidden = !isPlatformOwner();
   });
+
+  const apiLocked = document.querySelector('[data-api-locked]');
+  const apiUnlocked = document.querySelector('[data-api-unlocked]');
+  if (apiLocked) apiLocked.hidden = apiEnabled();
+  if (apiUnlocked) apiUnlocked.hidden = !apiEnabled();
+}
+
+function renderPlanInfo() {
+  const plan = state.workspace?.plan ?? 'free';
+  const planLabels = { free: 'Free', pro: 'Pro', start: 'Start', plus: 'Plus', enterprise: 'Enterprise' };
+  const badge = document.querySelector('[data-plan-badge]');
+  const desc = document.querySelector('[data-plan-badge-desc]');
+  const featureList = document.querySelector('[data-plan-feature-list]');
+  const maxP = maxPrompts();
+
+  if (badge) {
+    badge.textContent = planLabels[plan] ?? plan;
+    badge.dataset.plan = plan;
+  }
+  if (desc) {
+    desc.textContent = 'Personligt konto';
+  }
+
+  const features = [
+    { label: `${maxP} prompts`, ok: true },
+    { label: 'MCP-nyckel (egna + publika prompts)', ok: true },
+    { label: 'API-nycklar för externa integrationer', ok: apiEnabled() },
+    { label: 'Dela prompts inom workspace', ok: isPlanPro() }
+  ];
+
+  if (featureList) {
+    featureList.innerHTML = features.map(({ label, ok }) =>
+      `<li class="${ok ? 'plan-feature-on' : 'plan-feature-off'}">${ok ? '✓' : '✗'} ${escapeHtml(label)}</li>`
+    ).join('');
+  }
+
+  const maxEl = document.querySelector('[data-plan-max-prompts]');
+  if (maxEl) maxEl.textContent = maxP;
 }
 
 function renderPromptFormRules() {
@@ -249,6 +301,92 @@ function renderApiKeys() {
     : emptyRow(6, 'Inga API-nycklar ännu.');
 }
 
+function renderMcpKeys() {
+  const body = document.querySelector('[data-mcp-keys]');
+  if (!body) return;
+  body.innerHTML = state.mcpKeys.length
+    ? state.mcpKeys.map((key) => `
+        <tr>
+          <td>${escapeHtml(key.name)}</td>
+          <td><code>${escapeHtml(key.key_prefix)}</code></td>
+          <td>${escapeHtml(key.revoked_at ? 'Återkallad' : 'Aktiv')}</td>
+          <td>${escapeHtml(key.created_at ? new Date(key.created_at).toLocaleDateString('sv-SE') : '')}</td>
+          <td>
+            ${!key.revoked_at ? `<button type="button" data-revoke-mcp-key="${key.id}">Återkalla</button>` : ''}
+          </td>
+        </tr>
+      `).join('')
+    : emptyRow(5, 'Ingen MCP-nyckel skapad ännu.');
+}
+
+async function loadMcpKeys() {
+  const { data, error } = await supabase
+    .from('api_keys')
+    .select('id, name, key_prefix, scopes, revoked_at, created_at')
+    .eq('workspace_id', state.workspace.id)
+    .contains('scopes', ['mcp'])
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  state.mcpKeys = data || [];
+  renderMcpKeys();
+}
+
+async function createMcpKey(event) {
+  event.preventDefault();
+  const formData = new FormData(mcpKeyForm);
+  const name = formData.get('name')?.toString().trim();
+  if (!name) {
+    setStatus('Namn krävs för MCP-nyckeln.', true);
+    return;
+  }
+
+  const activeCount = state.mcpKeys.filter((k) => !k.revoked_at).length;
+  if (activeCount >= 1 && state.workspace?.type === 'personal') {
+    setStatus('Du har redan en aktiv MCP-nyckel. Återkalla den befintliga för att skapa en ny.', true);
+    return;
+  }
+
+  const rawKey = `pb_mcp_${randomToken()}`;
+  const keyPrefix = rawKey.slice(0, 16);
+  const keyHash = await sha256Hex(rawKey);
+
+  const { error } = await supabase.from('api_keys').insert({
+    workspace_id: state.workspace.id,
+    created_by: state.user.id,
+    name,
+    key_prefix: keyPrefix,
+    key_hash: keyHash,
+    scopes: ['mcp']
+  });
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte skapa MCP-nyckel.', true);
+    return;
+  }
+
+  mcpKeyForm.reset();
+  setText('[data-new-mcp-key]', rawKey);
+  setStatus('MCP-nyckeln skapades. Kopiera den nu, den visas bara en gång.');
+  await loadMcpKeys();
+}
+
+async function revokeMcpKey(keyId) {
+  const { error } = await supabase
+    .from('api_keys')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', keyId)
+    .eq('workspace_id', state.workspace.id);
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte återkalla MCP-nyckel.', true);
+    return;
+  }
+
+  setStatus('MCP-nyckeln återkallades.');
+  await loadMcpKeys();
+}
+
 async function loadProfile(user) {
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -269,7 +407,7 @@ async function loadProfile(user) {
 
   const { data: workspace, error: workspaceError } = await supabase
     .from('workspaces')
-    .select('id, name, type, plan')
+    .select('id, name, type, plan, api_enabled, mcp_enabled, max_prompts')
     .eq('id', profile.workspace_id)
     .single();
 
@@ -289,6 +427,7 @@ async function loadProfile(user) {
   renderRoleMode(profile.role);
   renderCapabilityState();
   renderPromptFormRules();
+  renderPlanInfo();
 
   dashboardElement.hidden = false;
   noProfileElement.hidden = true;
@@ -349,7 +488,7 @@ async function loadApiKeys() {
 
 async function refreshWorkspaceData() {
   setStatus('Uppdaterar...');
-  await Promise.all([loadPrompts(), loadMembers(), loadApiKeys()]);
+  await Promise.all([loadPrompts(), loadMembers(), loadMcpKeys(), loadApiKeys()]);
   setStatus('');
 }
 
@@ -375,13 +514,15 @@ async function createPrompt(event) {
     return;
   }
 
-  if (isPersonalFreeWorkspace()) {
+  if (state.workspace?.type === 'personal') {
     const activeOwnPrompts = state.prompts.filter((item) => (
       item.status !== 'archived'
       && (item.owner_user_id === state.user.id || item.created_by === state.user.id)
     )).length;
-    if (activeOwnPrompts >= 3) {
-      setStatus('Free-läge är begränsat till 3 privata prompts. Skapa ett org-konto för fler prompts och delning.', true);
+    const limit = maxPrompts();
+    if (activeOwnPrompts >= limit) {
+      const plan = state.workspace.plan ?? 'free';
+      setStatus(`Du har nått gränsen på ${limit} prompts för ${plan}-planen.`, true);
       return;
     }
   }
@@ -544,6 +685,10 @@ if (apiKeyForm) {
   apiKeyForm.addEventListener('submit', createApiKey);
 }
 
+if (mcpKeyForm) {
+  mcpKeyForm.addEventListener('submit', createMcpKey);
+}
+
 refreshButtons.forEach((button) => {
   button.addEventListener('click', () => {
     refreshWorkspaceData().catch((error) => setStatus(error.message || 'Kunde inte uppdatera.', true));
@@ -554,12 +699,18 @@ document.addEventListener('click', (event) => {
   const publishButton = event.target.closest('[data-publish-prompt]');
   const revokeButton = event.target.closest('[data-revoke-api-key]');
 
+  const revokeMcpButton = event.target.closest('[data-revoke-mcp-key]');
+
   if (publishButton) {
     publishPrompt(publishButton.dataset.publishPrompt);
   }
 
   if (revokeButton) {
     revokeApiKey(revokeButton.dataset.revokeApiKey);
+  }
+
+  if (revokeMcpButton) {
+    revokeMcpKey(revokeMcpButton.dataset.revokeMcpKey);
   }
 });
 

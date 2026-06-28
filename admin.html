@@ -87,9 +87,23 @@
                         <article>
                             <strong class="is-red" data-admin-stat="ownPrompts">0</strong>
                             <span>Egna prompts</span>
-                            <small><span data-free-prompts-used>0</span> av 3 i free-läge</small>
+                            <small><span data-free-prompts-used>0</span> av <span data-plan-max-prompts>3</span></small>
                         </article>
                     </div>
+
+                    <section class="workspace-section workspace-plan-section" id="plan" aria-labelledby="plan-title">
+                        <div class="workspace-section-heading">
+                            <h2 id="plan-title">Din plan</h2>
+                        </div>
+                        <div class="plan-info-grid">
+                            <div class="plan-badge-wrap">
+                                <span class="plan-badge" data-plan-badge>Free</span>
+                                <p class="plan-badge-desc" data-plan-badge-desc>Personligt konto</p>
+                            </div>
+                            <ul class="plan-feature-list" data-plan-feature-list>
+                            </ul>
+                        </div>
+                    </section>
 
                     <div class="admin-overview-grid">
                         <section class="workspace-mode" id="installningar" aria-labelledby="role-mode-title">
@@ -254,37 +268,77 @@
                         </div>
                     </section>
 
-                    <section class="workspace-section" id="api-nycklar" data-admin-only>
+                    <section class="workspace-section" id="mcp-nyckel">
                         <div class="workspace-section-heading">
-                            <h2>API-nycklar</h2>
+                            <div>
+                                <h2>MCP-nyckel</h2>
+                                <p>Koppla Promptbanken till din AI-assistent via MCP. Personliga konton kan ha en aktiv nyckel.</p>
+                            </div>
                             <button type="button" data-refresh>Uppdatera</button>
                         </div>
-                        <form class="workspace-form compact" data-api-key-form>
+                        <form class="workspace-form compact" data-mcp-key-form>
                             <label>
                                 Namn
-                                <input name="name" required>
+                                <input name="name" required placeholder="t.ex. Min Claude">
                             </label>
-                            <label>
-                                Scopes
-                                <input name="scopes" value="read">
-                            </label>
-                            <button type="submit">Skapa API-nyckel</button>
+                            <button type="submit">Skapa MCP-nyckel</button>
                         </form>
-                        <p class="workspace-secret" data-new-api-key></p>
+                        <p class="workspace-secret" data-new-mcp-key></p>
                         <div class="workspace-table-wrap">
                             <table class="workspace-table">
                                 <thead>
                                     <tr>
                                         <th>Namn</th>
                                         <th>Prefix</th>
-                                        <th>Scopes</th>
                                         <th>Status</th>
                                         <th>Skapad</th>
                                         <th>Åtgärd</th>
                                     </tr>
                                 </thead>
-                                <tbody data-api-keys></tbody>
+                                <tbody data-mcp-keys></tbody>
                             </table>
+                        </div>
+                    </section>
+
+                    <section class="workspace-section" id="api-nycklar">
+                        <div class="workspace-section-heading">
+                            <div>
+                                <h2>API-nycklar</h2>
+                                <p>Programmatisk åtkomst för externa integrationer.</p>
+                            </div>
+                            <button type="button" data-refresh>Uppdatera</button>
+                        </div>
+                        <div data-api-locked>
+                            <p class="plan-locked-note">API-nycklar ingår inte i Free-planen.</p>
+                        </div>
+                        <div data-api-unlocked hidden>
+                            <form class="workspace-form compact" data-api-key-form>
+                                <label>
+                                    Namn
+                                    <input name="name" required>
+                                </label>
+                                <label>
+                                    Scopes
+                                    <input name="scopes" value="read">
+                                </label>
+                                <button type="submit">Skapa API-nyckel</button>
+                            </form>
+                            <p class="workspace-secret" data-new-api-key></p>
+                            <div class="workspace-table-wrap">
+                                <table class="workspace-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Namn</th>
+                                            <th>Prefix</th>
+                                            <th>Scopes</th>
+                                            <th>Status</th>
+                                            <th>Skapad</th>
+                                            <th>Åtgärd</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-api-keys></tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
                 </section>

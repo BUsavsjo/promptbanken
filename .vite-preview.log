@@ -1,0 +1,7 @@
+
+> promptbanken@1.0.0 preview
+> vite preview --host 0.0.0.0
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.0.113:[1m4173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://10.220.0.68:[1m4173[22m/[39m

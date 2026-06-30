@@ -248,6 +248,7 @@ function renderPrompts() {
       `).join('')
     : emptyRow(6, 'Inga egna prompts ännu.');
 
+  const canManageLibrary = isAdminRole(state.profile.role);
   libraryBody.innerHTML = publishedPrompts.length
     ? publishedPrompts.map((item) => `
         <tr>
@@ -256,9 +257,14 @@ function renderPrompts() {
           <td>${escapeHtml(item.category || '-')}</td>
           <td>${escapeHtml(item.audience || '-')}</td>
           <td>${escapeHtml(item.published_at ? new Date(item.published_at).toLocaleDateString('sv-SE') : '')}</td>
+          ${canManageLibrary ? `
+          <td>
+            <button type="button" data-unpublish-prompt="${item.id}">Avpublicera</button>
+            <button type="button" data-delete-prompt="${item.id}">Ta bort</button>
+          </td>` : ''}
         </tr>
       `).join('')
-    : emptyRow(5, 'Inga publicerade prompts i biblioteket ännu.');
+    : emptyRow(canManageLibrary ? 6 : 5, 'Inga publicerade prompts i biblioteket ännu.');
   if (reviewList) {
     reviewList.innerHTML = reviewPrompts.length
       ? reviewPrompts.map((item) => `
@@ -658,6 +664,27 @@ async function deletePrompt(promptId) {
   await loadPrompts();
 }
 
+async function unpublishPrompt(promptId) {
+  if (!isAdminRole(state.profile.role)) {
+    setStatus('Din roll får inte avpublicera.', true);
+    return;
+  }
+
+  const { error } = await supabase
+    .from('content_items')
+    .update({ status: 'draft' })
+    .eq('id', promptId)
+    .eq('workspace_id', state.workspace.id);
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte avpublicera prompt.', true);
+    return;
+  }
+
+  setStatus('Prompten avpublicerades och är nu ett utkast.');
+  await loadPrompts();
+}
+
 async function publishPrompt(promptId) {
   if (!isAdminRole(state.profile.role)) {
     setStatus('Din roll får inte publicera.', true);
@@ -807,6 +834,7 @@ refreshButtons.forEach((button) => {
 
 document.addEventListener('click', (event) => {
   const publishButton = event.target.closest('[data-publish-prompt]');
+  const unpublishButton = event.target.closest('[data-unpublish-prompt]');
   const editButton = event.target.closest('[data-edit-prompt]');
   const deleteButton = event.target.closest('[data-delete-prompt]');
   const revokeButton = event.target.closest('[data-revoke-api-key]');
@@ -816,6 +844,10 @@ document.addEventListener('click', (event) => {
 
   if (publishButton) {
     publishPrompt(publishButton.dataset.publishPrompt);
+  }
+
+  if (unpublishButton) {
+    unpublishPrompt(unpublishButton.dataset.unpublishPrompt);
   }
 
   if (editButton) {

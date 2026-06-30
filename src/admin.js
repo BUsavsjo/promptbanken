@@ -781,7 +781,7 @@ async function revokeApiKey(keyId) {
 async function logout() {
   setStatus('Loggar ut...');
   const { error } = await supabase.auth.signOut();
-  if (error) {
+  if (error && error.name !== 'AuthSessionMissingError') {
     setStatus(error.message || 'Kunde inte logga ut.', true);
     return;
   }

@@ -19,11 +19,11 @@ export async function getCurrentSession() {
   }
 
   const { data, error } = await supabase.auth.getSession();
-  if (error) {
+  if (error && error.name !== 'AuthSessionMissingError') {
     throw error;
   }
 
-  return data.session;
+  return data?.session ?? null;
 }
 
 export async function redirectIfAuthenticated(targetUrl = 'admin.html') {

@@ -72,11 +72,12 @@ def _http_error_to_detail(exc: httpx.HTTPError, request_id: str) -> dict[str, st
         body_excerpt,
     )
 
+    # body_excerpt loggas ovan för felsökning men skickas aldrig till klienten -
+    # uppströms felsvar kan innehålla interna detaljer om Ollama-installationen.
     return {
         "message": "Kunde inte köra modell via Ollama.",
         "request_id": request_id,
         "upstream_status": status_code,
-        "upstream_body_excerpt": body_excerpt,
         "error_type": exc.__class__.__name__,
     }
 

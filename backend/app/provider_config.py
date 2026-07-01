@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import base64
-import hashlib
 import os
 import sqlite3
 from dataclasses import dataclass
@@ -29,16 +27,15 @@ class SecretStore:
 
     def _build_encryption_key(self) -> bytes:
         configured_key = os.getenv("PROVIDER_ENCRYPTION_KEY")
-        if configured_key:
-            return configured_key.encode("utf-8")
-
-        # MVP fallback: derive key from admin token so encryption-at-rest always exists,
-        # but rotate carefully because old data cannot be decrypted after token changes.
-        key_material = os.getenv("PROVIDER_ENCRYPTION_KEY") or os.getenv("ADMIN_PANEL_TOKEN")
-        if not key_material:
-            raise RuntimeError("PROVIDER_ENCRYPTION_KEY eller ADMIN_PANEL_TOKEN måste vara satt.")
-        digest = hashlib.sha256(key_material.encode("utf-8")).digest()
-        return base64.urlsafe_b64encode(digest)
+        if not configured_key:
+            raise RuntimeError(
+                "PROVIDER_ENCRYPTION_KEY måste vara satt (t.ex. "
+                "`python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"`). "
+                "Krypteringsnyckeln för lagrade provider-API-nycklar får inte härledas från ADMIN_PANEL_TOKEN, "
+                "eftersom det kopplar ihop två separata hemligheter och gör att rotation av admin-token "
+                "av misstag gör lagrade provider-nycklar odekrypterbara."
+            )
+        return configured_key.encode("utf-8")
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)

@@ -97,6 +97,62 @@
                     </section>
 
                     <section>
+                        <h2>Så lägger du till din MCP-nyckel (Free och Pro)</h2>
+                        <p>Alla konton — både Free och Pro — kan skapa en egen MCP-nyckel under <a href="admin.html">Min workspace → MCP-nyckel</a>. Free-konton kan ha 1 aktiv nyckel, Pro-konton upp till 5.</p>
+                        <div class="article-table">
+                            <div><strong>1. Skapa nyckel</strong><span>Gå till admin.html → MCP-nyckel → ge den ett namn → "Skapa MCP-nyckel". Nyckeln visas bara en gång, spara den direkt (t.ex. i en lösenordshanterare).</span></div>
+                            <div><strong>2. Anslut ditt AI-verktyg</strong><span>Använd något av alternativen nedan beroende på vilket verktyg du kör.</span></div>
+                            <div><strong>3. Återkalla vid behov</strong><span>Tappat bort nyckeln eller misstänker läckage? Återkalla den direkt i admin.html och skapa en ny.</span></div>
+                        </div>
+                        <p><strong>Viktigt att veta just nu:</strong> nyckelbaserad åtkomst till dina egna och Pro:s premiummallar via den publika, hostade MCP-servern är under utveckling och inte driftsatt ännu. Idag fungerar nyckeln för att administrera din workspace, medan själva MCP-anslutningen (nedan) sker på ett av två sätt: den öppna publika servern (standardmallar, ingen nyckel behövs) eller en lokal server du kör själv (kan kopplas mot dina egna prompts).</p>
+                    </section>
+
+                    <section>
+                        <h2>Claude (Claude Desktop / Claude Code)</h2>
+                        <p>Claude Desktop läser MCP-servrar från en konfigurationsfil. Öppna Claude → Settings → Developer → Edit Config, och lägg till:</p>
+                        <p><em>Publik server (standardmallar, snabbast att testa):</em></p>
+                        <pre><code>{
+  "mcpServers": {
+    "promptbanken": {
+      "url": "https://mcp.promptbanken.se/sse"
+    }
+  }
+}</code></pre>
+                        <p><em>Lokal server (kräver att du klonat repot och kört <code>npm run setup:python</code> i <code>mcp-server/</code>):</em></p>
+                        <pre><code>{
+  "mcpServers": {
+    "promptbanken-lokal": {
+      "command": "node",
+      "args": ["/sokvag/till/promptbanken/mcp-server/scripts/run-mcp.js"]
+    }
+  }
+}</code></pre>
+                        <p>Starta om Claude Desktop efter att du sparat filen. I Claude Code fungerar samma <code>mcpServers</code>-block i projektets <code>.claude</code>-konfiguration.</p>
+                    </section>
+
+                    <section>
+                        <h2>OpenAI / ChatGPT</h2>
+                        <p>ChatGPT-appen kör inte lokala MCP-servrar på samma sätt som Claude Desktop. MCP stöds istället via OpenAIs API (Responses API/Agents SDK) eller via ChatGPTs Connectors (Team/Enterprise-planer), och kräver då en <strong>remote</strong> MCP-adress:</p>
+                        <pre><code>{
+  "type": "mcp",
+  "server_label": "promptbanken",
+  "server_url": "https://mcp.promptbanken.se/sse"
+}</code></pre>
+                        <p>Bygger du en egen integration mot OpenAIs API lägger du in detta som ett verktyg i din anropskod. Har du inte tillgång till Connectors eller API:et kan du fortfarande använda den enkla vägen: kopiera prompttexten direkt från <a href="https://kommun.promptbanken.se">kommun.promptbanken.se</a> eller <a href="pro.html">Promptbanken Pro</a> in i ChatGPT.</p>
+                    </section>
+
+                    <section>
+                        <h2>Microsoft Copilot Studio</h2>
+                        <div class="article-table">
+                            <div><strong>1. Skapa eller öppna en agent</strong><span>I Copilot Studio, gå till din agent (eller skapa en ny).</span></div>
+                            <div><strong>2. Lägg till verktyg</strong><span>Under "Tools" (Verktyg) → "Add a tool" → "Model Context Protocol".</span></div>
+                            <div><strong>3. Ange serveradress</strong><span>Klistra in <code>https://mcp.promptbanken.se/sse</code> som MCP-serverns URL.</span></div>
+                            <div><strong>4. Testa</strong><span>Använd testfönstret i Copilot Studio och be agenten hämta en promptmall, t.ex. klarspråk eller informationsutskick.</span></div>
+                        </div>
+                        <p>Menyerna i Copilot Studio ändras ibland — leta efter "Tools", "Connectors" eller "Model Context Protocol" om stegen ovan inte matchar exakt. Prata med din IT-avdelning innan du kopplar in externa MCP-servrar i en organisationsagent.</p>
+                    </section>
+
+                    <section>
                         <h2>Praktisk slutsats</h2>
                         <p>Vill man testa de öppna promptarna som vanlig webbsida är <a href="https://kommun.promptbanken.se">kommun.promptbanken.se</a> enklast.</p>
                         <p>Vill man testa den publika MCP-servern är <a href="https://mcp.promptbanken.se/sse">mcp.promptbanken.se/sse</a> rätt väg.</p>

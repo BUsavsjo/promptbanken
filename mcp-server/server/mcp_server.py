@@ -5,6 +5,7 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from .pro_templates import ProTemplatesNotConfigured, ProTemplatesClient
 from .risk_checker import RiskChecker
 from .skill_repository import SkillRepository
 from .skill_router import SkillRouter
@@ -64,6 +65,24 @@ def compile_skill_prompt(skill_id: str, user_task: str = "", user_input: str = "
 def check_input_risk(text: str) -> dict[str, object]:
     """Check text for common personal-data patterns before using a prompt."""
     return risk_checker.check(text).to_dict()
+
+
+@mcp.tool()
+def list_pro_templates() -> dict[str, Any]:
+    """List Promptbanken Pro premium templates. Full prompt text is only
+    included if PROMPTBANKEN_MCP_KEY (env var) belongs to a workspace with
+    an active Pro plan -- otherwise a teaser (title/syfte/output only) is
+    returned for each template."""
+    try:
+        client = ProTemplatesClient.from_env()
+    except ProTemplatesNotConfigured as exc:
+        return {"error": str(exc), "templates": []}
+
+    templates = client.list_templates()
+    return {
+        "unlocked": bool(templates) and all(t.get("is_unlocked") for t in templates),
+        "templates": templates,
+    }
 
 
 if __name__ == "__main__":

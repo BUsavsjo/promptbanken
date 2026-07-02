@@ -123,11 +123,17 @@
   "mcpServers": {
     "promptbanken-lokal": {
       "command": "node",
-      "args": ["/sokvag/till/promptbanken/mcp-server/scripts/run-mcp.js"]
+      "args": ["/sokvag/till/promptbanken/mcp-server/scripts/run-mcp.js"],
+      "env": {
+        "SUPABASE_URL": "https://ditt-projekt.supabase.co",
+        "SUPABASE_ANON_KEY": "din-publishable-anon-nyckel",
+        "PROMPTBANKEN_MCP_KEY": "din-mcp-nyckel-fran-admin.html"
+      }
     }
   }
 }</code></pre>
                         <p>Starta om Claude Desktop efter att du sparat filen. I Claude Code fungerar samma <code>mcpServers</code>-block i projektets <code>.claude</code>-konfiguration.</p>
+                        <p><code>SUPABASE_URL</code> och <code>SUPABASE_ANON_KEY</code> hittar du i Supabase-projektets inställningar (samma publika nyckel som webbsidan redan använder — inte hemlig). <code>PROMPTBANKEN_MCP_KEY</code> är din egen nyckel från <a href="admin.html">admin.html → MCP-nyckel</a>. Med de tre satta får AI-verktyget även tillgång till verktyget <code>list_pro_templates</code>, som visar Promptbanken Pros 42 premium-mallar — full prompttext om din workspace har aktiv Pro-plan, annars bara en förhandsvisning.</p>
                     </section>
 
                     <section>

@@ -93,17 +93,24 @@ Idé: ge ut 30 dagars Pro-test via en unik, engångs-länk istället för att by
 
 **Modell:** fakturaköp, inte kortbetalning. Beställning samlar in fakturauppgifter → **Pro/org-nivå aktiveras direkt** vid beställning (inte vid betalning) → fakturan skickas/hanteras utanför systemet (t.ex. i bokföringsverktyg) → admin bevakar betalstatus manuellt och kan nedgradera om obetald i tid.
 
-**Nivåstruktur (bekräftad):**
+**Nivåstruktur (bekräftad, uppdaterad med exakta medlems- och nyckelgränser):**
 
-| Nivå | Typ | Målgrupp | `workspace_plan`-värde | Egna mallar (`max_prompts`) | MCP-nycklar |
+| Nivå | Typ | Medlemmar | Egna mallar (`max_prompts`) | MCP-nycklar | Innehåll som visas |
 |---|---|---|---|---|---|
-| Free | Personlig | 1 användare | `free` | 3 | 1 |
-| Pro | Personlig | 1 användare | `pro` | 100 | 5 |
-| Team | Organisation | 5–10 användare, delad via en agent | `start` *(redan i enumet, oanvänt idag)* | 200 | 5 |
-| Förvaltning | Organisation | En förvaltning/avdelning, delad via en agent | `plus` *(redan i enumet, oanvänt idag)* | 500 | 5 |
-| Kommun | Organisation | Hela kommunen, delad via en agent | `enterprise` *(redan i enumet, oanvänt idag)* | 1000 | 5 |
+| Free | Personlig | 1 | 3 | 1 personlig nyckel | Öppna standardmallar + egna 3 mallar |
+| Pro | Personlig | 1 | 100 | 3–5 personliga nycklar | Öppna mallar + Pro-premiummallar + egna mallar |
+| Team | Organisation | 10 | 200 | 1–2 workspace-nycklar (delade) | Öppna mallar + Pro-premiummallar + workspace-delade mallar |
+| Förvaltning | Organisation | 50 | 500 | 3–5 workspace-nycklar | samma som Team |
+| Kommun | Organisation | 250 eller obegränsat/offert | 1000 | 5–10 workspace-nycklar eller enligt avtal | samma som Team |
 
-**Viktigt förtydligande:** org-nivåerna handlar om att *workspacet* får en starkare API/MCP-nyckel som kan kopplas in i en delad agent (t.ex. Copilot Studio-bot) — **men** ett Team ska även kunna dela prompts mellan sina egna, riktigt inloggade medlemmar (5–10 personer), inte bara agera nyckel-till-en-bot. Det innebär att medlemsinbjudan **återinförs i scopet** (jag strök det för snabbt tidigare) — åtminstone för Team, sannolikt även Förvaltning/Kommun.
+`workspace_plan`-värdena `start`/`plus`/`enterprise` (redan i enumet, oanvända idag) mappar mot Team/Förvaltning/Kommun.
+
+**Viktig nyansering av MCP-nycklar — två olika typer, inte en gemensam räknare:**
+- **Personliga nycklar** (Free/Pro): kopplade till en enskild persons eget workspace, som idag (`enforce_mcp_key_limit()`).
+- **Workspace-nycklar** (Team/Förvaltning/Kommun): delade nycklar på organisationsnivå, avsedda för integrationer/agenter (Copilot Studio-bot, intern agent, testmiljö, produktion) — inte en nyckel per person. En medlem i ett Team kan **även** ha sin egen personliga nyckel via sitt eget separata personliga workspace parallellt, om de vill — det är inte antingen-eller.
+- [ ] **Kräver kodändring:** `enforce_mcp_key_limit()` kollar idag bara gräns för `type = 'personal'` — organisationsworkspaces har **ingen gräns alls** just nu (hål i nuvarande kod, oavsiktligt). Måste utökas med en nivå→gräns-mappning som täcker `start`/`plus`/`enterprise` också.
+
+**Viktigt förtydligande:** org-nivåerna handlar om att *workspacet* får starkare API/MCP-nycklar som kan kopplas in i delade agenter/integrationer — **men** ett Team ska även kunna dela prompts mellan sina egna, riktigt inloggade medlemmar (upp till 10), inte bara agera nyckel-till-en-bot. Det innebär att medlemsinbjudan **återinförs i scopet** (jag strök det för snabbt tidigare) — åtminstone för Team, sannolikt även Förvaltning/Kommun.
 
 - **Delning i sig fungerar redan tekniskt:** `content_items.visibility = 'workspace'` finns redan, och "Promptbibliotek"-listan i `admin.html` visar redan sådana prompts för alla i samma organisation (`enforce_content_access_model()` kräver redan `visibility='workspace'` för organisationsprompts). Inget nytt behövs där.
 - **Det som faktiskt saknas:** ett sätt att **bjuda in en kollega** till workspacet. Idag skapas `profiles`-rader bara automatiskt för personliga workspaces (`ensure_personal_workspace()`) — det finns ingen "bjud in via e-post"-funktion för organisationer alls.
@@ -120,7 +127,7 @@ Idé: ge ut 30 dagars Pro-test via en unik, engångs-länk istället för att by
 - [ ] UI för att generera/visa join-koden: i "Medlemmar"-sektionen, bredvid direktinbjudan — "Generera join-länk" + kopiera-knapp, samma UX som Pro-inbjudningarna i Plattformsadmin.
 
 **Gemensamt för A och B:**
-- [ ] Platsgräns per nivå (Team max ~10 medlemmar) — enkel räkne-trigger på `profiles`-insert, samma mönster som `enforce_mcp_key_limit()`, gäller oavsett om medlemmen kom in via A eller B.
+- [ ] Platsgräns per nivå (Team: 10, Förvaltning: 50, Kommun: 250 eller obegränsat/offert) — enkel räkne-trigger på `profiles`-insert, samma mönster som `enforce_mcp_key_limit()`, gäller oavsett om medlemmen kom in via A eller B.
 - [ ] Redan bekräftat: en person kan redan ha flera workspace-medlemskap samtidigt (`profiles` har `unique(user_id, workspace_id)`, inget hindrar att någon har både sitt egna personliga Pro-workspace *och* är medlem i ett Team-workspace) — ingen schemaändring behövs för det.
 
 **Datamodell:**

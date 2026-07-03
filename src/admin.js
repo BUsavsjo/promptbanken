@@ -36,6 +36,7 @@ const state = {
   editingPromptId: null,
   myPromptsSearch: '',
   expandedPromptId: null,
+  expandedOrderId: null,
   formIsDirty: false
 };
 
@@ -604,11 +605,27 @@ function renderProOrders() {
           <td><span class="order-status-chip" data-status="${escapeHtml(order.status)}">${escapeHtml(order.status)}</span></td>
           <td>${escapeHtml(order.due_date ? new Date(order.due_date).toLocaleDateString('sv-SE') : '-')}</td>
           <td>
+            <button type="button" data-preview-order="${order.id}">${state.expandedOrderId === order.id ? 'Dölj' : 'Visa'}</button>
             ${order.status === 'pending' ? `<button type="button" data-mark-invoiced="${order.id}">Markera fakturerad</button>` : ''}
             ${order.status === 'invoiced' ? `<button type="button" data-mark-paid="${order.id}">Markera betald</button>` : ''}
             ${order.status !== 'cancelled' ? `<button type="button" data-downgrade-order="${order.id}" data-delete-confirm="0">Nedgradera till Free</button>` : ''}
           </td>
         </tr>
+        ${state.expandedOrderId === order.id ? `
+        <tr class="prompt-preview-row">
+          <td colspan="7">
+            <div class="order-detail-grid">
+              <div><span>Beställnings-ID</span><code>${escapeHtml(order.id)}</code></div>
+              <div><span>Workspace-ID</span><code>${escapeHtml(order.workspace_id || '-')}</code></div>
+              <div><span>Licens-ID</span><code>${escapeHtml(order.license_id || '-')}</code></div>
+              <div><span>Org.nummer</span>${escapeHtml(order.billing_org_number || '-')}</div>
+              <div><span>Fakturaadress</span>${escapeHtml(order.billing_address || '-')}</div>
+              <div><span>Referens/kostnadsställe</span>${escapeHtml(order.billing_reference || '-')}</div>
+              <div><span>Beställd</span>${escapeHtml(order.created_at ? new Date(order.created_at).toLocaleString('sv-SE') : '-')}</div>
+              <div><span>Notering</span>${escapeHtml(order.note || '-')}</div>
+            </div>
+          </td>
+        </tr>` : ''}
       `).join('')
     : emptyRow(7, 'Ingen beställning ännu.');
 }
@@ -1339,7 +1356,7 @@ async function loadProOrders() {
 
   const { data, error } = await supabase
     .from('pro_orders')
-    .select('id, requested_plan, requested_workspaces, billing_company_name, billing_email, status, due_date, created_at')
+    .select('id, license_id, workspace_id, requested_plan, requested_workspaces, billing_company_name, billing_org_number, billing_address, billing_reference, billing_email, status, due_date, created_at, note')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -1702,6 +1719,7 @@ document.addEventListener('click', (event) => {
   const editButton = event.target.closest('[data-edit-prompt]');
   const deleteButton = event.target.closest('[data-delete-prompt]');
   const previewButton = event.target.closest('[data-preview-prompt]');
+  const previewOrderButton = event.target.closest('[data-preview-order]');
   const revokeButton = event.target.closest('[data-revoke-api-key]');
 
   const revokeMcpButton = event.target.closest('[data-revoke-mcp-key]');
@@ -1745,6 +1763,12 @@ document.addEventListener('click', (event) => {
     const promptId = previewButton.dataset.previewPrompt;
     state.expandedPromptId = state.expandedPromptId === promptId ? null : promptId;
     renderPrompts();
+  }
+
+  if (previewOrderButton) {
+    const orderId = previewOrderButton.dataset.previewOrder;
+    state.expandedOrderId = state.expandedOrderId === orderId ? null : orderId;
+    renderProOrders();
   }
 
   if (revokeButton) {

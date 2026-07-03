@@ -85,5 +85,21 @@ def list_pro_templates() -> dict[str, Any]:
     }
 
 
+@mcp.tool()
+def list_my_workspace_prompts() -> dict[str, Any]:
+    """List the caller's own workspace prompts via PROMPTBANKEN_MCP_KEY
+    (env var): published prompts shared with the whole workspace, plus --
+    only for the first/primary MCP key created for a team workspace --
+    the workspace owner's own private prompts. Additional keys created
+    later for a team only see workspace-shared prompts, not anyone's
+    private ones."""
+    try:
+        client = ProTemplatesClient.from_env()
+    except ProTemplatesNotConfigured as exc:
+        return {"error": str(exc), "prompts": []}
+
+    return {"prompts": client.list_workspace_prompts()}
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

@@ -69,6 +69,38 @@
                         <button type="button" data-refresh>Uppdatera</button>
                     </section>
 
+                    <section class="workspace-section admin-onboarding" id="kom-igang" data-org-only hidden>
+                        <div class="workspace-section-heading">
+                            <div>
+                                <h2>Kom igång som team</h2>
+                                <p>Tre saker som gör att teamet får ut mesta möjliga av Promptbanken.</p>
+                            </div>
+                        </div>
+                        <ol class="onboarding-checklist">
+                            <li data-onboarding-step="members">
+                                <span class="onboarding-check" aria-hidden="true">○</span>
+                                <div>
+                                    <strong>Bjud in dina kollegor</strong>
+                                    <p>Under "Medlemmar" bjuder du in via e-post, eller delar en join-länk som flera kan använda samtidigt.</p>
+                                </div>
+                            </li>
+                            <li data-onboarding-step="mcp">
+                                <span class="onboarding-check" aria-hidden="true">○</span>
+                                <div>
+                                    <strong>Skapa en delad MCP-nyckel</strong>
+                                    <p>Under "Integrationer" kopplar du er gemensamma AI-agent (t.ex. en Copilot Studio-bot) till Promptbanken.</p>
+                                </div>
+                            </li>
+                            <li data-onboarding-step="shared-prompt">
+                                <span class="onboarding-check" aria-hidden="true">○</span>
+                                <div>
+                                    <strong>Spara er första delade prompt</strong>
+                                    <p>Under "Mina prompts" väljer du synlighet "Teamet" så att alla i workspacet ser den.</p>
+                                </div>
+                            </li>
+                        </ol>
+                    </section>
+
                     <div class="admin-stat-grid" aria-label="Nyckeltal">
                         <article>
                             <strong data-admin-stat="published">0</strong>
@@ -157,13 +189,13 @@
 
                     <div class="admin-overview-grid">
                         <section class="workspace-mode" id="installningar" aria-labelledby="role-mode-title">
-                            <h2 id="role-mode-title">Dashboardläge</h2>
+                            <h2 id="role-mode-title">Vad du kan göra</h2>
                             <p data-role-summary></p>
-                            <p data-role-mode="viewer" hidden>Viewer-läge: fokus på att läsa publicerat organisationsinnehåll.</p>
-                            <p data-role-mode="editor" hidden>Editor-läge: förberett för egna utkast och redigering i kommande fas.</p>
-                            <p data-role-mode="workspace_admin" hidden>Workspace admin-läge: förberett för publicering och enklare administration.</p>
-                            <p data-role-mode="workspace_owner" hidden>Workspace owner-läge: förberett för ägarskap och workspace-inställningar.</p>
-                            <p data-role-mode="platform_owner" hidden>Platform owner-läge: förberett för plattformsöversikt.</p>
+                            <p data-role-mode="viewer" hidden>Som läsare kan du se och kopiera publicerade prompts i workspacet, men inte skapa egna.</p>
+                            <p data-role-mode="editor" hidden>Som redigerare kan du skapa och redigera egna prompts (privata eller delade med teamet).</p>
+                            <p data-role-mode="workspace_admin" hidden>Som administratör kan du publicera prompts, bjuda in medlemmar och hantera integrationer för workspacet.</p>
+                            <p data-role-mode="workspace_owner" hidden>Som ägare har du full kontroll över workspacet: medlemmar, integrationer och inställningar.</p>
+                            <p data-role-mode="platform_owner" hidden>Som plattformsägare kan du även skapa publika Promptbanken-mallar och administrera hela plattformen.</p>
                         </section>
 
                         <section class="workspace-section">
@@ -417,7 +449,10 @@
 
                     <section class="workspace-section" id="medlemmar" data-org-only>
                         <div class="workspace-section-heading">
-                            <h2>Medlemmar</h2>
+                            <div>
+                                <h2>Medlemmar</h2>
+                                <p>Alla som är med i det här workspacet ser och kan bidra till era delade mallar.</p>
+                            </div>
                             <button type="button" data-refresh>Uppdatera</button>
                         </div>
                         <div class="workspace-table-wrap">
@@ -435,7 +470,10 @@
 
                         <div data-admin-only>
                             <div class="workspace-section-heading">
-                                <h3>Bjud in medlem via e-post</h3>
+                                <div>
+                                    <h3>Sätt 1: Bjud in via e-post</h3>
+                                    <p class="mp-small">Bäst när du redan vet exakt vilka kollegor som ska med. Personen måste redan ha ett Promptbanken-konto.</p>
+                                </div>
                             </div>
                             <form class="workspace-form compact" data-invite-member-form>
                                 <label>
@@ -444,18 +482,21 @@
                                 </label>
                                 <label>
                                     Roll
-                                    <select name="role">
-                                        <option value="editor">Editor</option>
-                                        <option value="viewer">Viewer</option>
-                                        <option value="workspace_admin">Workspace admin</option>
+                                    <select name="role" data-invite-role-select>
+                                        <option value="editor">Redigerare</option>
+                                        <option value="viewer">Läsare</option>
+                                        <option value="workspace_admin">Administratör</option>
                                     </select>
                                 </label>
                                 <button type="submit">Bjud in</button>
                             </form>
-                            <p class="plan-locked-note">Personen måste redan ha ett Promptbanken-konto.</p>
+                            <p class="mp-hint" data-invite-role-hint>Redigerare kan skapa och redigera prompts, både privata och delade med teamet.</p>
 
                             <div class="workspace-section-heading">
-                                <h3>Join-länk</h3>
+                                <div>
+                                    <h3>Sätt 2: Dela en join-länk</h3>
+                                    <p class="mp-small">Bäst för att bjuda in flera samtidigt utan att skriva in varje e-post för sig — vem som helst med länken kan gå med, upp till platsgränsen.</p>
+                                </div>
                                 <button type="button" data-generate-join-code>Generera join-länk</button>
                             </div>
                             <div class="secret-reveal" data-new-join-link-panel hidden>
@@ -495,7 +536,8 @@
                         </div>
 
                         <div class="integration-panel" id="mcp-nyckel" data-integration-panel>
-                            <p>Koppla Promptbanken till din AI-assistent via MCP. Personliga konton kan ha upp till <span data-mcp-key-limit>1</span> aktiv(a) nyckel/nycklar.</p>
+                            <p>Koppla Promptbanken till en AI-assistent via MCP. Ni kan ha upp till <span data-mcp-key-limit>1</span> aktiv(a) nyckel/nycklar.</p>
+                            <p class="mp-small" data-mcp-team-hint hidden>I ett team är MCP-nycklar delade — en nyckel per agent/integration (t.ex. er Copilot-bot, en testmiljö och produktion), inte en nyckel per person. Varje medlem kan även skapa en egen personlig nyckel via sitt eget personliga konto om de vill.</p>
                             <div data-mcp-locked>
                                 <p class="plan-locked-note">MCP-nycklar är inte aktiverade för det här workspacet.</p>
                             </div>

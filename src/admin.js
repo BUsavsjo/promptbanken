@@ -9,6 +9,19 @@ const roleLabels = {
   platform_owner: 'Skapa publika Promptbanken-prompts och administrera plattformen.'
 };
 
+const roleNameLabels = {
+  viewer: 'Läsare',
+  editor: 'Redigerare',
+  workspace_admin: 'Administratör',
+  workspace_owner: 'Ägare',
+  platform_owner: 'Plattformsägare'
+};
+
+const workspaceTypeLabels = {
+  personal: 'Personlig',
+  organization: 'Team/organisation'
+};
+
 const state = {
   user: null,
   profile: null,
@@ -228,6 +241,34 @@ function renderCapabilityState() {
   const mcpUnlocked = document.querySelector('[data-mcp-unlocked]');
   if (mcpLocked) mcpLocked.hidden = mcpEnabled();
   if (mcpUnlocked) mcpUnlocked.hidden = !mcpEnabled();
+
+  const mcpTeamHint = document.querySelector('[data-mcp-team-hint]');
+  if (mcpTeamHint) mcpTeamHint.hidden = state.workspace.type !== 'organization';
+}
+
+function renderOnboardingChecklist() {
+  const section = document.getElementById('kom-igang');
+  if (!section || state.workspace?.type !== 'organization') return;
+
+  const hasMembers = state.members.length > 1;
+  const hasMcpKey = state.mcpKeys.some((key) => !key.revoked_at);
+  const hasSharedPrompt = state.prompts.some((item) => item.visibility === 'workspace');
+
+  const steps = {
+    members: hasMembers,
+    mcp: hasMcpKey,
+    'shared-prompt': hasSharedPrompt
+  };
+
+  Object.entries(steps).forEach(([step, done]) => {
+    const item = section.querySelector(`[data-onboarding-step="${step}"]`);
+    if (!item) return;
+    item.classList.toggle('is-done', done);
+    const check = item.querySelector('.onboarding-check');
+    if (check) check.textContent = done ? '✓' : '○';
+  });
+
+  section.hidden = hasMembers && hasMcpKey && hasSharedPrompt;
 }
 
 function renderPlanExpiry() {
@@ -690,9 +731,9 @@ async function loadProfile(user) {
 
   setText('[data-user-email]', user.email);
   setText('[data-workspace-name]', workspace.name);
-  setText('[data-workspace-type]', workspace.type);
+  setText('[data-workspace-type]', workspaceTypeLabels[workspace.type] || workspace.type);
   setText('[data-workspace-plan]', workspace.plan);
-  setText('[data-profile-role]', profile.role);
+  setText('[data-profile-role]', roleNameLabels[profile.role] || profile.role);
   renderRoleMode(profile.role);
   renderCapabilityState();
   renderPromptFormRules();
@@ -726,9 +767,9 @@ async function switchToWorkspace(workspaceId) {
   state.workspace = workspace;
 
   setText('[data-workspace-name]', workspace.name);
-  setText('[data-workspace-type]', workspace.type);
+  setText('[data-workspace-type]', workspaceTypeLabels[workspace.type] || workspace.type);
   setText('[data-workspace-plan]', workspace.plan);
-  setText('[data-profile-role]', profile.role);
+  setText('[data-profile-role]', roleNameLabels[profile.role] || profile.role);
   renderRoleMode(profile.role);
   renderCapabilityState();
   renderPromptFormRules();
@@ -964,6 +1005,7 @@ async function loadApiKeys() {
 async function refreshWorkspaceData() {
   setStatus('Uppdaterar...');
   await Promise.all([loadPrompts(), loadMembers(), loadJoinCodes(), loadMcpKeys(), loadApiKeys(), loadProInvites(), loadProOrders()]);
+  renderOnboardingChecklist();
   setStatus('');
 }
 
@@ -1488,6 +1530,13 @@ if (promoteAdminForm) {
 
 if (inviteMemberForm) {
   inviteMemberForm.addEventListener('submit', inviteOrgMember);
+  const roleSelect = inviteMemberForm.querySelector('[data-invite-role-select]');
+  const roleHint = document.querySelector('[data-invite-role-hint]');
+  if (roleSelect && roleHint) {
+    roleSelect.addEventListener('change', () => {
+      roleHint.textContent = roleLabels[roleSelect.value] || '';
+    });
+  }
 }
 
 const generateJoinCodeButton = document.querySelector('[data-generate-join-code]');

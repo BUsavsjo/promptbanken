@@ -1637,6 +1637,66 @@ body.local-chat-enabled .card-actions .local-chat-btn {
     color: #b42318;
 }
 
+/* ── Kom igång-checklista (organisationer) ───────────────────── */
+.admin-onboarding {
+    background: linear-gradient(180deg, #f7fbff 0%, #eef5ff 100%);
+    border: 1px solid #bfd3f2;
+}
+
+.onboarding-checklist {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.onboarding-checklist li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+    border: 1px solid #dfe6ee;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.onboarding-checklist li.is-done {
+    border-color: #86d19f;
+    background: #f3fdf6;
+    opacity: 0.75;
+}
+
+.onboarding-check {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #bfd3f2;
+    color: #0b63ce;
+    font-weight: 800;
+}
+
+.onboarding-checklist li.is-done .onboarding-check {
+    border-color: #067647;
+    color: #067647;
+}
+
+.onboarding-checklist strong {
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.onboarding-checklist p {
+    margin: 0;
+    color: #667085;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
 /* ── Mina prompts: redesignad yta ───────────────────────────── */
 .mp-cards {
     display: grid;

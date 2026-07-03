@@ -107,8 +107,21 @@ Idé: ge ut 30 dagars Pro-test via en unik, engångs-länk istället för att by
 
 - **Delning i sig fungerar redan tekniskt:** `content_items.visibility = 'workspace'` finns redan, och "Promptbibliotek"-listan i `admin.html` visar redan sådana prompts för alla i samma organisation (`enforce_content_access_model()` kräver redan `visibility='workspace'` för organisationsprompts). Inget nytt behövs där.
 - **Det som faktiskt saknas:** ett sätt att **bjuda in en kollega** till workspacet. Idag skapas `profiles`-rader bara automatiskt för personliga workspaces (`ensure_personal_workspace()`) — det finns ingen "bjud in via e-post"-funktion för organisationer alls.
-- [ ] **Ny funktion att bygga:** `invite_org_member(p_workspace_id, p_email, p_role)`-RPC (SECURITY DEFINER, kollar att anroparen är `workspace_owner`/`workspace_admin`/`platform_owner` i det workspacet) som hittar mottagarens `user_id` via e-post (de måste redan ha ett Promptbanken-konto — enklast för v1, ingen e-postutskicksfunktion behövs då) och skapar en `profiles`-rad åt dem i organisationens workspace. UI: formulär i "Medlemmar"-sektionen i `admin.html` (som idag bara listar, aldrig bjuder in).
-- [ ] Platsgräns per nivå (Team max ~10 medlemmar) — enkel räkne-trigger på `profiles`-insert, samma mönster som `enforce_mcp_key_limit()`.
+**Två parallella sätt att få in medlemmar i ett organisations-workspace (bekräftat: bygg båda):**
+
+**A. Direktinbjudan via e-post** (för ägare som redan vet exakt vilka kollegor som ska in)
+- [ ] `invite_org_member(p_workspace_id, p_email, p_role)`-RPC (SECURITY DEFINER, kollar att anroparen är `workspace_owner`/`workspace_admin`/`platform_owner` i det workspacet) som hittar mottagarens `user_id` via e-post (de måste redan ha ett Promptbanken-konto — enklast för v1, ingen e-postutskicksfunktion behövs då) och skapar en `profiles`-rad åt dem i organisationens workspace.
+- [ ] UI: formulär i "Medlemmar"-sektionen i `admin.html` (som idag bara listar, aldrig bjuder in).
+
+**B. Delad join-länk/kod** (samma mönster som `pro_invites`/`invite.html`, enklare onboarding för en hel grupp på en gång)
+- [ ] Ny tabell `org_join_codes` (eller utöka `pro_invites` med `workspace_id`/`kind='org_join'`): token, `workspace_id`, `role` (vilken roll den som joinar får, t.ex. `editor`), `status` (unused/revoked — **ej engångs**, kan användas av flera personer upp till platsgränsen), `expires_at`.
+- [ ] `redeem_org_join_code(p_token)`-RPC: verifierar koden, kollar platsgräns, skapar `profiles`-rad åt anroparen i workspacet.
+- [ ] Återanvänd `invite.html`-mönstret: `?team_token=xxx` (eller egen sida `team-invite.html`) — logga in/skapa konto, joina automatiskt.
+- [ ] UI för att generera/visa join-koden: i "Medlemmar"-sektionen, bredvid direktinbjudan — "Generera join-länk" + kopiera-knapp, samma UX som Pro-inbjudningarna i Plattformsadmin.
+
+**Gemensamt för A och B:**
+- [ ] Platsgräns per nivå (Team max ~10 medlemmar) — enkel räkne-trigger på `profiles`-insert, samma mönster som `enforce_mcp_key_limit()`, gäller oavsett om medlemmen kom in via A eller B.
+- [ ] Redan bekräftat: en person kan redan ha flera workspace-medlemskap samtidigt (`profiles` har `unique(user_id, workspace_id)`, inget hindrar att någon har både sitt egna personliga Pro-workspace *och* är medlem i ett Team-workspace) — ingen schemaändring behövs för det.
 
 **Datamodell:**
 - [ ] Ny tabell `pro_orders`: `id`, `workspace_id`, `user_id`, `status` (`pending`→`invoiced`→`paid`|`overdue`|`cancelled`), `requested_plan` (workspace_plan-enum), `billing_company_name`, `billing_org_number`, `billing_address`, `billing_reference`, `billing_email`, `created_at`, `due_date`, `note`. RLS: platform_owner ser allt, beställaren ser sin egen order.
@@ -127,6 +140,7 @@ Idé: ge ut 30 dagars Pro-test via en unik, engångs-länk istället för att by
 **Byggordning:**
 1. Migration: `pro_orders`-tabell + RLS + breddad premium-koll i befintliga funktioner + nivå→gräns-mappning
 2. `create_pro_order()`-RPC (inkl. organisations-workspace-skapande för Team/Förvaltning/Kommun)
-3. `invite_org_member()`-RPC + "Bjud in medlem"-formulär i Medlemmar-sektionen + platsgräns-trigger
-4. "Uppgradera till Pro"-formulär i admin.html/admin.js
-5. Adminfaktura-granskning (lista + statusknappar + nedgradera-knapp)
+3. `invite_org_member()`-RPC (A) + `org_join_codes`-tabell + `redeem_org_join_code()`-RPC (B) + platsgräns-trigger, delat mellan båda
+4. UI: "Bjud in medlem" (e-post) + "Generera join-länk" i Medlemmar-sektionen; ny `team-invite.html`-sida (eller `?team_token=` på `invite.html`) för att lösa in join-koden
+5. "Uppgradera till Pro"-formulär i admin.html/admin.js
+6. Adminfaktura-granskning (lista + statusknappar + nedgradera-knapp)

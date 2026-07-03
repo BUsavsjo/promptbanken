@@ -10,7 +10,7 @@ Webbplatsen är även gjord för att kunna läsas av AI-agenter och indexeringst
 - Statisk promptkatalog: https://kommun.promptbanken.se/prompts.html
 - Promptmanifest: https://kommun.promptbanken.se/prompts.json
 - Agentguide: https://kommun.promptbanken.se/llms.txt
-- Remote MCP demo: https://mcp.promptbanken.se/sse
+- Remote MCP demo: https://mcp.promptbanken.se/mcp
 
 **Status:** ✅ Live på GitHub Pages | **Version:** 1.0.0
 
@@ -215,7 +215,7 @@ Remote MCP-demo:
 {
   "mcpServers": {
     "promptbanken": {
-      "url": "https://mcp.promptbanken.se/sse"
+      "url": "https://mcp.promptbanken.se/mcp"
     }
   }
 }

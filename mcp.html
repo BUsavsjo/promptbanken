@@ -50,11 +50,11 @@
                     <section>
                         <h2>Det mer tekniska sättet</h2>
                         <p>Lägg till Promptbanken som en MCP-server i en AI-klient som stödjer MCP. Då kan klienten hämta promptmallar när du behöver stöd för exempelvis klarspråk, informationsutskick, checklistor, FAQ:er eller beslutsunderlag.</p>
-                        <p>I klienter som stödjer remote MCP via HTTP/SSE kan konfigurationen ofta se ut ungefär så här:</p>
+                        <p>I klienter som stödjer remote MCP via Streamable HTTP kan konfigurationen ofta se ut ungefär så här:</p>
                         <pre><code>{
   "mcpServers": {
     "promptbanken": {
-      "url": "https://mcp.promptbanken.se/sse"
+      "url": "https://mcp.promptbanken.se/mcp"
     }
   }
 }</code></pre>
@@ -81,7 +81,7 @@
                             <div><strong>Vill du använda egna mallar eller känsligt material?</strong><span>Använd lokal MCP eller kontrollerad intern server.</span></div>
                             <div><strong>Vill du dela en kurerad promptbank till flera användare?</strong><span>Remote MCP kan passa, men kräver tydlig styrning.</span></div>
                         </div>
-                        <p>Demo-servern för remote MCP är <a href="https://mcp.promptbanken.se/sse">https://mcp.promptbanken.se/sse</a>.</p>
+                        <p>Demo-servern för remote MCP är <a href="https://mcp.promptbanken.se/mcp">https://mcp.promptbanken.se/mcp</a>.</p>
                     </section>
 
                     <section>
@@ -114,7 +114,7 @@
                         <pre><code>{
   "mcpServers": {
     "promptbanken": {
-      "url": "https://mcp.promptbanken.se/sse"
+      "url": "https://mcp.promptbanken.se/mcp"
     }
   }
 }</code></pre>
@@ -142,7 +142,7 @@
                         <pre><code>{
   "type": "mcp",
   "server_label": "promptbanken",
-  "server_url": "https://mcp.promptbanken.se/sse"
+  "server_url": "https://mcp.promptbanken.se/mcp"
 }</code></pre>
                         <p>Bygger du en egen integration mot OpenAIs API lägger du in detta som ett verktyg i din anropskod. Har du inte tillgång till Connectors eller API:et kan du fortfarande använda den enkla vägen: kopiera prompttexten direkt från <a href="https://kommun.promptbanken.se">kommun.promptbanken.se</a> eller <a href="pro.html">Promptbanken Pro</a> in i ChatGPT.</p>
                     </section>
@@ -152,7 +152,7 @@
                         <div class="article-table">
                             <div><strong>1. Skapa eller öppna en agent</strong><span>I Copilot Studio, gå till din agent (eller skapa en ny).</span></div>
                             <div><strong>2. Lägg till verktyg</strong><span>Under "Tools" (Verktyg) → "Add a tool" → "Model Context Protocol".</span></div>
-                            <div><strong>3. Ange serveradress</strong><span>Klistra in <code>https://mcp.promptbanken.se/sse</code> som MCP-serverns URL.</span></div>
+                            <div><strong>3. Ange serveradress</strong><span>Klistra in <code>https://mcp.promptbanken.se/mcp</code> som MCP-serverns URL.</span></div>
                             <div><strong>4. Testa</strong><span>Använd testfönstret i Copilot Studio och be agenten hämta en promptmall, t.ex. klarspråk eller informationsutskick.</span></div>
                         </div>
                         <p>Menyerna i Copilot Studio ändras ibland — leta efter "Tools", "Connectors" eller "Model Context Protocol" om stegen ovan inte matchar exakt. Prata med din IT-avdelning innan du kopplar in externa MCP-servrar i en organisationsagent.</p>
@@ -161,7 +161,7 @@
                     <section>
                         <h2>Praktisk slutsats</h2>
                         <p>Vill man testa de öppna promptarna som vanlig webbsida är <a href="https://kommun.promptbanken.se">kommun.promptbanken.se</a> enklast.</p>
-                        <p>Vill man testa den publika MCP-servern är <a href="https://mcp.promptbanken.se/sse">mcp.promptbanken.se/sse</a> rätt väg.</p>
+                        <p>Vill man testa den publika MCP-servern är <a href="https://mcp.promptbanken.se/mcp">mcp.promptbanken.se/mcp</a> rätt väg.</p>
                         <p>Vill man använda egna mallar, interna texter eller mer verksamhetsnära material bör man hellre köra lokalt eller i en kontrollerad intern miljö.</p>
                     </section>
                 </article>

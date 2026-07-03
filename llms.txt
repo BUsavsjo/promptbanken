@@ -7,7 +7,7 @@ Promptmanifest JSON: https://kommun.promptbanken.se/prompts.json
 Statisk promptkatalog: https://kommun.promptbanken.se/prompts.html
 MCP-guide: https://kommun.promptbanken.se/mcp.html
 Hjälp: https://kommun.promptbanken.se/help.html
-Remote MCP demo: https://mcp.promptbanken.se/sse
+Remote MCP demo: https://mcp.promptbanken.se/mcp
 
 ## Agentinstruktion
 

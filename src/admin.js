@@ -843,7 +843,16 @@ function syncUpgradeWorkspacesField() {
   if (!upgradeForm) return;
   const plan = upgradeForm.querySelector('select[name="plan"]')?.value;
   const field = document.querySelector('[data-upgrade-workspaces-field]');
-  if (field) field.hidden = plan === 'pro';
+  // Pro och Team har ett fast antal arbetsytor (1 vardera) -- bara
+  // Förvaltning/Kommun kan välja hur många arbetsytor de vill börja med.
+  const fixedWorkspaces = plan === 'pro' || plan === 'start';
+  if (field) {
+    field.hidden = fixedWorkspaces;
+    if (fixedWorkspaces) {
+      const input = field.querySelector('input[name="workspaces"]');
+      if (input) input.value = 1;
+    }
+  }
 }
 
 async function submitUpgradeOrder(event) {

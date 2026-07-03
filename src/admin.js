@@ -19,6 +19,7 @@ const state = {
   mcpKeys: [],
   proInvites: [],
   joinCodes: [],
+  proOrders: [],
   editingPromptId: null,
   myPromptsSearch: '',
   expandedPromptId: null,
@@ -41,6 +42,7 @@ const mcpKeyForm = document.querySelector('[data-mcp-key-form]');
 const inviteForm = document.querySelector('[data-invite-form]');
 const promoteAdminForm = document.querySelector('[data-promote-admin-form]');
 const inviteMemberForm = document.querySelector('[data-invite-member-form]');
+const upgradeForm = document.querySelector('[data-upgrade-form]');
 const myPromptsSearchInput = document.querySelector('[data-my-prompts-search]');
 const refreshButtons = document.querySelectorAll('[data-refresh]');
 const visibilitySelect = promptForm?.querySelector('select[name="visibility"]');
@@ -509,6 +511,28 @@ function renderProInvites() {
     : emptyRow(6, 'Ingen inbjudan skapad ännu.');
 }
 
+function renderProOrders() {
+  const body = document.querySelector('[data-pro-orders]');
+  if (!body) return;
+  body.innerHTML = state.proOrders.length
+    ? state.proOrders.map((order) => `
+        <tr>
+          <td>${escapeHtml(order.billing_company_name || '-')}</td>
+          <td>${escapeHtml(upgradePlanLabels[order.requested_plan] || order.requested_plan)}</td>
+          <td>${escapeHtml(order.requested_workspaces)}</td>
+          <td>${escapeHtml(order.billing_email || '-')}</td>
+          <td><span class="order-status-chip" data-status="${escapeHtml(order.status)}">${escapeHtml(order.status)}</span></td>
+          <td>${escapeHtml(order.due_date ? new Date(order.due_date).toLocaleDateString('sv-SE') : '-')}</td>
+          <td>
+            ${order.status === 'pending' ? `<button type="button" data-mark-invoiced="${order.id}">Markera fakturerad</button>` : ''}
+            ${order.status === 'invoiced' ? `<button type="button" data-mark-paid="${order.id}">Markera betald</button>` : ''}
+            ${order.status !== 'cancelled' ? `<button type="button" data-downgrade-order="${order.id}" data-delete-confirm="0">Nedgradera till Free</button>` : ''}
+          </td>
+        </tr>
+      `).join('')
+    : emptyRow(7, 'Ingen beställning ännu.');
+}
+
 async function loadMcpKeys() {
   if (!isAdminRole(state.profile.role)) {
     state.mcpKeys = [];
@@ -641,6 +665,39 @@ async function loadProfile(user) {
   return true;
 }
 
+async function switchToWorkspace(workspaceId) {
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, role, workspace_id')
+    .eq('user_id', state.user.id)
+    .eq('workspace_id', workspaceId)
+    .single();
+
+  if (profileError) throw profileError;
+
+  const { data: workspace, error: workspaceError } = await supabase
+    .from('workspaces')
+    .select('id, name, type, plan, api_enabled, mcp_enabled, max_prompts, plan_source, plan_expires_at')
+    .eq('id', workspaceId)
+    .single();
+
+  if (workspaceError) throw workspaceError;
+
+  state.profile = profile;
+  state.workspace = workspace;
+
+  setText('[data-workspace-name]', workspace.name);
+  setText('[data-workspace-type]', workspace.type);
+  setText('[data-workspace-plan]', workspace.plan);
+  setText('[data-profile-role]', profile.role);
+  renderRoleMode(profile.role);
+  renderCapabilityState();
+  renderPromptFormRules();
+  renderPlanInfo();
+
+  await refreshWorkspaceData();
+}
+
 async function loadPrompts() {
   const { data, error } = await supabase
     .from('content_items')
@@ -767,6 +824,74 @@ async function revokeJoinCode(codeId) {
   await loadJoinCodes();
 }
 
+const upgradePlanLabels = {
+  pro: 'Pro',
+  start: 'Team',
+  plus: 'Förvaltning',
+  enterprise: 'Kommun'
+};
+
+function setUpgradeStatus(message, isError = false) {
+  const el = document.querySelector('[data-upgrade-status]');
+  if (!el) return;
+  el.textContent = message;
+  el.hidden = !message;
+  el.classList.toggle('is-error', isError);
+}
+
+function syncUpgradeWorkspacesField() {
+  if (!upgradeForm) return;
+  const plan = upgradeForm.querySelector('select[name="plan"]')?.value;
+  const field = document.querySelector('[data-upgrade-workspaces-field]');
+  if (field) field.hidden = plan === 'pro';
+}
+
+async function submitUpgradeOrder(event) {
+  event.preventDefault();
+
+  const formData = new FormData(upgradeForm);
+  const plan = formData.get('plan')?.toString();
+  const workspaces = Number(formData.get('workspaces')) || 1;
+  const companyName = formData.get('company_name')?.toString().trim();
+  const orgNumber = formData.get('org_number')?.toString().trim() || null;
+  const address = formData.get('address')?.toString().trim() || null;
+  const reference = formData.get('reference')?.toString().trim() || null;
+  const billingEmail = formData.get('billing_email')?.toString().trim();
+
+  if (!companyName || !billingEmail) {
+    setUpgradeStatus('Företag/kommun och fakturamejl krävs.', true);
+    return;
+  }
+
+  setUpgradeStatus('Skickar beställning...');
+
+  const { data, error } = await supabase.rpc('create_pro_order', {
+    p_requested_plan: plan,
+    p_requested_workspaces: workspaces,
+    p_billing_company_name: companyName,
+    p_billing_org_number: orgNumber,
+    p_billing_address: address,
+    p_billing_reference: reference,
+    p_billing_email: billingEmail
+  });
+
+  if (error) {
+    setUpgradeStatus(error.message || 'Kunde inte skapa beställningen.', true);
+    return;
+  }
+
+  const result = Array.isArray(data) ? data[0] : data;
+  setUpgradeStatus(`${upgradePlanLabels[plan] || plan} är aktiverat. Faktura skickas till ${billingEmail}.`);
+  upgradeForm.reset();
+  syncUpgradeWorkspacesField();
+
+  if (result?.workspace_id && result.workspace_id !== state.workspace.id) {
+    await switchToWorkspace(result.workspace_id);
+  } else {
+    await loadProfile(state.user);
+  }
+}
+
 async function loadApiKeys() {
   if (!isAdminRole(state.profile.role)) {
     state.apiKeys = [];
@@ -790,7 +915,7 @@ async function loadApiKeys() {
 
 async function refreshWorkspaceData() {
   setStatus('Uppdaterar...');
-  await Promise.all([loadPrompts(), loadMembers(), loadJoinCodes(), loadMcpKeys(), loadApiKeys(), loadProInvites()]);
+  await Promise.all([loadPrompts(), loadMembers(), loadJoinCodes(), loadMcpKeys(), loadApiKeys(), loadProInvites(), loadProOrders()]);
   setStatus('');
 }
 
@@ -1077,6 +1202,68 @@ async function loadProInvites() {
   renderProInvites();
 }
 
+async function loadProOrders() {
+  if (!isPlatformOwner()) {
+    state.proOrders = [];
+    renderProOrders();
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('pro_orders')
+    .select('id, requested_plan, requested_workspaces, billing_company_name, billing_email, status, due_date, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  state.proOrders = data || [];
+  renderProOrders();
+}
+
+async function markOrderInvoiced(orderId) {
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 30);
+
+  const { error } = await supabase
+    .from('pro_orders')
+    .update({ status: 'invoiced', due_date: dueDate.toISOString() })
+    .eq('id', orderId);
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte markera som fakturerad.', true);
+    return;
+  }
+
+  setStatus('Markerad som fakturerad (förfaller om 30 dagar).');
+  await loadProOrders();
+}
+
+async function markOrderPaid(orderId) {
+  const { error } = await supabase
+    .from('pro_orders')
+    .update({ status: 'paid' })
+    .eq('id', orderId);
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte markera som betald.', true);
+    return;
+  }
+
+  setStatus('Markerad som betald.');
+  await loadProOrders();
+}
+
+async function downgradeProOrder(orderId) {
+  const { error } = await supabase.rpc('admin_downgrade_pro_order', { p_order_id: orderId });
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte nedgradera beställningen.', true);
+    return;
+  }
+
+  setStatus('Workspacet/licensen har nedgraderats till Free.');
+  await loadProOrders();
+}
+
 async function createProInvite(event) {
   event.preventDefault();
   if (!isPlatformOwner()) {
@@ -1260,6 +1447,12 @@ if (generateJoinCodeButton) {
   generateJoinCodeButton.addEventListener('click', generateJoinCode);
 }
 
+if (upgradeForm) {
+  upgradeForm.addEventListener('submit', submitUpgradeOrder);
+  upgradeForm.querySelector('select[name="plan"]')?.addEventListener('change', syncUpgradeWorkspacesField);
+  syncUpgradeWorkspacesField();
+}
+
 if (myPromptsSearchInput) {
   myPromptsSearchInput.addEventListener('input', () => {
     state.myPromptsSearch = myPromptsSearchInput.value;
@@ -1365,6 +1558,9 @@ document.addEventListener('click', (event) => {
 
   const revokeMcpButton = event.target.closest('[data-revoke-mcp-key]');
   const revokeJoinCodeButton = event.target.closest('[data-revoke-join-code]');
+  const markInvoicedButton = event.target.closest('[data-mark-invoiced]');
+  const markPaidButton = event.target.closest('[data-mark-paid]');
+  const downgradeOrderButton = event.target.closest('[data-downgrade-order]');
   const copySecretButton = event.target.closest('[data-copy-secret]');
 
   if (publishButton) {
@@ -1413,6 +1609,32 @@ document.addEventListener('click', (event) => {
 
   if (revokeJoinCodeButton) {
     revokeJoinCode(revokeJoinCodeButton.dataset.revokeJoinCode);
+  }
+
+  if (markInvoicedButton) {
+    markOrderInvoiced(markInvoicedButton.dataset.markInvoiced);
+  }
+
+  if (markPaidButton) {
+    markOrderPaid(markPaidButton.dataset.markPaid);
+  }
+
+  if (downgradeOrderButton) {
+    if (downgradeOrderButton.dataset.deleteConfirm === '1') {
+      downgradeProOrder(downgradeOrderButton.dataset.downgradeOrder);
+    } else {
+      downgradeOrderButton.dataset.deleteConfirm = '1';
+      const originalLabel = downgradeOrderButton.textContent;
+      downgradeOrderButton.textContent = 'Bekräfta nedgradering?';
+      downgradeOrderButton.classList.add('is-confirming');
+      setTimeout(() => {
+        if (downgradeOrderButton.isConnected) {
+          downgradeOrderButton.dataset.deleteConfirm = '0';
+          downgradeOrderButton.textContent = originalLabel;
+          downgradeOrderButton.classList.remove('is-confirming');
+        }
+      }, 4000);
+    }
   }
 
   if (copySecretButton) {

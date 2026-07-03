@@ -107,6 +107,54 @@
                         </div>
                     </section>
 
+                    <section class="workspace-section" id="uppgradera">
+                        <div class="workspace-section-heading">
+                            <div>
+                                <h2>Uppgradera till Pro</h2>
+                                <p>Fakturaköp — planen aktiveras direkt, fakturan skickas separat till angiven e-post.</p>
+                            </div>
+                        </div>
+                        <form class="workspace-form" data-upgrade-form>
+                            <label>
+                                Nivå
+                                <select name="plan">
+                                    <option value="pro">Pro (personlig, 100 mallar, 5 MCP-nycklar)</option>
+                                    <option value="start">Team (5–10 medlemmar, delad arbetsyta)</option>
+                                    <option value="plus">Förvaltning (flera arbetsytor, upp till 50 medlemmar)</option>
+                                    <option value="enterprise">Kommun (flera arbetsytor, 250+/offert)</option>
+                                </select>
+                            </label>
+                            <label data-upgrade-workspaces-field>
+                                Antal arbetsytor att börja med
+                                <input type="number" name="workspaces" value="1" min="1">
+                            </label>
+                            <label>
+                                Företag/kommun
+                                <input name="company_name" required placeholder="t.ex. Sävsjö kommun">
+                            </label>
+                            <label>
+                                Organisationsnummer
+                                <input name="org_number">
+                            </label>
+                            <label class="workspace-form-wide">
+                                Fakturaadress
+                                <input name="address">
+                            </label>
+                            <label>
+                                Referens/kostnadsställe
+                                <input name="reference">
+                            </label>
+                            <label>
+                                Fakturamejl
+                                <input type="email" name="billing_email" required placeholder="faktura@exempel.se">
+                            </label>
+                            <div class="workspace-form-actions">
+                                <button type="submit">Beställ</button>
+                            </div>
+                        </form>
+                        <p class="plan-locked-note" data-upgrade-status hidden></p>
+                    </section>
+
                     <div class="admin-overview-grid">
                         <section class="workspace-mode" id="installningar" aria-labelledby="role-mode-title">
                             <h2 id="role-mode-title">Dashboardläge</h2>
@@ -498,6 +546,27 @@
                                     </tr>
                                 </thead>
                                 <tbody data-pro-invites></tbody>
+                            </table>
+                        </div>
+
+                        <div class="workspace-section-heading">
+                            <h3>Fakturor</h3>
+                            <button type="button" data-refresh>Uppdatera</button>
+                        </div>
+                        <div class="workspace-table-wrap">
+                            <table class="workspace-table">
+                                <thead>
+                                    <tr>
+                                        <th>Företag/kommun</th>
+                                        <th>Nivå</th>
+                                        <th>Ytor</th>
+                                        <th>Fakturamejl</th>
+                                        <th>Status</th>
+                                        <th>Förfaller</th>
+                                        <th>Åtgärd</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-pro-orders></tbody>
                             </table>
                         </div>
                     </section>

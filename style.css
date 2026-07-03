@@ -1682,6 +1682,37 @@ body.local-chat-enabled .card-actions .local-chat-btn {
     display: none;
 }
 
+.order-status-chip {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.order-status-chip[data-status="paid"] {
+    background: #ecfdf3;
+    color: #067647;
+}
+
+.order-status-chip[data-status="invoiced"] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.order-status-chip[data-status="overdue"] {
+    background: #fee4e2;
+    color: #b42318;
+}
+
+.order-status-chip[data-status="cancelled"] {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
 .workspace-table button.is-confirming {
     background: #fee2e2;
     color: #b42318;

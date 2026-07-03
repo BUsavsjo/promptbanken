@@ -95,7 +95,10 @@ function allowedVisibilityOptions() {
   }
 
   if (state.workspace?.type === 'organization') {
-    return [['workspace', 'Organisationen']];
+    return [
+      ['private', 'Privat (bara du)'],
+      ['workspace', 'Teamet']
+    ];
   }
 
   return [['private', 'Privat']];

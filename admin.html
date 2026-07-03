@@ -22,7 +22,7 @@
                 <a class="admin-nav-link" href="#bibliotek"><span class="app-icon" data-icon="library"></span>Promptbibliotek</a>
                 <a class="admin-nav-link" href="#mina-prompts"><span class="app-icon" data-icon="files"></span>Mina prompts</a>
                 <a class="admin-nav-link" href="#granskning"><span class="app-icon" data-icon="clipboard"></span>Förslag & granskning</a>
-                <a class="admin-nav-link" href="#api-nycklar"><span class="app-icon" data-icon="shield"></span>API-nycklar</a>
+                <a class="admin-nav-link" href="#integrationer"><span class="app-icon" data-icon="shield"></span>Integrationer</a>
             </nav>
 
             <div class="admin-nav-group">
@@ -190,6 +190,7 @@
                                 <h2>Mina prompts</h2>
                                 <p>Skapa utkast och publicera när rollen tillåter det.</p>
                                 <p data-prompt-limit-note>Free-läge: du kan skapa upp till 3 privata prompts.</p>
+                                <p class="prompt-count-note" data-prompt-count-note hidden></p>
                             </div>
                             <div class="workspace-section-actions">
                                 <button type="button" data-export-my-prompts>Exportera mina prompts</button>
@@ -244,6 +245,10 @@
                                 <button type="button" data-prompt-form-cancel hidden>Avbryt redigering</button>
                             </div>
                         </form>
+                        <label class="prompt-search-field">
+                            <span class="app-icon" aria-hidden="true" data-icon="search"></span>
+                            <input type="search" data-my-prompts-search placeholder="Sök bland dina prompts (titel eller kategori)...">
+                        </label>
                         <div class="workspace-table-wrap">
                             <table class="workspace-table">
                                 <thead>
@@ -299,61 +304,62 @@
                         </div>
                     </section>
 
-                    <section class="workspace-section" id="mcp-nyckel">
+                    <section class="workspace-section" id="integrationer">
                         <div class="workspace-section-heading">
                             <div>
-                                <h2>MCP-nyckel</h2>
-                                <p>Koppla Promptbanken till din AI-assistent via MCP. Personliga konton kan ha upp till <span data-mcp-key-limit>1</span> aktiv(a) nyckel/nycklar.</p>
+                                <h2>Integrationer</h2>
+                                <p>Koppla Promptbanken till en AI-assistent via MCP, eller skapa en API-nyckel för egna integrationer.</p>
                             </div>
                             <button type="button" data-refresh>Uppdatera</button>
                         </div>
-                        <div data-mcp-locked>
-                            <p class="plan-locked-note">MCP-nycklar är inte aktiverade för det här workspacet.</p>
+                        <div class="integration-tabs" role="tablist">
+                            <button type="button" class="integration-tab active" data-integration-tab="mcp-nyckel" role="tab" aria-selected="true">MCP-nyckel</button>
+                            <button type="button" class="integration-tab" data-integration-tab="api-nycklar" role="tab" aria-selected="false">API-nycklar</button>
                         </div>
-                        <div data-mcp-unlocked hidden>
-                            <form class="workspace-form compact" data-mcp-key-form>
-                                <label>
-                                    Namn
-                                    <input name="name" required placeholder="t.ex. Min Claude">
-                                </label>
-                                <button type="submit">Skapa MCP-nyckel</button>
-                            </form>
-                            <div class="secret-reveal" data-new-mcp-key-panel hidden>
-                                <p class="secret-reveal-warning">⚠️ Nyckeln visas bara just nu och går inte att se igen. Spara den säkert (t.ex. i en lösenordshanterare) innan du lämnar sidan.</p>
-                                <div class="secret-reveal-row">
-                                    <code data-new-mcp-key></code>
-                                    <button type="button" data-copy-secret="new-mcp-key">Kopiera</button>
+
+                        <div class="integration-panel" id="mcp-nyckel" data-integration-panel>
+                            <p>Koppla Promptbanken till din AI-assistent via MCP. Personliga konton kan ha upp till <span data-mcp-key-limit>1</span> aktiv(a) nyckel/nycklar.</p>
+                            <div data-mcp-locked>
+                                <p class="plan-locked-note">MCP-nycklar är inte aktiverade för det här workspacet.</p>
+                            </div>
+                            <div data-mcp-unlocked hidden>
+                                <form class="workspace-form compact" data-mcp-key-form>
+                                    <label>
+                                        Namn
+                                        <input name="name" required placeholder="t.ex. Min Claude">
+                                    </label>
+                                    <button type="submit">Skapa MCP-nyckel</button>
+                                </form>
+                                <div class="secret-reveal" data-new-mcp-key-panel hidden>
+                                    <p class="secret-reveal-warning">⚠️ Nyckeln visas bara just nu och går inte att se igen. Spara den säkert (t.ex. i en lösenordshanterare) innan du lämnar sidan.</p>
+                                    <div class="secret-reveal-row">
+                                        <code data-new-mcp-key></code>
+                                        <button type="button" data-copy-secret="new-mcp-key">Kopiera</button>
+                                    </div>
+                                </div>
+                                <div class="workspace-table-wrap">
+                                    <table class="workspace-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Namn</th>
+                                                <th>Prefix</th>
+                                                <th>Status</th>
+                                                <th>Skapad</th>
+                                                <th>Åtgärd</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-mcp-keys></tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div class="workspace-table-wrap">
-                                <table class="workspace-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Namn</th>
-                                            <th>Prefix</th>
-                                            <th>Status</th>
-                                            <th>Skapad</th>
-                                            <th>Åtgärd</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-mcp-keys></tbody>
-                                </table>
-                            </div>
                         </div>
-                    </section>
 
-                    <section class="workspace-section" id="api-nycklar">
-                        <div class="workspace-section-heading">
-                            <div>
-                                <h2>API-nycklar</h2>
-                                <p>Programmatisk åtkomst för externa integrationer.</p>
+                        <div class="integration-panel" id="api-nycklar" data-integration-panel hidden>
+                            <p>Programmatisk åtkomst för externa integrationer.</p>
+                            <div data-api-locked>
+                                <p class="plan-locked-note">API-nycklar ingår inte i Free-planen.</p>
                             </div>
-                            <button type="button" data-refresh>Uppdatera</button>
-                        </div>
-                        <div data-api-locked>
-                            <p class="plan-locked-note">API-nycklar ingår inte i Free-planen.</p>
-                        </div>
-                        <div data-api-unlocked hidden>
+                            <div data-api-unlocked hidden>
                             <form class="workspace-form compact" data-api-key-form>
                                 <label>
                                     Namn
@@ -387,6 +393,7 @@
                                     <tbody data-api-keys></tbody>
                                 </table>
                             </div>
+                        </div>
                         </div>
                     </section>
 

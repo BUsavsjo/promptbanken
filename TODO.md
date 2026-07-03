@@ -13,18 +13,18 @@
 ## UX-förbättringar: admin-sidan och "Mina prompts"
 
 **Mina prompts**
-1. [ ] Dölj/filtrera synlighetsval efter behörighet — visa bara "Publik"-alternativet i formuläret för roller som faktiskt får publicera publikt (idag ser alla det men får serverfel om de väljer det utan rättighet).
-2. [ ] Sök/filtrera i "Mina prompts"-tabellen — saknas helt idag, blir opraktiskt vid fler än ~5–6 rader (särskilt Pro/organisation med upp till 100 prompts).
-3. [ ] Egen bekräftelsedialog vid radering istället för nativ `window.confirm()` — mjukare, stylbar UX.
-4. [ ] Tydligare tom-vy/guidning för nya användare med 0 prompts (t.ex. "Skapa din första prompt nedan" istället för tom tabell).
-5. [ ] Proaktiv räknare "X av 3 prompts använda" i sektionsrubriken, innan gränsen nås (inte bara felmeddelande efteråt).
-6. [ ] Förhandsgranskning/expandering av prompttext direkt i tabellen, utan att behöva klicka "redigera".
-7. [ ] Varna vid oavsiktlig navigering med osparade ändringar i redigeringsformuläret.
+1. [x] Dölj/filtrera synlighetsval efter behörighet — var redan löst (stale TODO-rad): `renderPromptFormRules()` bygger redan synlighetsalternativen dynamiskt från `allowedVisibilityOptions()`, som redan filtrerar bort "Publik" för alla utom `platform_owner`.
+2. [x] Sök/filtrera i "Mina prompts"-tabellen — nytt sökfält (`data-my-prompts-search`) filtrerar client-side på titel/kategori, egen tom-vy-text när inget matchar.
+3. [x] Egen bekräftelsedialog vid radering — tvåstegsknapp ("Ta bort" → "Bekräfta radering?" inom 4 sekunder) istället för `window.confirm()`, i både "Mina prompts" och biblioteks-tabellen.
+4. [x] Tydligare tom-vy/guidning för nya användare — "Du har inga prompts än. Fyll i formuläret ovan för att skapa din första!" istället för generisk text.
+5. [x] Proaktiv räknare "X av N prompts använda" — ny `renderPromptCounter()`, visas i sektionsrubriken, blir röd vid gränsen.
+6. [x] Förhandsgranskning/expandering av prompttext i tabellen — "Visa"-knapp per rad expanderar en extra tabellrad med full prompttext, utan att gå in i redigeringsläge.
+7. [x] Varna vid oavsiktlig navigering med osparade ändringar — dirty-flag på `input`-event i formuläret + `beforeunload`-varning.
 
 **Admin-sidan i stort**
-8. [ ] Riktig sidnavigering istället för ankarlänkar på en lång sida — nav-menyns `.active`-klass är hårdkodad på första länken och uppdateras aldrig vid scroll/klick.
-9. [ ] Slå ihop MCP-nyckel och API-nycklar visuellt (t.ex. under gemensam "Integrationer"-rubrik med flikar) — två nästan identiska sektioner gör sidan onödigt lång.
-10. [ ] Verifiera/förbättra mobilanpassning av tabellerna (`workspace-table-wrap` ger horisontell scroll — utvärdera om kort-layout är bättre på smala skärmar).
+8. [x] Riktig sidnavigering — `IntersectionObserver`-baserad scroll-spy (`initNavScrollSpy()`) uppdaterar `.active`-klass på rätt nav-länk vid scroll.
+9. [x] Slå ihop MCP-nyckel och API-nycklar visuellt — ny gemensam sektion "Integrationer" (`#integrationer`) med flikar (`.integration-tab`/`.integration-panel`); nav-länken pekar dit och klick på flikarna växlar panel utan sidladdning.
+10. [x] Mobilanpassning av tabellerna — ny media query (`max-width: 640px`) minskar padding/font-storlek, gör knappar i tabellceller fullbredd/staplade, och tar bort sökfältets maxbredd på smala skärmar.
 
 ## Pro-läget: vad som ska ingå
 

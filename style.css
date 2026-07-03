@@ -1625,6 +1625,76 @@ body.local-chat-enabled .card-actions .local-chat-btn {
     flex-shrink: 0;
 }
 
+.prompt-count-note {
+    font-size: 0.85rem;
+    color: #0f5ea8;
+    font-weight: 600;
+    margin: 0.25rem 0 0;
+}
+
+.prompt-count-note.is-at-limit {
+    color: #b42318;
+}
+
+.prompt-search-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 360px;
+    margin: 0.75rem 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dfe6ee;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.prompt-search-field input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 0.92rem;
+}
+
+.integration-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #dfe6ee;
+}
+
+.integration-tab {
+    padding: 0.6rem 1rem;
+    border: none;
+    background: transparent;
+    color: #667085;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.integration-tab.active {
+    color: #0f5ea8;
+    border-bottom-color: #0f5ea8;
+}
+
+.integration-panel[hidden] {
+    display: none;
+}
+
+.workspace-table button.is-confirming {
+    background: #fee2e2;
+    color: #b42318;
+    border-color: #fca5a5;
+}
+
+.prompt-preview-row td {
+    background: #f8fafc;
+    white-space: pre-wrap;
+    font-family: ui-monospace, monospace;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+}
+
 .admin-danger-note {
     color: #667085;
     font-size: 0.9rem;
@@ -2186,6 +2256,27 @@ body.local-chat-enabled .card-actions .local-chat-btn {
     .admin-topbar-actions {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .workspace-table {
+        min-width: 520px;
+        font-size: 0.85rem;
+    }
+
+    .workspace-table th,
+    .workspace-table td {
+        padding: 0.5rem;
+    }
+
+    .workspace-table td button,
+    .workspace-table td a {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.35rem;
+    }
+
+    .prompt-search-field {
+        max-width: none;
     }
 }
 

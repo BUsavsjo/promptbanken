@@ -18,7 +18,10 @@ const state = {
   apiKeys: [],
   mcpKeys: [],
   proInvites: [],
-  editingPromptId: null
+  editingPromptId: null,
+  myPromptsSearch: '',
+  expandedPromptId: null,
+  formIsDirty: false
 };
 
 const riskLabels = {
@@ -36,6 +39,7 @@ const apiKeyForm = document.querySelector('[data-api-key-form]');
 const mcpKeyForm = document.querySelector('[data-mcp-key-form]');
 const inviteForm = document.querySelector('[data-invite-form]');
 const promoteAdminForm = document.querySelector('[data-promote-admin-form]');
+const myPromptsSearchInput = document.querySelector('[data-my-prompts-search]');
 const refreshButtons = document.querySelectorAll('[data-refresh]');
 const visibilitySelect = promptForm?.querySelector('select[name="visibility"]');
 const promptFormSubmit = promptForm?.querySelector('[data-prompt-form-submit]');
@@ -301,17 +305,40 @@ function renderPromptFormRules() {
   }
 }
 
+function renderPromptCounter(ownActivePrompts) {
+  const note = document.querySelector('[data-prompt-count-note]');
+  if (!note) return;
+
+  const limit = maxPrompts();
+  note.hidden = false;
+  note.textContent = `${ownActivePrompts} av ${limit} prompts använda`;
+  note.classList.toggle('is-at-limit', ownActivePrompts >= limit);
+}
+
 function renderPrompts() {
   const mineBody = document.querySelector('[data-my-prompts]');
   const libraryBody = document.querySelector('[data-library-prompts]');
   const reviewList = document.querySelector('[data-review-prompts]');
-  const ownPrompts = state.prompts.filter((item) => item.owner_user_id === state.user.id || item.created_by === state.user.id);
+  const allOwnPrompts = state.prompts.filter((item) => item.owner_user_id === state.user.id || item.created_by === state.user.id);
   const publishedPrompts = state.prompts.filter((item) => item.status === 'published');
   const reviewPrompts = state.prompts.filter((item) => item.status !== 'published').slice(0, 6);
-  const ownActivePrompts = ownPrompts.filter((item) => item.status !== 'archived').length;
+  const ownActivePrompts = allOwnPrompts.filter((item) => item.status !== 'archived').length;
 
-  mineBody.innerHTML = ownPrompts.length
-    ? ownPrompts.map((item) => `
+  renderPromptCounter(ownActivePrompts);
+
+  const search = state.myPromptsSearch.trim().toLowerCase();
+  const ownPrompts = search
+    ? allOwnPrompts.filter((item) => (
+        item.title.toLowerCase().includes(search) || (item.category || '').toLowerCase().includes(search)
+      ))
+    : allOwnPrompts;
+
+  if (!allOwnPrompts.length) {
+    mineBody.innerHTML = emptyRow(6, 'Du har inga prompts än. Fyll i formuläret ovan för att skapa din första!');
+  } else if (!ownPrompts.length) {
+    mineBody.innerHTML = emptyRow(6, `Inga prompts matchar "${escapeHtml(state.myPromptsSearch)}".`);
+  } else {
+    mineBody.innerHTML = ownPrompts.map((item) => `
         <tr>
           <td>${escapeHtml(item.title)}</td>
           <td>${escapeHtml(item.status)}</td>
@@ -319,6 +346,7 @@ function renderPrompts() {
           <td>${escapeHtml(riskLabels[item.risk_level] || riskLabels.low)}</td>
           <td>${escapeHtml(item.updated_at ? new Date(item.updated_at).toLocaleDateString('sv-SE') : '')}</td>
           <td>
+            <button type="button" data-preview-prompt="${item.id}">${state.expandedPromptId === item.id ? 'Dölj' : 'Visa'}</button>
             ${item.status !== 'published'
               ? `<button type="button" data-edit-prompt="${item.id}">Redigera</button>`
               : ''}
@@ -326,12 +354,16 @@ function renderPrompts() {
               ? `<button type="button" data-publish-prompt="${item.id}">Publicera</button>`
               : ''}
             ${item.status !== 'published'
-              ? `<button type="button" data-delete-prompt="${item.id}">Ta bort</button>`
+              ? `<button type="button" data-delete-prompt="${item.id}" data-delete-confirm="0">Ta bort</button>`
               : ''}
           </td>
         </tr>
-      `).join('')
-    : emptyRow(6, 'Inga egna prompts ännu.');
+        ${state.expandedPromptId === item.id ? `
+        <tr class="prompt-preview-row">
+          <td colspan="6">${escapeHtml(item.content)}</td>
+        </tr>` : ''}
+      `).join('');
+  }
 
   const canManageLibrary = isAdminRole(state.profile.role);
   libraryBody.innerHTML = publishedPrompts.length
@@ -345,7 +377,7 @@ function renderPrompts() {
           ${canManageLibrary ? `
           <td>
             <button type="button" data-unpublish-prompt="${item.id}">Avpublicera</button>
-            <button type="button" data-delete-prompt="${item.id}">Ta bort</button>
+            <button type="button" data-delete-prompt="${item.id}" data-delete-confirm="0">Ta bort</button>
           </td>` : ''}
         </tr>
       `).join('')
@@ -664,6 +696,7 @@ function startEditPrompt(promptId) {
   if (promptFormSubmit) promptFormSubmit.textContent = 'Spara ändringar';
   if (promptFormCancel) promptFormCancel.hidden = false;
   promptForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  state.formIsDirty = false;
 }
 
 function cancelEditPrompt() {
@@ -672,6 +705,7 @@ function cancelEditPrompt() {
   clearFieldErrors();
   if (promptFormSubmit) promptFormSubmit.textContent = 'Spara utkast';
   if (promptFormCancel) promptFormCancel.hidden = true;
+  state.formIsDirty = false;
 }
 
 async function savePrompt(event) {
@@ -799,10 +833,6 @@ function exportMyPrompts() {
 }
 
 async function deletePrompt(promptId) {
-  if (!window.confirm('Ta bort den här prompten? Det går inte att ångra.')) {
-    return;
-  }
-
   const { error } = await supabase
     .from('content_items')
     .delete()
@@ -1106,6 +1136,85 @@ if (promoteAdminForm) {
   promoteAdminForm.addEventListener('submit', promoteAdmin);
 }
 
+if (myPromptsSearchInput) {
+  myPromptsSearchInput.addEventListener('input', () => {
+    state.myPromptsSearch = myPromptsSearchInput.value;
+    renderPrompts();
+  });
+}
+
+if (promptForm) {
+  promptForm.addEventListener('input', () => {
+    state.formIsDirty = true;
+  });
+}
+
+window.addEventListener('beforeunload', (event) => {
+  if (state.formIsDirty) {
+    event.preventDefault();
+    event.returnValue = '';
+  }
+});
+
+function switchIntegrationTab(panelId) {
+  document.querySelectorAll('[data-integration-tab]').forEach((tab) => {
+    const isActive = tab.dataset.integrationTab === panelId;
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', String(isActive));
+  });
+  document.querySelectorAll('[data-integration-panel]').forEach((panel) => {
+    panel.hidden = panel.id !== panelId;
+  });
+}
+
+function initIntegrationTabs() {
+  document.querySelectorAll('[data-integration-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => switchIntegrationTab(tab.dataset.integrationTab));
+  });
+
+  document.querySelectorAll('a.admin-nav-link[href="#api-nycklar"], a.admin-nav-link[href="#mcp-nyckel"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const panelId = link.getAttribute('href').slice(1);
+      switchIntegrationTab(panelId);
+      document.getElementById(panelId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+
+initIntegrationTabs();
+
+function initNavScrollSpy() {
+  const navLinks = document.querySelectorAll('.admin-nav-link[href^="#"]');
+  if (!navLinks.length) return;
+
+  const sections = [...navLinks]
+    .map((link) => document.getElementById(link.getAttribute('href').slice(1)))
+    .filter(Boolean);
+
+  if (!sections.length) return;
+
+  const setActive = (id) => {
+    navLinks.forEach((link) => {
+      link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+    });
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting);
+      if (visible.length) {
+        setActive(visible[0].target.id);
+      }
+    },
+    { rootMargin: '-96px 0px -70% 0px', threshold: 0 }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
+initNavScrollSpy();
+
 const exportMyPromptsButton = document.querySelector('[data-export-my-prompts]');
 if (exportMyPromptsButton) {
   exportMyPromptsButton.addEventListener('click', exportMyPrompts);
@@ -1127,6 +1236,7 @@ document.addEventListener('click', (event) => {
   const unpublishButton = event.target.closest('[data-unpublish-prompt]');
   const editButton = event.target.closest('[data-edit-prompt]');
   const deleteButton = event.target.closest('[data-delete-prompt]');
+  const previewButton = event.target.closest('[data-preview-prompt]');
   const revokeButton = event.target.closest('[data-revoke-api-key]');
 
   const revokeMcpButton = event.target.closest('[data-revoke-mcp-key]');
@@ -1145,7 +1255,27 @@ document.addEventListener('click', (event) => {
   }
 
   if (deleteButton) {
-    deletePrompt(deleteButton.dataset.deletePrompt);
+    if (deleteButton.dataset.deleteConfirm === '1') {
+      deletePrompt(deleteButton.dataset.deletePrompt);
+    } else {
+      deleteButton.dataset.deleteConfirm = '1';
+      const originalLabel = deleteButton.textContent;
+      deleteButton.textContent = 'Bekräfta radering?';
+      deleteButton.classList.add('is-confirming');
+      setTimeout(() => {
+        if (deleteButton.isConnected) {
+          deleteButton.dataset.deleteConfirm = '0';
+          deleteButton.textContent = originalLabel;
+          deleteButton.classList.remove('is-confirming');
+        }
+      }, 4000);
+    }
+  }
+
+  if (previewButton) {
+    const promptId = previewButton.dataset.previewPrompt;
+    state.expandedPromptId = state.expandedPromptId === promptId ? null : promptId;
+    renderPrompts();
   }
 
   if (revokeButton) {

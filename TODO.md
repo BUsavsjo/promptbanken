@@ -93,17 +93,35 @@ Idé: ge ut 30 dagars Pro-test via en unik, engångs-länk istället för att by
 
 **Modell:** fakturaköp, inte kortbetalning. Beställning samlar in fakturauppgifter → **Pro/org-nivå aktiveras direkt** vid beställning (inte vid betalning) → fakturan skickas/hanteras utanför systemet (t.ex. i bokföringsverktyg) → admin bevakar betalstatus manuellt och kan nedgradera om obetald i tid.
 
-**Nivåstruktur (bekräftad, uppdaterad med exakta medlems- och nyckelgränser):**
+**Nivåstruktur (senaste versionen — Förvaltning/Kommun kan nu ha FLERA arbetsytor, inte bara en):**
 
-| Nivå | Typ | Medlemmar | Egna mallar (`max_prompts`) | MCP-nycklar | Innehåll som visas |
-|---|---|---|---|---|---|
-| Free | Personlig | 1 | 3 | 1 personlig nyckel | Öppna standardmallar + egna 3 mallar |
-| Pro | Personlig | 1 | 100 | 3–5 personliga nycklar | Öppna mallar + Pro-premiummallar + egna mallar |
-| Team | Organisation | 10 | 200 | 1–2 workspace-nycklar (delade) | Öppna mallar + Pro-premiummallar + workspace-delade mallar |
-| Förvaltning | Organisation | 50 | 500 | 3–5 workspace-nycklar | samma som Team |
-| Kommun | Organisation | 250 eller obegränsat/offert | 1000 | 5–10 workspace-nycklar eller enligt avtal | samma som Team |
+| Plan | Typ | Svenskt namn | Arbetsytor | Medlemmar | Mallar | Nycklar | Huvudidé |
+|---|---|---|---:|---:|---:|---:|---|
+| Free | Personlig | Min arbetsyta | 1 personlig | 1 | 3 egna + öppna | 1 personlig MCP | Testa Promptbanken |
+| Pro | Personlig | Min AI-arbetsbank | 1 personlig | 1 | 100 egna + Pro-tools | 5 personliga MCP | Bygga egen AI-arbetsbank |
+| Team | Grupp | Teamets arbetsyta | 1 teamyta | 5–10 | ca 200 delade | 1–2 agentnycklar | Dela mallar i liten grupp |
+| Förvaltning | Organisation | Förvaltningens mallbank | flera, t.ex. 3–5 | upp till ca 50 totalt | ca 500 totalt | 3–5 agentnycklar | Flera verksamheter inom samma förvaltning |
+| Kommun | Organisation | Kommunens mallbank | flera, enligt avtal | 250+ / offert | 1000+ / offert | 5–10+ enligt avtal | Flera förvaltningar + kommunövergripande styrning |
 
 `workspace_plan`-värdena `start`/`plus`/`enterprise` (redan i enumet, oanvända idag) mappar mot Team/Förvaltning/Kommun.
+
+**Exempel på arbetsytor per nivå** (visar varför flera arbetsytor behövs för Förvaltning/Kommun):
+- Team: "Kommunikationsgruppen", "IT-teamet", "HR-teamet" (en yta per köpt team-licens)
+- Förvaltning: en förvaltning (t.ex. Barn- och utbildningsförvaltningen) delar upp sig internt i egna ytor: "BU Ledning", "Förskola", "Grundskola", "Elevhälsa", "Administration"
+- Kommun: hela kommunen, en yta per förvaltning: "Kommunledning", "BU", "Socialförvaltning", "Tekniska", "HR", "Kommunikation", "IT"
+
+**Grundprincip:**
+> Arbetsytor är där mallarna bor. Medlemmar är personer som skapar och förvaltar mallar. Nycklar är tekniska ingångar för agenter, botar och integrationer.
+
+**🔴 Arkitekturkonsekvens — nytt lager mellan beställning och workspace:**
+
+Detta ändrar tidigare antagande (att Förvaltning/Kommun = ett enda organisations-workspace med hög gräns). Nu behövs en **licens** som äger flera workspaces, och gränserna (medlemmar/mallar/nycklar) gäller **summerat över alla arbetsytor under samma licens**, inte per enskild arbetsyta.
+
+- [ ] **Ny tabell `pro_licenses`:** `id`, `plan` (workspace_plan-enum), `owner_user_id`, `max_workspaces`, `max_members_total`, `max_prompts_total`, `max_mcp_keys_total`, `plan_source`, `plan_expires_at`, `status`. En rad per köpt Team/Förvaltning/Kommun-licens.
+- [ ] `workspaces` får en ny nullable kolumn `license_id` (FK till `pro_licenses`). Free/Pro-workspaces har `license_id = null` som idag (opåverkade). Team har en licens med `max_workspaces = 1` (samma beteende som innan). Förvaltning/Kommun kan ha flera rader i `workspaces` som pekar på samma `license_id`.
+- [ ] **Ny självbetjäningsfunktion:** "Skapa ny arbetsyta" inom en befintlig Förvaltning/Kommun-licens — en `workspace_owner`/`workspace_admin` kan skapa fler arbetsytor (t.ex. lägga till "Grundskola" efter att "Förskola" redan finns) upp till `max_workspaces`. Ny RPC `create_workspace_under_license(p_license_id, p_name)`.
+- [ ] **Gränser måste räknas ihop över syskon-workspaces:** `enforce_content_access_model()` (mallar) och den nya medlemsgräns-triggern måste, för workspaces med `license_id is not null`, summera över **alla** workspaces med samma `license_id` — inte bara det egna workspacet, som idag. Detta är den mest komplexa kodändringen i hela Pro-projektet hittills.
+- [ ] **Ny UI-fråga:** en person kan nu tillhöra flera arbetsytor under samma licens (t.ex. jobba i både "Förskola" och "BU Ledning"). `admin.html` behöver en **arbetsyteväxlare** (workspace switcher) i sidomenyn/headern, liknande hur de flesta multi-workspace-SaaS-appar fungerar — idag visar admin.html bara ett workspace per session.
 
 **Viktig nyansering av MCP-nycklar — två olika typer, inte en gemensam räknare:**
 - **Personliga nycklar** (Free/Pro): kopplade till en enskild persons eget workspace, som idag (`enforce_mcp_key_limit()`).
@@ -131,23 +149,37 @@ Idé: ge ut 30 dagars Pro-test via en unik, engångs-länk istället för att by
 - [ ] Redan bekräftat: en person kan redan ha flera workspace-medlemskap samtidigt (`profiles` har `unique(user_id, workspace_id)`, inget hindrar att någon har både sitt egna personliga Pro-workspace *och* är medlem i ett Team-workspace) — ingen schemaändring behövs för det.
 
 **Datamodell:**
-- [ ] Ny tabell `pro_orders`: `id`, `workspace_id`, `user_id`, `status` (`pending`→`invoiced`→`paid`|`overdue`|`cancelled`), `requested_plan` (workspace_plan-enum), `billing_company_name`, `billing_org_number`, `billing_address`, `billing_reference`, `billing_email`, `created_at`, `due_date`, `note`. RLS: platform_owner ser allt, beställaren ser sin egen order.
+- [ ] Ny tabell `pro_orders`: `id`, `license_id` (för Team/Förvaltning/Kommun) eller `workspace_id` (för personligt Pro), `user_id`, `status` (`pending`→`invoiced`→`paid`|`overdue`|`cancelled`), `requested_plan` (workspace_plan-enum), `requested_workspaces` (hur många arbetsytor kunden vill ha, för Förvaltning/Kommun), `billing_company_name`, `billing_org_number`, `billing_address`, `billing_reference`, `billing_email`, `created_at`, `due_date`, `note`. RLS: platform_owner ser allt, beställaren ser sin egen order.
+- [ ] Ny tabell `pro_licenses` (se arkitektur-avsnittet ovan) — krävs innan `pro_orders` kan peka på den för org-nivåer.
 - [ ] Bredda "har premiumåtkomst"-kollen i `list_pro_templates()`, `get_pro_templates_for_mcp_key()` och `enforce_mcp_key_limit()` så `start`/`plus`/`enterprise` räknas som premium, inte bara `pro` (idag hårdkodat till exakt `plan = 'pro'`).
-- [ ] Nivå→gräns-mappning (`max_prompts` per plan enligt tabellen ovan) i samma triggrar som redan sätter `max_prompts` vid planbyte.
+- [ ] Nivå→gräns-mappning (`max_prompts_total`/`max_members_total`/`max_mcp_keys_total`/`max_workspaces` per plan enligt tabellen ovan), lagrad på `pro_licenses`-raden vid köp.
 
 **Beställningsflöde:**
-- [ ] `create_pro_order(p_workspace_id, p_requested_plan, billing-fält...)`-RPC: kollar behörighet (ägare för personligt Pro; `workspace_owner`/`workspace_admin`/`platform_owner` för org-nivåer), **skapar ett nytt organisations-workspace** om beställningen gäller Team/Förvaltning/Kommun och beställaren inte redan äger ett (namn från `billing_company_name`), sätter `plan`/`max_prompts`/`api_enabled`/`mcp_enabled` direkt, skapar `pro_orders`-raden med `status='pending'`, `plan_source='invoice'`.
-- [ ] Ny sektion "Uppgradera till Pro" i `admin.html` (synlig för Free-workspaces) — formulär: företagsnamn/kommun, org.nr, fakturaadress, referens/kostnadsställe, fakturamejl, samt val av nivå (Pro/Team/Förvaltning/Kommun).
+- [ ] `create_pro_order(p_requested_plan, p_requested_workspaces, billing-fält...)`-RPC: för personligt Pro — aktiverar direkt på beställarens egna workspace, som innan. För Team/Förvaltning/Kommun — **skapar en `pro_licenses`-rad** + en första arbetsyta under licensen (namn från `billing_company_name`), sätter gränserna enligt tabellen, skapar `pro_orders`-raden med `status='pending'`, `plan_source='invoice'`.
+- [ ] `create_workspace_under_license(p_license_id, p_name)`-RPC: självbetjäning för att lägga till fler arbetsytor under en redan köpt Förvaltning/Kommun-licens, upp till `max_workspaces`.
+- [ ] Ny sektion "Uppgradera till Pro" i `admin.html` (synlig för Free-workspaces) — formulär: företagsnamn/kommun, org.nr, fakturaadress, referens/kostnadsställe, fakturamejl, val av nivå (Pro/Team/Förvaltning/Kommun), och för Förvaltning/Kommun: önskat antal arbetsytor att börja med.
 - [ ] Bekräftelsetext efter beställning: "Pro är redan aktiverat. Faktura skickas till [e-post]."
+- [ ] Arbetsyteväxlare i `admin.html` för konton som tillhör flera arbetsytor under samma licens.
 
 **Admin-granskningsläge (ny flik under Plattformsadmin):**
-- [ ] Lista alla `pro_orders`: workspace/kommunnamn, nivå, **fakturamejl (tydligt synligt/kopierbart för påminnelser)**, status (färgkodad), förfallodatum.
-- [ ] Åtgärder: "Markera fakturerad" (sätt `due_date`), "Markera betald", **"Nedgradera till Free"** (sätter `plan='free'` direkt på workspacet — samma säkra nedgraderingsbeteende som redan gäller: data ligger kvar, bara nya prompts blockeras över gränsen). Ingen automatisk cron-nedgradering — du sa uttryckligen att nedgradering vid obetald faktura ska vara ett manuellt beslut du tar, eftersom ingen automatik kan veta om en extern faktura faktiskt betalats.
+- [ ] Lista alla `pro_orders`: licens/kommunnamn, nivå, antal arbetsytor, **fakturamejl (tydligt synligt/kopierbart för påminnelser)**, status (färgkodad), förfallodatum.
+- [ ] Åtgärder: "Markera fakturerad" (sätt `due_date`), "Markera betald", **"Nedgradera till Free"** (sätter `plan='free'` på licensen — nedgraderar samtliga arbetsytor under licensen samtidigt; samma säkra beteende som redan gäller: data ligger kvar, bara nya prompts blockeras över gränsen). Ingen automatisk cron-nedgradering — du sa uttryckligen att nedgradering vid obetald faktura ska vara ett manuellt beslut du tar, eftersom ingen automatik kan veta om en extern faktura faktiskt betalats.
 
-**Byggordning:**
-1. Migration: `pro_orders`-tabell + RLS + breddad premium-koll i befintliga funktioner + nivå→gräns-mappning
-2. `create_pro_order()`-RPC (inkl. organisations-workspace-skapande för Team/Förvaltning/Kommun)
-3. `invite_org_member()`-RPC (A) + `org_join_codes`-tabell + `redeem_org_join_code()`-RPC (B) + platsgräns-trigger, delat mellan båda
-4. UI: "Bjud in medlem" (e-post) + "Generera join-länk" i Medlemmar-sektionen; ny `team-invite.html`-sida (eller `?team_token=` på `invite.html`) för att lösa in join-koden
-5. "Uppgradera till Pro"-formulär i admin.html/admin.js
-6. Adminfaktura-granskning (lista + statusknappar + nedgradera-knapp)
+**Kort säljtext per nivå (för prissida/marknadsföring):**
+
+| Plan | Text |
+|---|---|
+| Free | Testa öppna kommunala AI-mallar. |
+| Pro | Bygg din egen AI-arbetsbank med Pro-tools och egna mallar. |
+| Team | Dela prompts och arbetssätt i en mindre grupp. |
+| Förvaltning | Samla flera verksamheters mallar i en gemensam förvaltningslicens. |
+| Kommun | Styr och distribuera godkända AI-mallar till hela kommunen och dess agenter. |
+
+**Byggordning (uppdaterad med licens-lagret):**
+1. Migration: `pro_licenses`-tabell + `workspaces.license_id` + `pro_orders`-tabell + RLS + breddad premium-koll i befintliga funktioner + nivå→gräns-mappning
+2. `create_pro_order()`-RPC (skapar licens + första arbetsyta för Team/Förvaltning/Kommun) + `create_workspace_under_license()`-RPC för fler arbetsytor
+3. Uppdatera `enforce_content_access_model()` och medlemsgräns-triggern till att summera över alla arbetsytor med samma `license_id`, inte bara det egna workspacet
+4. `invite_org_member()`-RPC (A) + `org_join_codes`-tabell + `redeem_org_join_code()`-RPC (B) + platsgräns-trigger, delat mellan båda
+5. UI: "Bjud in medlem" (e-post) + "Generera join-länk" i Medlemmar-sektionen; ny `team-invite.html`-sida (eller `?team_token=` på `invite.html`) för att lösa in join-koden; arbetsyteväxlare för konton med flera ytor
+6. "Uppgradera till Pro"-formulär i admin.html/admin.js
+7. Adminfaktura-granskning (lista + statusknappar + nedgradera-knapp)

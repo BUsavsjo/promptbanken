@@ -145,8 +145,10 @@
                             <div>
                                 <h2>Uppgradera till Pro</h2>
                                 <p>Fakturaköp — planen aktiveras direkt, fakturan skickas separat till angiven e-post.</p>
+                                <p class="mp-small" data-upgrade-current-plan-note></p>
                             </div>
                         </div>
+                        <p class="plan-locked-note" data-upgrade-maxed hidden>Ni har redan högsta nivån (Kommun). Kontakta oss om ni behöver fler arbetsytor, medlemmar eller mallar än vad planen ger.</p>
                         <form class="workspace-form" data-upgrade-form>
                             <label>
                                 Nivå
@@ -201,6 +203,7 @@
                             <p data-role-mode="workspace_admin" hidden>Som administratör kan du publicera prompts, bjuda in medlemmar och hantera integrationer för workspacet.</p>
                             <p data-role-mode="workspace_owner" hidden>Som ägare har du full kontroll över workspacet: medlemmar, integrationer och inställningar.</p>
                             <p data-role-mode="platform_owner" hidden>Som plattformsägare kan du även skapa publika Promptbanken-mallar och administrera hela plattformen.</p>
+                            <p class="mp-small" data-plan-limits-summary></p>
                         </section>
 
                         <section class="workspace-section">
@@ -299,6 +302,7 @@
                                 <h3>Användning</h3>
                                 <div class="mp-metric" data-mp-usage-metric><span data-mp-used-count>0</span> <span>av <span data-mp-max-count>3</span></span></div>
                                 <div class="mp-bar"><span data-mp-usage-bar></span></div>
+                                <div class="mp-small">Räknar <span data-mp-used-label>dina egna</span> mallar</div>
                             </div>
                             <div class="mp-card">
                                 <h3>Status</h3>

@@ -39,7 +39,8 @@ const state = {
   expandedOrderId: null,
   workspacesList: [],
   expandedWorkspaceId: null,
-  formIsDirty: false
+  formIsDirty: false,
+  planUsage: null
 };
 
 const riskLabels = {
@@ -94,11 +95,31 @@ function mcpEnabled() {
 }
 
 function maxPrompts() {
-  return state.workspace?.max_prompts ?? 3;
+  return state.planUsage?.max_prompts ?? state.workspace?.max_prompts ?? 3;
 }
 
 function mcpKeyLimit() {
+  if (state.planUsage) return state.planUsage.max_mcp_keys;
   return isPlanPro() ? 5 : 1;
+}
+
+async function loadPlanUsage() {
+  if (!state.workspace?.id) {
+    state.planUsage = null;
+    return;
+  }
+
+  const { data, error } = await supabase
+    .rpc('get_plan_usage', { p_workspace_id: state.workspace.id })
+    .maybeSingle();
+
+  if (error) {
+    console.error('Kunde inte hämta plananvändning', error);
+    state.planUsage = null;
+    return;
+  }
+
+  state.planUsage = data;
 }
 
 function allowedVisibilityOptions() {
@@ -224,6 +245,23 @@ function renderRoleMode(role) {
   });
 
   setText('[data-role-summary]', roleLabels[role] || 'Roll utan särskilt dashboardläge.');
+  renderPlanLimitsSummary();
+}
+
+function renderPlanLimitsSummary() {
+  const el = document.querySelector('[data-plan-limits-summary]');
+  if (!el || !state.workspace) return;
+
+  const planName = planNameLabels[state.workspace.plan] || state.workspace.plan;
+  const promptLimit = maxPrompts();
+  const keyLimit = mcpKeyLimit();
+
+  if (state.workspace.type === 'organization') {
+    const memberLimit = state.planUsage?.max_members;
+    el.textContent = `Din plan: ${planName} — ${memberLimit ? `upp till ${memberLimit} medlemmar, ` : ''}${keyLimit} MCP-nycklar, ${promptLimit} delade mallar totalt.`;
+  } else {
+    el.textContent = `Din plan: ${planName} — ${promptLimit} mallar, ${keyLimit} MCP-nyckl${keyLimit === 1 ? 'a' : 'ar'}${mcpEnabled() ? '' : ' (kräver Pro)'}.`;
+  }
 }
 
 function renderCapabilityState() {
@@ -312,6 +350,19 @@ function renderPlanExpiry() {
   element.classList.toggle('is-expiring-soon', daysLeft <= 7);
 }
 
+function renderUpgradeSection(plan) {
+  const maxedNote = document.querySelector('[data-upgrade-maxed]');
+  const currentPlanNote = document.querySelector('[data-upgrade-current-plan-note]');
+  const form = document.querySelector('[data-upgrade-form]');
+  const isMaxed = plan === 'enterprise';
+
+  if (maxedNote) maxedNote.hidden = !isMaxed;
+  if (form) form.hidden = isMaxed;
+  if (currentPlanNote) {
+    currentPlanNote.textContent = `Nuvarande nivå: ${planNameLabels[plan] || plan}`;
+  }
+}
+
 function renderPlanInfo() {
   const plan = state.workspace?.plan ?? 'free';
   const planLabels = { free: 'Free', pro: 'Pro', start: 'Start', plus: 'Plus', enterprise: 'Enterprise' };
@@ -329,6 +380,8 @@ function renderPlanInfo() {
   }
 
   renderPlanExpiry();
+  renderUpgradeSection(plan);
+  renderPlanLimitsSummary();
 
   const features = [
     { label: `${maxP} prompts`, ok: true },
@@ -369,16 +422,23 @@ const planNameLabels = { free: 'Free', pro: 'Pro', start: 'Team', plus: 'Förval
 
 function renderPromptCounter(ownActivePrompts) {
   const limit = maxPrompts();
-  const atLimit = ownActivePrompts >= limit;
+  const isOrgLicense = state.workspace?.type === 'organization' && state.planUsage?.has_license;
+  const usedCount = isOrgLicense ? state.planUsage.used_prompts : ownActivePrompts;
+  const atLimit = usedCount >= limit;
   const plan = state.workspace?.plan ?? 'free';
 
   setText('[data-mp-plan-name]', planNameLabels[plan] || plan);
-  setText('[data-mp-used-count]', ownActivePrompts);
+  setText('[data-mp-used-count]', usedCount);
   setText('[data-mp-max-count]', limit);
+
+  const usedLabel = document.querySelector('[data-mp-used-label]');
+  if (usedLabel) {
+    usedLabel.textContent = isOrgLicense ? 'hela licensen (alla arbetsytor)' : 'dina egna';
+  }
 
   const bar = document.querySelector('[data-mp-usage-bar]');
   if (bar) {
-    bar.style.width = `${Math.min(100, Math.round((ownActivePrompts / limit) * 100))}%`;
+    bar.style.width = `${Math.min(100, Math.round((usedCount / limit) * 100))}%`;
     bar.parentElement?.classList.toggle('is-at-limit', atLimit);
   }
 
@@ -1207,6 +1267,9 @@ async function loadApiKeys() {
 
 async function refreshWorkspaceData() {
   setStatus('Uppdaterar...');
+  await loadPlanUsage();
+  renderPlanInfo();
+  renderCapabilityState();
   await Promise.all([loadPrompts(), loadMembers(), loadJoinCodes(), loadMcpKeys(), loadApiKeys(), loadProInvites(), loadProOrders(), loadWorkspaces()]);
   renderOnboardingChecklist();
   setStatus('');

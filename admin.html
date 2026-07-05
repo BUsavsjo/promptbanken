@@ -143,8 +143,8 @@
                     <section class="workspace-section" id="uppgradera">
                         <div class="workspace-section-heading">
                             <div>
-                                <h2>Uppgradera till Pro</h2>
-                                <p>Fakturaköp — planen aktiveras direkt, fakturan skickas separat till angiven e-post.</p>
+                                <h2>Uppgradera</h2>
+                                <p>Pro och Team aktiveras direkt mot faktura. Förvaltning och Kommun är en förfrågan — vi kontaktar er med offert innan avtal och aktivering.</p>
                                 <p class="mp-small" data-upgrade-current-plan-note></p>
                             </div>
                         </div>
@@ -154,11 +154,15 @@
                                 Nivå
                                 <select name="plan">
                                     <option value="pro">Pro (personlig, 100 mallar, 5 MCP-nycklar)</option>
-                                    <option value="start">Team (5–10 medlemmar, delad arbetsyta)</option>
+                                    <option value="start">Team (upp till 10 medlemmar, delad arbetsyta)</option>
                                     <option value="plus">Förvaltning (flera arbetsytor, upp till 50 medlemmar)</option>
                                     <option value="enterprise">Kommun (flera arbetsytor, 250+/offert)</option>
                                 </select>
                             </label>
+                            <div class="upgrade-price-box" data-upgrade-price>
+                                <span class="upgrade-price-amount" data-upgrade-price-amount>—</span>
+                                <span class="upgrade-price-note" data-upgrade-price-note></span>
+                            </div>
                             <label data-upgrade-team-name-field>
                                 Namn på teamet/arbetsytan
                                 <input name="workspace_name" placeholder="t.ex. IT-teamet">
@@ -188,9 +192,20 @@
                                 <input type="email" name="billing_email" required placeholder="faktura@exempel.se">
                             </label>
                             <div class="workspace-form-actions">
-                                <button type="submit">Beställ</button>
+                                <button type="submit" data-upgrade-submit>Granska beställning</button>
                             </div>
                         </form>
+
+                        <div class="upgrade-confirm-panel" data-upgrade-confirm-panel hidden>
+                            <h3>Bekräfta beställning</h3>
+                            <dl class="upgrade-confirm-summary" data-upgrade-confirm-summary></dl>
+                            <p class="upgrade-confirm-terms" data-upgrade-confirm-terms></p>
+                            <div class="workspace-form-actions">
+                                <button type="button" class="primary-btn" data-upgrade-confirm>Bekräfta och beställ</button>
+                                <button type="button" class="secondary-btn" data-upgrade-cancel>Avbryt</button>
+                            </div>
+                        </div>
+
                         <p class="plan-locked-note" data-upgrade-status hidden></p>
                     </section>
 

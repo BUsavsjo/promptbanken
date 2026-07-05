@@ -4714,6 +4714,80 @@ body.detail-panel-closed .prompt-detail-panel {
     color: #b42318;
 }
 
+.upgrade-price-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0 0.5rem;
+    border: 1px solid #dfe6ee;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.upgrade-price-amount {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #10233d;
+}
+
+.upgrade-price-note {
+    font-size: 0.85rem;
+    color: #667085;
+}
+
+.upgrade-confirm-panel {
+    margin: 1rem 0;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid #c9dcff;
+    border-radius: 12px;
+    background: #f2f7ff;
+}
+
+.upgrade-confirm-panel h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+}
+
+.upgrade-confirm-summary {
+    margin: 0 0 0.85rem;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.upgrade-confirm-summary div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.upgrade-confirm-summary dt {
+    min-width: 140px;
+    margin: 0;
+    color: #667085;
+}
+
+.upgrade-confirm-summary dd {
+    margin: 0;
+    font-weight: 650;
+    color: #10233d;
+}
+
+.upgrade-confirm-terms {
+    margin: 0 0 1rem;
+    font-size: 0.88rem;
+    color: #475467;
+}
+
+@media (max-width: 640px) {
+    .upgrade-confirm-summary dt {
+        min-width: 0;
+        flex-basis: 100%;
+    }
+}
+
 .pro-status-banner {
     padding: 0.75rem 1rem;
     border-radius: 10px;
@@ -4722,6 +4796,84 @@ body.detail-panel-closed .prompt-detail-panel {
     color: #475467;
     margin-bottom: 1.25rem;
     font-weight: 500;
+}
+
+.plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 2.5rem;
+}
+
+.plan-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1.35rem 1.25rem;
+    border: 1px solid #dfe6ee;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.plan-card--highlight {
+    border-color: #2f6fed;
+    box-shadow: 0 6px 24px rgba(47, 111, 237, 0.12);
+}
+
+.plan-card-badge {
+    position: absolute;
+    top: -0.7rem;
+    right: 1rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: #2f6fed;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.plan-card h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.15rem;
+}
+
+.plan-card-price {
+    margin: 0 0 0.15rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #10233d;
+}
+
+.plan-card-audience {
+    margin: 0 0 0.6rem;
+    font-size: 0.82rem;
+    color: #667085;
+}
+
+.plan-card-value {
+    margin: 0 0 0.85rem;
+    font-size: 0.9rem;
+    color: #344054;
+}
+
+.plan-card-features {
+    list-style: none;
+    margin: 0 0 1.15rem;
+    padding: 0;
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+}
+
+.plan-card-features li {
+    color: #344054;
+}
+
+.plan-card-cta {
+    margin-top: auto;
+    text-align: center;
+    text-decoration: none;
 }
 
 .pro-status-banner.is-pro {

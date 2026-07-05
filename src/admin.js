@@ -365,30 +365,40 @@ function renderUpgradeSection(plan) {
 
 function renderPlanInfo() {
   const plan = state.workspace?.plan ?? 'free';
-  const planLabels = { free: 'Free', pro: 'Pro', start: 'Start', plus: 'Plus', enterprise: 'Enterprise' };
+  const isOrg = state.workspace?.type === 'organization';
   const badge = document.querySelector('[data-plan-badge]');
   const desc = document.querySelector('[data-plan-badge-desc]');
   const featureList = document.querySelector('[data-plan-feature-list]');
   const maxP = maxPrompts();
 
   if (badge) {
-    badge.textContent = planLabels[plan] ?? plan;
+    badge.textContent = planNameLabels[plan] ?? plan;
     badge.dataset.plan = plan;
   }
   if (desc) {
-    desc.textContent = 'Personligt konto';
+    desc.textContent = isOrg ? 'Organisationskonto' : 'Personligt konto';
   }
+
+  setText('[data-workspace-plan]', planNameLabels[plan] ?? plan);
 
   renderPlanExpiry();
   renderUpgradeSection(plan);
   renderPlanLimitsSummary();
 
-  const features = [
-    { label: `${maxP} prompts`, ok: true },
-    { label: 'MCP-nyckel (egna + publika prompts)', ok: true },
-    { label: 'API-nycklar för externa integrationer', ok: apiEnabled() },
-    { label: 'Dela prompts inom workspace', ok: isPlanPro() }
-  ];
+  const features = isOrg
+    ? [
+        { label: `${maxP} delade mallar (hela licensen)`, ok: true },
+        { label: 'Dela prompts med hela teamet', ok: true },
+        { label: `${mcpKeyLimit()} MCP-nycklar för agenter/integrationer`, ok: mcpEnabled() },
+        { label: 'API-nycklar för externa integrationer', ok: apiEnabled() },
+        { label: 'Premium-mallar (Pro-biblioteket)', ok: true }
+      ]
+    : [
+        { label: `${maxP} egna mallar`, ok: true },
+        { label: 'MCP-nyckel (egna + publika prompts)', ok: mcpEnabled() },
+        { label: 'API-nycklar för externa integrationer', ok: apiEnabled() },
+        { label: '42 premium-mallar (Pro-biblioteket)', ok: isPlanPro() }
+      ];
 
   if (featureList) {
     featureList.innerHTML = features.map(({ label, ok }) =>
@@ -677,6 +687,9 @@ function renderProOrders() {
           <td>${escapeHtml(order.due_date ? new Date(order.due_date).toLocaleDateString('sv-SE') : '-')}</td>
           <td>
             <button type="button" data-preview-order="${order.id}">${state.expandedOrderId === order.id ? 'Dölj' : 'Visa'}</button>
+            ${(order.status === 'pending' && !order.license_id && ['plus', 'enterprise'].includes(order.requested_plan))
+              ? `<button type="button" class="primary-btn" data-activate-order="${order.id}">Aktivera</button>`
+              : ''}
             ${order.status === 'pending' ? `<button type="button" data-mark-invoiced="${order.id}">Markera fakturerad</button>` : ''}
             ${order.status === 'invoiced' ? `<button type="button" data-mark-paid="${order.id}">Markera betald</button>` : ''}
             ${order.status !== 'cancelled' ? `<button type="button" data-downgrade-order="${order.id}" data-delete-confirm="0">Nedgradera till Free</button>` : ''}
@@ -820,7 +833,7 @@ async function loadProfile(user) {
   setText('[data-user-email]', user.email);
   setTextWithTitle('[data-workspace-name]', workspace.name);
   setText('[data-workspace-type]', workspaceTypeLabels[workspace.type] || workspace.type);
-  setText('[data-workspace-plan]', workspace.plan);
+  setText('[data-workspace-plan]', planNameLabels[workspace.plan] || workspace.plan);
   setText('[data-profile-role]', roleNameLabels[profile.role] || profile.role);
   renderRoleMode(profile.role);
   renderCapabilityState();
@@ -864,7 +877,7 @@ async function switchToWorkspace(workspaceId) {
 
   setTextWithTitle('[data-workspace-name]', workspace.name);
   setText('[data-workspace-type]', workspaceTypeLabels[workspace.type] || workspace.type);
-  setText('[data-workspace-plan]', workspace.plan);
+  setText('[data-workspace-plan]', planNameLabels[workspace.plan] || workspace.plan);
   setText('[data-profile-role]', roleNameLabels[profile.role] || profile.role);
   renderRoleMode(profile.role);
   renderCapabilityState();
@@ -1136,6 +1149,36 @@ const upgradePlanLabels = {
   enterprise: 'Kommun'
 };
 
+// Priser fyllda med riktiga belopp av produktägaren. Self-service-nivåer
+// (pro/start) har ett fast pris; org-nivåer (plus/enterprise) prissätts
+// via offert och aktiveras först efter godkännande (se B2).
+// TODO: bekräfta beloppen innan publik release.
+const planPricing = {
+  pro: { amount: 'PRIS SAKNAS kr/år', note: 'per användare, faktureras årsvis', selfService: true },
+  start: { amount: 'PRIS SAKNAS kr/år', note: 'per team, faktureras årsvis', selfService: true },
+  plus: { amount: 'Pris enligt offert', note: 'vi kontaktar er innan avtal och fakturering', selfService: false },
+  enterprise: { amount: 'Pris enligt offert', note: 'vi kontaktar er innan avtal och fakturering', selfService: false }
+};
+
+function planIsSelfService(plan) {
+  return planPricing[plan]?.selfService === true;
+}
+
+function renderUpgradePrice() {
+  if (!upgradeForm) return;
+  const plan = upgradeForm.querySelector('select[name="plan"]')?.value;
+  const pricing = planPricing[plan];
+  const amountEl = document.querySelector('[data-upgrade-price-amount]');
+  const noteEl = document.querySelector('[data-upgrade-price-note]');
+  const submitBtn = document.querySelector('[data-upgrade-submit]');
+
+  if (amountEl) amountEl.textContent = pricing?.amount || '—';
+  if (noteEl) noteEl.textContent = pricing?.note || '';
+  if (submitBtn) {
+    submitBtn.textContent = planIsSelfService(plan) ? 'Granska beställning' : 'Skicka förfrågan';
+  }
+}
+
 function setUpgradeStatus(message, isError = false) {
   const el = document.querySelector('[data-upgrade-status]');
   if (!el) return;
@@ -1163,9 +1206,23 @@ function syncUpgradeWorkspacesField() {
   if (teamNameField) {
     teamNameField.hidden = plan === 'pro';
   }
+
+  renderUpgradePrice();
+  hideUpgradeConfirm();
 }
 
-async function submitUpgradeOrder(event) {
+// Beställningen som väntar på användarens bekräftelse (steg 1 -> steg 2).
+let pendingUpgradeOrder = null;
+
+function hideUpgradeConfirm() {
+  pendingUpgradeOrder = null;
+  const panel = document.querySelector('[data-upgrade-confirm-panel]');
+  if (panel) panel.hidden = true;
+}
+
+// Steg 1: validera och visa en sammanfattning att bekräfta -- anropar
+// INTE databasen ännu.
+function reviewUpgradeOrder(event) {
   event.preventDefault();
 
   const formData = new FormData(upgradeForm);
@@ -1183,17 +1240,62 @@ async function submitUpgradeOrder(event) {
     return;
   }
 
+  pendingUpgradeOrder = {
+    plan, workspaces, workspaceName, companyName, orgNumber, address, reference, billingEmail
+  };
+
+  const pricing = planPricing[plan];
+  const selfService = planIsSelfService(plan);
+
+  const summary = document.querySelector('[data-upgrade-confirm-summary]');
+  if (summary) {
+    const rows = [
+      ['Nivå', upgradePlanLabels[plan] || plan],
+      ['Pris', pricing?.amount || '—'],
+      ['Företag/kommun', companyName],
+      workspaceName ? ['Arbetsyta', workspaceName] : null,
+      !selfService && workspaces > 1 ? ['Antal arbetsytor', String(workspaces)] : null,
+      ['Fakturamejl', billingEmail]
+    ].filter(Boolean);
+    summary.innerHTML = rows
+      .map(([k, v]) => `<div><dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd></div>`)
+      .join('');
+  }
+
+  const terms = document.querySelector('[data-upgrade-confirm-terms]');
+  if (terms) {
+    terms.textContent = selfService
+      ? `${upgradePlanLabels[plan] || plan} aktiveras direkt. En faktura på ${pricing?.amount || 'angivet belopp'} skickas till ${billingEmail}.`
+      : `Detta är en förfrågan, inte ett bindande köp. Vi kontaktar er på ${billingEmail} med offert innan avtal tecknas och kontot aktiveras.`;
+  }
+
+  const confirmBtn = document.querySelector('[data-upgrade-confirm]');
+  if (confirmBtn) {
+    confirmBtn.textContent = selfService ? 'Bekräfta och beställ' : 'Skicka förfrågan';
+  }
+
+  const panel = document.querySelector('[data-upgrade-confirm-panel]');
+  if (panel) panel.hidden = false;
+  setUpgradeStatus('');
+}
+
+// Steg 2: användaren har bekräftat -- skapa ordern.
+async function confirmUpgradeOrder() {
+  if (!pendingUpgradeOrder) return;
+  const order = pendingUpgradeOrder;
+
   setUpgradeStatus('Skickar beställning...');
+  hideUpgradeConfirm();
 
   const { data, error } = await supabase.rpc('create_pro_order', {
-    p_requested_plan: plan,
-    p_requested_workspaces: workspaces,
-    p_billing_company_name: companyName,
-    p_billing_org_number: orgNumber,
-    p_billing_address: address,
-    p_billing_reference: reference,
-    p_billing_email: billingEmail,
-    p_workspace_name: workspaceName
+    p_requested_plan: order.plan,
+    p_requested_workspaces: order.workspaces,
+    p_billing_company_name: order.companyName,
+    p_billing_org_number: order.orgNumber,
+    p_billing_address: order.address,
+    p_billing_reference: order.reference,
+    p_billing_email: order.billingEmail,
+    p_workspace_name: order.workspaceName
   });
 
   if (error) {
@@ -1202,11 +1304,18 @@ async function submitUpgradeOrder(event) {
   }
 
   const result = Array.isArray(data) ? data[0] : data;
-  setUpgradeStatus(`${upgradePlanLabels[plan] || plan} är aktiverat. Faktura skickas till ${billingEmail}.`);
+  const activated = result?.activated !== false;
+
+  if (activated) {
+    setUpgradeStatus(`${upgradePlanLabels[order.plan] || order.plan} är aktiverat. Faktura skickas till ${order.billingEmail}.`);
+  } else {
+    setUpgradeStatus(`Tack! Din förfrågan om ${upgradePlanLabels[order.plan] || order.plan} har registrerats. Vi kontaktar dig på ${order.billingEmail} med offert innan aktivering.`);
+  }
+
   upgradeForm.reset();
   syncUpgradeWorkspacesField();
 
-  if (result?.workspace_id && result.workspace_id !== state.workspace.id) {
+  if (activated && result?.workspace_id && result.workspace_id !== state.workspace.id) {
     await switchToWorkspace(result.workspace_id);
   } else {
     await loadProfile(state.user);
@@ -1608,6 +1717,18 @@ async function markOrderPaid(orderId) {
   await loadProOrders();
 }
 
+async function activateProOrder(orderId) {
+  const { error } = await supabase.rpc('admin_activate_pro_order', { p_order_id: orderId });
+
+  if (error) {
+    setStatus(error.message || 'Kunde inte aktivera beställningen.', true);
+    return;
+  }
+
+  setStatus('Beställningen aktiverades — licens och arbetsyta har skapats åt beställaren.');
+  await loadProOrders();
+}
+
 async function downgradeProOrder(orderId) {
   const { error } = await supabase.rpc('admin_downgrade_pro_order', { p_order_id: orderId });
 
@@ -1811,8 +1932,15 @@ if (generateJoinCodeButton) {
 }
 
 if (upgradeForm) {
-  upgradeForm.addEventListener('submit', submitUpgradeOrder);
+  upgradeForm.addEventListener('submit', reviewUpgradeOrder);
   upgradeForm.querySelector('select[name="plan"]')?.addEventListener('change', syncUpgradeWorkspacesField);
+  document.querySelector('[data-upgrade-confirm]')?.addEventListener('click', () => {
+    confirmUpgradeOrder().catch((error) => setUpgradeStatus(error.message || 'Kunde inte skapa beställningen.', true));
+  });
+  document.querySelector('[data-upgrade-cancel]')?.addEventListener('click', () => {
+    hideUpgradeConfirm();
+    setUpgradeStatus('Beställningen avbröts.');
+  });
   syncUpgradeWorkspacesField();
 }
 
@@ -1943,6 +2071,7 @@ document.addEventListener('click', (event) => {
   const revokeJoinCodeButton = event.target.closest('[data-revoke-join-code]');
   const markInvoicedButton = event.target.closest('[data-mark-invoiced]');
   const markPaidButton = event.target.closest('[data-mark-paid]');
+  const activateOrderButton = event.target.closest('[data-activate-order]');
   const downgradeOrderButton = event.target.closest('[data-downgrade-order]');
   const switchWorkspaceButton = event.target.closest('[data-switch-workspace]');
   const quickCreateToggleButton = event.target.closest('[data-quick-create-toggle]');
@@ -2008,6 +2137,24 @@ document.addEventListener('click', (event) => {
 
   if (markPaidButton) {
     markOrderPaid(markPaidButton.dataset.markPaid);
+  }
+
+  if (activateOrderButton) {
+    if (activateOrderButton.dataset.confirm === '1') {
+      activateProOrder(activateOrderButton.dataset.activateOrder);
+    } else {
+      activateOrderButton.dataset.confirm = '1';
+      const originalLabel = activateOrderButton.textContent;
+      activateOrderButton.textContent = 'Bekräfta aktivering?';
+      activateOrderButton.classList.add('is-confirming');
+      setTimeout(() => {
+        if (activateOrderButton.isConnected) {
+          activateOrderButton.dataset.confirm = '0';
+          activateOrderButton.textContent = originalLabel;
+          activateOrderButton.classList.remove('is-confirming');
+        }
+      }, 4000);
+    }
   }
 
   if (downgradeOrderButton) {

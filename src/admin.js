@@ -428,7 +428,7 @@ function renderPromptFormRules() {
   }
 }
 
-const planNameLabels = { free: 'Free', pro: 'Pro', start: 'Team', plus: 'Förvaltning', enterprise: 'Kommun' };
+const planNameLabels = { free: 'Free', pro: 'Pro', start: 'Arbetsyta', plus: 'Förvaltning', enterprise: 'Kommun' };
 
 function renderPromptCounter(ownActivePrompts) {
   const limit = maxPrompts();
@@ -1144,7 +1144,7 @@ async function revokeJoinCode(codeId) {
 
 const upgradePlanLabels = {
   pro: 'Pro',
-  start: 'Team',
+  start: 'Arbetsyta',
   plus: 'Förvaltning',
   enterprise: 'Kommun'
 };
@@ -1154,8 +1154,8 @@ const upgradePlanLabels = {
 // via offert och aktiveras först efter godkännande (se B2).
 // TODO: bekräfta beloppen innan publik release.
 const planPricing = {
-  pro: { amount: '849 kr/år', note: 'eller 89 kr/mån · faktureras i efterskott', selfService: true },
-  start: { amount: 'PRIS SAKNAS kr/år', note: 'per team, faktureras årsvis', selfService: true },
+  pro: { amount: '89 kr/mån', note: 'faktureras i efterskott', selfService: true },
+  start: { amount: '99 kr/användare/mån', note: 'minst 3 användare · faktureras i efterskott', selfService: true },
   plus: { amount: 'Pris enligt offert', note: 'vi kontaktar er innan avtal och fakturering', selfService: false },
   enterprise: { amount: 'Pris enligt offert', note: 'vi kontaktar er innan avtal och fakturering', selfService: false }
 };

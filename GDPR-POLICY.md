@@ -78,11 +78,13 @@ Du kan begära att vi begränsar vår behandling av dina data.
 
 ---
 
-## 4. Dataskyddssamordnare – Kontakt
+## 4. Kontakt för dataskyddsfrågor
 
 **För frågor om dataskydd & GDPR:**
 
 📧 **E-post:** peter@promptbanken.se
+
+> Obs: Tjänsten har ännu inte formellt granskats av en kommunal dataskyddssamordnare. Innan skarp driftsättning i en kommun ansvarar respektive kommun för granskning enligt sin egen dataskyddsprocess.
 
 ---
 
@@ -96,11 +98,13 @@ Vi kan uppdatera denna policy när som helst. Ändringar publiceras här:
 
 ## 6. Juridisk grund för dataskydd
 
-Denna tjänst följer:
-- ✅ **EU:s dataskyddsförordning (GDPR)**
-- ✅ **Sekretesslagen (SekrL) för offentlig sektor**
-- ✅ **Kommunens arkiveringsregler**
-- ✅ **EU:s AI Act (Low-Risk klassificering)**
+Denna tjänst är utformad enligt:
+- **EU:s dataskyddsförordning (GDPR)**
+- **Sekretesslagen (SekrL) för offentlig sektor**
+- **Kommunens arkiveringsregler**
+- **EU:s AI Act (självklassificerad Low-Risk)**
+
+*Utformad enligt ovanstående ramverk. Formell efterlevnadsgranskning (IT-säkerhet, dataskyddssamordnare, juridik) är ännu inte genomförd – se [AI-COMPLIANCE.md](AI-COMPLIANCE.md).*
 
 ---
 

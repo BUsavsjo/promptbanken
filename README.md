@@ -10,7 +10,7 @@ Webbplatsen är även gjord för att kunna läsas av AI-agenter och indexeringst
 - Statisk promptkatalog: https://kommun.promptbanken.se/prompts.html
 - Promptmanifest: https://kommun.promptbanken.se/prompts.json
 - Agentguide: https://kommun.promptbanken.se/llms.txt
-- Remote MCP demo: https://mcp.promptbanken.se/mcp
+- Remote MCP (publik): https://mcp.promptbanken.se/mcp
 
 **Status:** ✅ Live på GitHub Pages | **Version:** 1.0.0
 
@@ -209,7 +209,7 @@ Promptbanken kan användas på två sätt:
 1. Som vanlig webbplats där användaren läser och kopierar promptar manuellt.
 2. Som MCP-källa i AI-klienter som stödjer MCP.
 
-Remote MCP-demo:
+Remote MCP (publik server):
 
 ```json
 {
@@ -258,10 +258,10 @@ Rekommenderad agentinstruktion:
 
 ## 🔒 Säkerhet & Compliance
 
-Denna plattform följer:
-- **EU AI Act** – klassificerad som "Low-Risk AI Application" (LAAF)
+Denna plattform är utformad enligt:
+- **EU AI Act** – självklassificerad som "Low-Risk AI Application" (LAAF)
 - **GDPR** – ingen data lagras lokalt; du är ansvarig för anonymisering
-- **Offentligrättslig** – granskat av dataskyddssamordnare och juridik
+- **Offentligrättslig granskning** – IT-säkerhet, dataskyddssamordnare och juridik: ⏳ ännu ej genomförd (se [AI-COMPLIANCE.md](AI-COMPLIANCE.md)). Formell granskning krävs innan skarp driftsättning i en kommun.
 
 **Viktigt:** Du är ansvarig för att anonymisera personuppgifter innan du kopierar prompen. Klicka **"Visa exempel"** på varje kort för att se vad du ska ta bort.
 

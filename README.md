@@ -43,7 +43,7 @@ Alla prompter är utformade med **GDPR** och **EU AI Act** i åtanke. Du ansvara
 ### Lokal utveckling (utan Docker)
 ```bash
 # Klona repo
-git clone https://github.com/username/promptbanken.git
+git clone https://github.com/BUsavsjo/promptbanken.git
 cd promptbanken
 
 # 1) Starta backend (gateway mot Ollama)
@@ -98,7 +98,7 @@ Community Edition är local-first och använder endast Ollama via backend.
    ```
 3. **Klona repot** och gå till rotmappen:
    ```powershell
-   git clone https://github.com/username/promptbanken.git
+   git clone https://github.com/BUsavsjo/promptbanken.git
    cd promptbanken
    ```
 4. **Starta frontend + backend med Docker Compose**:
@@ -179,7 +179,7 @@ MCP-tools:
 
 ## 🌐 Deploy (GitHub Pages via Actions)
 
-- Workflow: .github/workflows/pages.yml (triggas på push till main eller manuellt via Actions → pages).
+- Workflow: .github/workflows/deploy.yml (triggas på push till main eller manuellt via Actions → "Deploy to GitHub Pages").
 - Första körning sätter Pages-källa till GitHub Actions och publicerar hela root-katalogen.
 - Så verifierar du efter deploy:
   1. Öppna senaste körningen under Actions → pages → Deploy to GitHub Pages och kontrollera att den är grön.
@@ -374,7 +374,7 @@ A: Nej. Du måste se till att all data är anonymiserad före kopia. Se "Visa ex
 A: Alla! ChatGPT, Claude, Gemini, etc. Kopiera bara prompen och klistra in i ditt verktyg.
 
 **F: Kan jag redigera prompterna?**
-A: Ja! Du kan redigera .txt-filerna och skapa pull requests. Eller använd dem som utgångspunkt för dina egna.
+A: Ja! Du kan redigera .txt-filerna lokalt och använda dem som utgångspunkt för dina egna. Vi tar dock i nuläget inte emot Pull Requests för prompts – skicka förslag via e-post (se "Bidra" ovan).
 
 ---
 

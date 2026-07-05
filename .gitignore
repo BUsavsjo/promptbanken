@@ -10,3 +10,9 @@ dist/
 .env.*.local
 backend/data/provider_secrets.db
 supabase/.temp/
+.env.seed.local
+
+# Logs (never commit runtime logs — de kan läcka interna adresser/sökvägar)
+*.log
+.vite-preview.log
+.vite-preview.err.log

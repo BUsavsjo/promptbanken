@@ -86,62 +86,64 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   }
 });
 
-const users = [
+// ---------------------------------------------------------------------------
+// Testdata enligt addon-modellen (2026-07-06):
+//   Personlig värld: Free / Pro / Pro + Delad arbetsyta.
+//   Organisationsvärld: Förvaltning (plus) / Kommun (enterprise).
+// En Delad arbetsyta (plan='start', license_id=null) kräver att ALLA medlemmar
+// har en aktiv personlig Pro-yta (join-triggern enforce_org_member_limit).
+// Därför får varje medlem i en delad yta en egen personlig Pro-yta först.
+// ---------------------------------------------------------------------------
+
+// Personliga ytor. plan='pro' ger Pro-rättighet (krävs för delad-yta-medlemskap).
+const personalUsers = [
+  { email: 'free.user@test.se', slug: 'test-free-personal', name: 'Test Free (privat)', plan: 'free' },
+  { email: 'org.owner@test.se', slug: 'test-owner-personal', name: 'Test Owner (privat Pro)', plan: 'pro' },
+  { email: 'org.admin@test.se', slug: 'test-admin-personal', name: 'Test Admin (privat Pro)', plan: 'pro' },
+  { email: 'org.editor@test.se', slug: 'test-editor-personal', name: 'Test Editor (privat Pro)', plan: 'pro' },
+  { email: 'org.viewer@test.se', slug: 'test-viewer-personal', name: 'Test Viewer (privat Pro)', plan: 'pro' },
+  { email: 'org-b.admin@test.se', slug: 'test-orgb-personal', name: 'Test Org B (privat Pro)', plan: 'pro' },
+  { email: 'platform.admin@test.se', slug: 'test-platform-personal', name: 'Test Platform Admin', plan: 'free' }
+];
+
+// Delade addon-ytor (Pro + Delad arbetsyta). Alla medlemmar måste ha Pro.
+const sharedWorkspaces = [
   {
-    email: 'free.user@test.se',
-    role: 'editor',
-    workspaceSlug: 'test-free-user',
-    workspaceName: 'Test Free User',
-    workspaceType: 'personal',
-    plan: 'free'
+    slug: 'test-delad-savsjo',
+    name: 'Test Delad arbetsyta (Sävsjö)',
+    ownerEmail: 'org.owner@test.se',
+    members: [
+      { email: 'org.owner@test.se', role: 'workspace_owner' },
+      { email: 'org.admin@test.se', role: 'workspace_admin' },
+      { email: 'org.editor@test.se', role: 'editor' },
+      { email: 'org.viewer@test.se', role: 'viewer' }
+    ]
   },
   {
-    email: 'org.editor@test.se',
-    role: 'editor',
-    workspaceSlug: 'test-savsjo-kommun',
-    workspaceName: 'Test Sävsjö kommun',
-    workspaceType: 'organization',
-    plan: 'start'
-  },
+    slug: 'test-delad-b',
+    name: 'Test Delad arbetsyta B',
+    ownerEmail: 'org-b.admin@test.se',
+    members: [
+      { email: 'org-b.admin@test.se', role: 'workspace_owner' }
+    ]
+  }
+];
+
+// Licensierade org-ytor (Förvaltning/Kommun). Medlemmar behöver INTE Pro.
+const planLicenseLimits = {
+  plus: { max_workspaces: 5, max_members_total: 50, max_prompts_total: 500, max_mcp_keys_total: 5 },
+  enterprise: { max_workspaces: 999999, max_members_total: 250, max_prompts_total: 1000, max_mcp_keys_total: 10 }
+};
+
+const licensedWorkspaces = [
   {
-    email: 'org.admin@test.se',
-    role: 'workspace_admin',
-    workspaceSlug: 'test-savsjo-kommun',
-    workspaceName: 'Test Sävsjö kommun',
-    workspaceType: 'organization',
-    plan: 'start'
-  },
-  {
-    email: 'org.owner@test.se',
-    role: 'workspace_owner',
-    workspaceSlug: 'test-savsjo-kommun',
-    workspaceName: 'Test Sävsjö kommun',
-    workspaceType: 'organization',
-    plan: 'start'
-  },
-  {
-    email: 'org.viewer@test.se',
-    role: 'viewer',
-    workspaceSlug: 'test-savsjo-kommun',
-    workspaceName: 'Test Sävsjö kommun',
-    workspaceType: 'organization',
-    plan: 'start'
-  },
-  {
-    email: 'org-b.admin@test.se',
-    role: 'workspace_admin',
-    workspaceSlug: 'testkommun-b',
-    workspaceName: 'Testkommun B',
-    workspaceType: 'organization',
-    plan: 'start'
-  },
-  {
-    email: 'platform.admin@test.se',
-    role: 'platform_owner',
-    workspaceSlug: 'test-platform',
-    workspaceName: 'Test Platform',
-    workspaceType: 'organization',
-    plan: 'enterprise'
+    slug: 'test-kommun-platform',
+    name: 'Test Kommun (plattform)',
+    plan: 'enterprise',
+    ownerEmail: 'platform.admin@test.se',
+    members: [
+      { email: 'platform.admin@test.se', role: 'platform_owner' }
+    ]
   }
 ];
 
@@ -192,56 +194,6 @@ async function upsertAuthUser(email) {
   return data.user;
 }
 
-async function ensureWorkspace(config, ownerUserId) {
-  const { data: existing, error: findError } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('slug', config.workspaceSlug)
-    .maybeSingle();
-
-  if (findError) {
-    throw findError;
-  }
-
-  if (existing) {
-    const { error } = await supabase
-      .from('workspaces')
-      .update({
-        name: config.workspaceName,
-        type: config.workspaceType,
-        plan: config.plan,
-        owner_user_id: ownerUserId,
-        max_public_items: config.workspaceType === 'personal' ? 3 : 25,
-        max_documents: config.workspaceType === 'personal' ? 3 : 25
-      })
-      .eq('id', existing.id);
-    if (error) {
-      throw error;
-    }
-    return existing.id;
-  }
-
-  const { data, error } = await supabase
-    .from('workspaces')
-    .insert({
-      name: config.workspaceName,
-      slug: config.workspaceSlug,
-      type: config.workspaceType,
-      plan: config.plan,
-      owner_user_id: ownerUserId,
-      max_public_items: config.workspaceType === 'personal' ? 3 : 25,
-      max_documents: config.workspaceType === 'personal' ? 3 : 25
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data.id;
-}
-
 async function upsertProfile(userId, workspaceId, role) {
   const { data: existing, error: findError } = await supabase
     .from('profiles')
@@ -274,12 +226,210 @@ async function upsertProfile(userId, workspaceId, role) {
   }
 }
 
+async function ensurePersonalWorkspace(user, cfg) {
+  const { data: existing, error: findError } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('owner_user_id', user.id)
+    .eq('type', 'personal')
+    .maybeSingle();
+
+  if (findError) {
+    throw findError;
+  }
+
+  let workspaceId;
+  if (existing) {
+    const { error } = await supabase
+      .from('workspaces')
+      .update({ name: cfg.name, plan: cfg.plan, status: 'active', mcp_enabled: true })
+      .eq('id', existing.id);
+    if (error) {
+      throw error;
+    }
+    workspaceId = existing.id;
+  } else {
+    const { data, error } = await supabase
+      .from('workspaces')
+      .insert({
+        name: cfg.name,
+        slug: cfg.slug,
+        type: 'personal',
+        plan: cfg.plan,
+        owner_user_id: user.id,
+        mcp_enabled: true
+      })
+      .select('id')
+      .single();
+    if (error) {
+      throw error;
+    }
+    workspaceId = data.id;
+  }
+
+  await upsertProfile(user.id, workspaceId, 'workspace_owner');
+  return workspaceId;
+}
+
+async function ensureSharedAddonWorkspace(cfg, ownerUser) {
+  const { data: existing, error: findError } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('slug', cfg.slug)
+    .maybeSingle();
+
+  if (findError) {
+    throw findError;
+  }
+
+  let workspaceId;
+  if (existing) {
+    const { error } = await supabase
+      .from('workspaces')
+      .update({
+        name: cfg.name,
+        type: 'organization',
+        plan: 'start',
+        license_id: null,
+        owner_user_id: ownerUser.id,
+        mcp_enabled: true
+      })
+      .eq('id', existing.id);
+    if (error) {
+      throw error;
+    }
+    workspaceId = existing.id;
+  } else {
+    const { data, error } = await supabase
+      .from('workspaces')
+      .insert({
+        name: cfg.name,
+        slug: cfg.slug,
+        type: 'organization',
+        plan: 'start',
+        license_id: null,
+        owner_user_id: ownerUser.id,
+        mcp_enabled: true
+      })
+      .select('id')
+      .single();
+    if (error) {
+      throw error;
+    }
+    workspaceId = data.id;
+  }
+
+  const { data: addon, error: addonFindError } = await supabase
+    .from('shared_workspace_addons')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .maybeSingle();
+
+  if (addonFindError) {
+    throw addonFindError;
+  }
+
+  if (!addon) {
+    const { error } = await supabase
+      .from('shared_workspace_addons')
+      .insert({
+        workspace_id: workspaceId,
+        owner_user_id: ownerUser.id,
+        billing_owner_user_id: ownerUser.id,
+        max_members: 5,
+        max_prompts: 200,
+        price_per_month: 199,
+        plan_source: 'invoice'
+      });
+    if (error) {
+      throw error;
+    }
+  }
+
+  return workspaceId;
+}
+
+async function ensureLicensedWorkspace(cfg, ownerUser) {
+  const limits = planLicenseLimits[cfg.plan];
+  if (!limits) {
+    throw new Error(`Okänd licensplan: ${cfg.plan}`);
+  }
+
+  const { data: existing, error: findError } = await supabase
+    .from('workspaces')
+    .select('id, license_id')
+    .eq('slug', cfg.slug)
+    .maybeSingle();
+
+  if (findError) {
+    throw findError;
+  }
+
+  async function createLicense() {
+    const { data, error } = await supabase
+      .from('pro_licenses')
+      .insert({
+        plan: cfg.plan,
+        owner_user_id: ownerUser.id,
+        max_workspaces: limits.max_workspaces,
+        max_members_total: limits.max_members_total,
+        max_prompts_total: limits.max_prompts_total,
+        max_mcp_keys_total: limits.max_mcp_keys_total,
+        plan_source: 'invoice'
+      })
+      .select('id')
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data.id;
+  }
+
+  if (existing) {
+    const licenseId = existing.license_id || (await createLicense());
+    const { error } = await supabase
+      .from('workspaces')
+      .update({
+        name: cfg.name,
+        type: 'organization',
+        plan: cfg.plan,
+        license_id: licenseId,
+        owner_user_id: ownerUser.id,
+        mcp_enabled: true
+      })
+      .eq('id', existing.id);
+    if (error) {
+      throw error;
+    }
+    return existing.id;
+  }
+
+  const licenseId = await createLicense();
+  const { data, error } = await supabase
+    .from('workspaces')
+    .insert({
+      name: cfg.name,
+      slug: cfg.slug,
+      type: 'organization',
+      plan: cfg.plan,
+      license_id: licenseId,
+      owner_user_id: ownerUser.id,
+      mcp_enabled: true
+    })
+    .select('id')
+    .single();
+  if (error) {
+    throw error;
+  }
+  return data.id;
+}
+
 const authUsers = new Map();
 
-for (const config of users) {
+for (const cfg of personalUsers) {
   try {
-    const user = await upsertAuthUser(config.email);
-    authUsers.set(config.email, user);
+    const user = await upsertAuthUser(cfg.email);
+    authUsers.set(cfg.email, user);
   } catch (error) {
     if (error?.status === 401) {
       console.error('');
@@ -291,15 +441,33 @@ for (const config of users) {
   }
 }
 
-for (const config of users) {
-  const user = authUsers.get(config.email);
-  const owner = users.find((item) => item.workspaceSlug === config.workspaceSlug && (
-    item.role === 'workspace_owner' || item.role === 'platform_owner' || item.workspaceType === 'personal'
-  ));
-  const ownerUser = authUsers.get(owner?.email || config.email);
-  const workspaceId = await ensureWorkspace(config, ownerUser.id);
-  await upsertProfile(user.id, workspaceId, config.role);
-  console.log(`${config.email} -> ${config.workspaceSlug} (${config.role})`);
+// 1. Personliga ytor (ger Pro-rättighet där plan='pro').
+for (const cfg of personalUsers) {
+  const user = authUsers.get(cfg.email);
+  await ensurePersonalWorkspace(user, cfg);
+  console.log(`${cfg.email} -> personlig ${cfg.plan}`);
+}
+
+// 2. Delade addon-ytor (alla medlemmar har nu Pro).
+for (const cfg of sharedWorkspaces) {
+  const owner = authUsers.get(cfg.ownerEmail);
+  const workspaceId = await ensureSharedAddonWorkspace(cfg, owner);
+  for (const member of cfg.members) {
+    const user = authUsers.get(member.email);
+    await upsertProfile(user.id, workspaceId, member.role);
+  }
+  console.log(`Delad arbetsyta ${cfg.slug} -> ${cfg.members.length} medlem(mar)`);
+}
+
+// 3. Licensierade org-ytor (Förvaltning/Kommun).
+for (const cfg of licensedWorkspaces) {
+  const owner = authUsers.get(cfg.ownerEmail);
+  const workspaceId = await ensureLicensedWorkspace(cfg, owner);
+  for (const member of cfg.members) {
+    const user = authUsers.get(member.email);
+    await upsertProfile(user.id, workspaceId, member.role);
+  }
+  console.log(`Licensyta ${cfg.slug} (${cfg.plan}) -> ${cfg.members.length} medlem(mar)`);
 }
 
 console.log('');

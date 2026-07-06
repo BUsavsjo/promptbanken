@@ -88,7 +88,7 @@ create table if not exists public.shared_workspace_addons (
     workspace_id           uuid not null unique references public.workspaces(id) on delete cascade,
     owner_user_id          uuid not null references auth.users(id) on delete restrict,
     billing_owner_user_id  uuid not null references auth.users(id) on delete restrict,
-    max_members            integer not null default 4  check (max_members >= 1),
+    max_members            integer not null default 5  check (max_members >= 1),
     max_prompts            integer not null default 200 check (max_prompts >= 0),
     price_per_month        integer not null default 199 check (price_per_month >= 0),
     plan_source            text,
@@ -272,7 +272,7 @@ begin
         max_members, max_prompts, price_per_month, plan_source
     ) values (
         new_workspace_id, current_user_id, current_user_id,
-        4, 200, 199, 'invoice'
+        5, 200, 199, 'invoice'
     )
     returning id into new_addon_id;
 
@@ -376,7 +376,7 @@ begin
           from public.profiles p
          where p.workspace_id = workspace_record.id;
 
-        if existing_count >= coalesce(addon_record.max_members, 4) then
+        if existing_count >= coalesce(addon_record.max_members, 5) then
             raise exception 'Den delade arbetsytan har nått gränsen på % medlemmar.', addon_record.max_members;
         end if;
 
@@ -411,8 +411,8 @@ revoke all on function app_private.enforce_org_member_limit() from public;
 -- 1. Lägg till en Pro-medlem via invite_org_member/redeem_org_join_code -> OK.
 -- 2. Försök lägga till en Free-medlem -> ska faila:
 --    'Alla medlemmar i en delad arbetsyta måste ha en aktiv Pro-plan.'
--- 3. Fyll ytan till 4 medlemmar, försök en femte Pro-medlem -> ska faila:
---    'Den delade arbetsytan har nått gränsen på 4 medlemmar.'
+-- 3. Fyll ytan till 5 medlemmar, försök en sjätte Pro-medlem -> ska faila:
+--    'Den delade arbetsytan har nått gränsen på 5 medlemmar.'
 select 'manuell scenariokörning enligt kommentarer' as note;
 ```
 
@@ -1084,19 +1084,21 @@ git commit -m "feat(mcp): context-driven prompt tools + shared workspace discove
 
 Ändra Arbetsyta-kortet: pris `Pro + 199 kr/mån`, målgrupp "Litet team med Pro",
 värde "Delad yta för Pro-användare", funktioner: `✓ 200 delade mallar`,
-`✓ Upp till 4 Pro-användare`, `✓ Delas via medlemmarnas personliga Pro-nycklar`,
+`✓ Upp till 5 Pro-användare`, `✓ Delas via medlemmarnas personliga Pro-nycklar`,
 `✗ Egna arbetsyte-nycklar`. Ta bort MCP-nyckelraden. Ändra Pro-kortet:
 `✓ 3 MCP-nycklar` (ej 5) och **ta bort** `✓ API-nycklar` (API=Nej i MVP).
+Byt även `✓ 42 premium-mallar` → `✓ Hela premiumbiblioteket` (hårdkoda inte antalet
+i copy — undviker drift när biblioteket växer). Samma i `pro.html` om det står där.
 Uppdatera "Vad är skillnaden"-avsnittet: Arbetsyta = Pro + delad yta där alla har egen Pro.
 
 - [ ] **Step 2: `admin.html` — uppgraderingsval**
 
 I `<select name="plan">`: byt `<option value="start">`-texten till
-`Delad arbetsyta (Pro-tillägg, upp till 4 medlemmar)`. Behåll `value="start"`.
+`Delad arbetsyta (Pro-tillägg, upp till 5 medlemmar)`. Behåll `value="start"`.
 
 - [ ] **Step 3: `src/admin.js` — dirigera start till create_shared_workspace**
 
-I `planPricing`: `start: { amount: 'Pro + 199 kr/mån', note: 'delad yta, upp till 4 Pro-användare · faktureras i efterskott', selfService: true }`.
+I `planPricing`: `start: { amount: 'Pro + 199 kr/mån', note: 'delad yta, upp till 5 Pro-användare · faktureras i efterskott', selfService: true }`.
 I `confirmUpgradeOrder()`: förgrena på plan innan RPC-anropet:
 
 ```javascript

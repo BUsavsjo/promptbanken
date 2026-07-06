@@ -44,7 +44,7 @@ shared_workspace_addons
   workspace_id           uuid not null references workspaces(id) on delete cascade  -- unik
   owner_user_id          uuid not null references auth.users(id)
   billing_owner_user_id  uuid not null references auth.users(id)  -- vem som betalar 199 kr
-  max_members            integer not null default 4
+  max_members            integer not null default 5   -- inkl. ägare
   max_prompts            integer not null default 200
   price_per_month        integer not null default 199
   plan_source            text        -- 'invoice' i MVP
@@ -91,7 +91,7 @@ Steg:
 2. Skapa `workspaces`-rad: `type='organization'`, `plan='start'`, `license_id=null`,
    `owner_user_id=auth.uid()`, `mcp_enabled=true`, `api_enabled=false`, unik slug.
 3. Skapa `shared_workspace_addons`-rad: `owner_user_id` och `billing_owner_user_id`
-   = anroparen, `max_members=4`, `max_prompts=200`, `price_per_month=199`,
+   = anroparen, `max_members=5` (inkl. ägare), `max_prompts=200`, `price_per_month=199`,
    `plan_source='invoice'`.
 4. Skapa `profiles`-rad: anroparen som `workspace_owner`.
 5. Skapa fakturapost på 199 kr enligt nuvarande fakturamodell (en engångsfaktura i
@@ -107,7 +107,7 @@ Ny/ändrad **join-trigger** på `profiles` (before insert) skiljer på yttyp:
 
 - **Addon-yta** (`type='organization'` och `license_id IS NULL` och addon-rad finns):
   1. Hård spärr: `has_active_pro_entitlement(new.user_id)` måste vara sant.
-  2. Medlemsgräns: antal profiler på ytan `< shared_workspace_addons.max_members` (4, inkl. ägare).
+  2. Medlemsgräns: antal profiler på ytan `< shared_workspace_addons.max_members` (5, inkl. ägare).
 - **Org-licensyta** (`license_id IS NOT NULL`): befintlig `enforce_org_member_limit`
   (summerat över licensens syskonytor) — **oförändrad**.
 - **Personlig yta:** ingen medlemsspärr (som idag).
@@ -165,7 +165,7 @@ Delad arbetsyta:
 
 | Gräns | Värde | Var enforcas |
 |---|---|---|
-| Medlemmar | 4 (inkl. ägare) | join-trigger, läser `shared_workspace_addons.max_members` |
+| Medlemmar | 5 (inkl. ägare) | join-trigger, läser `shared_workspace_addons.max_members` |
 | Delade mallar (`visibility='workspace'`) | 200 | `enforce_content_access_model`, ny gren för `license_id IS NULL`-org-ytor, läser `shared_workspace_addons.max_prompts` |
 | Egna MCP-nycklar på ytan | 0 | `enforce_mcp_key_limit`: org-yta med `license_id IS NULL` → blockera nyckelskapande |
 | Egna privata mallar på ytan | 0 | org-ytor tvingas redan till `visibility='workspace'` (befintligt) |
@@ -257,3 +257,8 @@ som org-licens.
 - **Antagande:** medlemmens Pro-rättighet räcker som premium-åtkomst; den delade
   ytan behöver inte själv ge premium (medlemmar når premium via sin personliga
   Pro-nyckel).
+- **Premium = ja/nej i planlogiken.** Åtkomst till premiummallar styrs av en
+  boolean (`plan IN ('pro','start','plus','enterprise')` i `list_pro_templates` /
+  `get_pro_templates_for_mcp_key`), aldrig av ett hårdkodat antal. Antalet
+  premiummallar (t.ex. "42") får bara förekomma som display-copy och ska helst
+  skrivas som "hela premiumbiblioteket" för att undvika drift när biblioteket växer.

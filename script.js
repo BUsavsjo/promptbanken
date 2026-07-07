@@ -308,7 +308,7 @@
                 updateFavoritesMenu();
                 applyPromptSort();
                 if (prompts.length) {
-                    selectPrompt(prompts[0].id, { reveal: false });
+                    selectPrompt(prompts[0].id, { reveal: false, markSelected: false });
                 }
 
                 grid.classList.remove('loading');
@@ -523,6 +523,7 @@
 
         function selectPrompt(promptId, options = {}) {
             const shouldReveal = options.reveal !== false;
+            const shouldMarkSelected = options.markSelected !== false;
             selectedPromptId = promptId;
             const prompt = allPrompts.find((item) => item.id === promptId);
             if (!prompt) return;
@@ -534,9 +535,11 @@
             const meta = getPromptMeta(prompt);
             const title = stripLeadingIcon(prompt.title);
 
-            grid.querySelectorAll('.prompt-card').forEach((card) => {
-                card.classList.toggle('selected', card.dataset.promptId === promptId);
-            });
+            if (shouldMarkSelected) {
+                grid.querySelectorAll('.prompt-card').forEach((card) => {
+                    card.classList.toggle('selected', card.dataset.promptId === promptId);
+                });
+            }
 
             const fields = {
                 title: document.getElementById('selected-prompt-title'),

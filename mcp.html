@@ -192,6 +192,10 @@
                     <section>
                         <h2>OpenAI / ChatGPT</h2>
                         <p>ChatGPT-appen kör inte lokala MCP-servrar på samma sätt som Claude Desktop. MCP stöds istället via OpenAIs API (Responses API/Agents SDK) eller via ChatGPTs Connectors (Team/Enterprise-planer), och kräver då en <strong>remote</strong> MCP-adress:</p>
+                        <figure class="article-figure">
+                            <img src="docs/bilder/mcp-openai-setup.png" alt="ChatGPTs dialog 'Ny app' med Server-URL ifylld till https://mcp.promptbanken.se/mcp, Autentisering satt till Åtkomsttoken/API-nyckel och Sidhuvudsschema satt till Bearer-token.">
+                            <figcaption>Så här ser det ut när du lägger till Promptbanken som en anpassad connector i ChatGPT: klistra in serveradressen, välj "Åtkomsttoken/API-nyckel" som autentisering och "Bearer-token" som sidhuvudsschema, och klistra sedan in din MCP-nyckel.</figcaption>
+                        </figure>
                         <pre><code>{
   "type": "mcp",
   "server_label": "promptbanken",

@@ -57,6 +57,9 @@
         const ADVANCED_MODE_KEY = 'advancedModeEnabled';
         const FAVORITES_MODE_KEY = 'favoritesModeEnabled';
         const LOCAL_CHAT_MODE_KEY = 'localChatEnabled';
+        // Under utveckling -- funktionen ligger kvar men visas inte förrän
+        // den är redo. Sätt till true för att slå på igen.
+        const LOCAL_CHAT_FEATURE_ENABLED = false;
         let advancedModeEnabled = false;
         let favoritesModeEnabled = false;
         let localChatEnabled = false;
@@ -626,7 +629,7 @@
         }
 
         function initLocalChatToggle() {
-            setLocalChatMode(loadLocalChatMode());
+            setLocalChatMode(LOCAL_CHAT_FEATURE_ENABLED && loadLocalChatMode());
             if (localChatToggleInput) {
                 localChatToggleInput.addEventListener('change', (event) => {
                     setLocalChatMode(Boolean(event.target.checked));

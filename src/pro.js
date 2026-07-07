@@ -78,7 +78,7 @@ function createCard(template) {
         <span class="card-kicker">${escapeHtml(template.area_label)}</span>
         <h3>${escapeHtml(template.title)}</h3>
       </div>
-      ${!template.is_unlocked ? '<span class="pro-lock-badge" title="Kräver Pro">🔒</span>' : ''}
+      ${!template.is_unlocked ? '<span class="pro-lock-badge app-icon" aria-hidden="true" data-icon="lock" title="Kräver Pro"></span>' : ''}
     </div>
     <p>${escapeHtml(template.syfte)}</p>
     <div class="card-tags">

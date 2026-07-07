@@ -26,7 +26,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="AI-COMPLIANCE.md">Om Promptbanken</a>
+                <a href="about.html">Om Promptbanken</a>
                 <a href="GDPR-POLICY.md">Dataskydd</a>
                 <a href="privacy.html">Integritetspolicy</a>
                 <a href="terms.html">Användarvillkor</a>
@@ -36,7 +36,7 @@
         <div class="app-main">
             <header class="topbar">
                 <a class="help-btn" href="index.html">Tillbaka till prompter</a>
-                <a class="help-btn" href="login.html">Logga in / skapa konto</a>
+                <a class="help-btn" href="login.html" id="auth-nav-link"><span class="app-icon" aria-hidden="true" data-icon="user"></span><span id="auth-nav-label">Logga in / skapa konto</span></a>
                 <div class="info-class">
                     <span class="shield" aria-hidden="true">◇</span>
                     <span><small>Informationsklass</small><strong><span class="status-dot"></span>Öppen</strong></span>
@@ -144,11 +144,24 @@
 
                     <section>
                         <h2>MCP och API-nycklar</h2>
-                        <p>MCP-nycklar och API-nycklar används för att koppla Promptbanken till AI-klienter, agenter och egna integrationer. Läs mer på <a href="mcp.html">MCP och användning</a>. Nyckelbaserad åtkomst mot den hostade servern byggs löpande – idag fungerar nycklar fullt ut mot en lokal MCP-server.</p>
+                        <p>MCP-nycklar och API-nycklar används för att koppla Promptbanken till AI-klienter, agenter och egna integrationer. Läs mer på <a href="mcp.html">MCP och användning</a>.</p>
                     </section>
                 </article>
             </main>
         </div>
     </div>
+    <script type="module">
+      import { supabase, hasSupabaseConfig } from '/src/supabaseClient.js';
+      if (hasSupabaseConfig) {
+        supabase.auth.getSession().then(({ data }) => {
+          const link = document.getElementById('auth-nav-link');
+          const label = document.getElementById('auth-nav-label');
+          if (data?.session && link && label) {
+            link.href = 'admin.html';
+            label.textContent = 'Min workspace';
+          }
+        });
+      }
+    </script>
 </body>
 </html>

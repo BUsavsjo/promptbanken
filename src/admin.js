@@ -1299,9 +1299,11 @@ function syncUpgradeWorkspacesField() {
   if (!upgradeForm) return;
   const plan = upgradeForm.querySelector('select[name="plan"]')?.value;
   const field = document.querySelector('[data-upgrade-workspaces-field]');
-  // Pro och Team har ett fast antal arbetsytor (1 vardera) -- bara
-  // Förvaltning/Kommun kan välja hur många arbetsytor de vill börja med.
-  const fixedWorkspaces = plan === 'pro' || plan === 'start';
+  // Pro har ett fast antal arbetsytor (1) -- Delad arbetsyta, Förvaltning
+  // och Kommun kan alla välja hur många arbetsytor de vill börja med.
+  // TODO: sätt ett per-plan max på input[name="workspaces"] när en verklig
+  // gräns är beslutad -- idag går det att skriva in ett godtyckligt antal.
+  const fixedWorkspaces = plan === 'pro';
   if (field) {
     field.hidden = fixedWorkspaces;
     if (fixedWorkspaces) {

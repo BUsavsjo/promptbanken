@@ -4634,7 +4634,20 @@ body.detail-panel-closed .prompt-detail-panel {
     margin-block: 1.5rem;
 }
 
-.plan-info-grid {
+/* Din plan: two-world identity. Personal (amber, matches the Pro badge)
+   vs organization (blue, matches the org plan badge) -- a visual echo of
+   the hard MCP-scope boundary between personal and org/license worlds. */
+.plan-panel {
+    margin-block: 1.5rem;
+    padding-left: 1.1rem;
+    border-left: 3px solid #e5c78a;
+}
+
+.plan-panel[data-plan-world="organization"] {
+    border-left-color: #6ba4dd;
+}
+
+.plan-panel-head {
     display: flex;
     gap: 2rem;
     align-items: flex-start;
@@ -4712,6 +4725,110 @@ body.detail-panel-closed .prompt-detail-panel {
 
 .plan-locked-note.is-error {
     color: #b42318;
+}
+
+/* Förbrukningsmätare: hur mycket av tilldelningen är använd. */
+.plan-meters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.plan-meter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.plan-meter-label {
+    font-size: 0.82rem;
+    color: #475467;
+}
+
+.plan-meter-value {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #10233d;
+}
+
+.plan-meter-track {
+    height: 6px;
+    border-radius: 999px;
+    background: #eef1f4;
+    overflow: hidden;
+}
+
+.plan-meter-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #15803d;
+}
+
+.plan-meter.is-at-limit .plan-meter-value {
+    color: #b42318;
+}
+
+.plan-meter.is-at-limit .plan-meter-fill {
+    background: #b42318;
+}
+
+/* Nästa steg: kontextuella kort istället för en dropdown som blandar
+   personlig värld och organisationsvärld i samma lista. */
+.plan-next-steps-wrap {
+    margin-top: 1.5rem;
+}
+
+.plan-next-steps-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #667085;
+    margin: 0 0 0.75rem;
+}
+
+.plan-next-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.plan-next-tile {
+    padding: 1rem 1.1rem;
+    border: 1px solid #dfe6ee;
+    border-radius: 12px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.plan-next-tile--primary {
+    border-color: #c9dcff;
+    background: #f2f7ff;
+}
+
+.plan-next-tile-name {
+    font-weight: 700;
+    color: #10233d;
+    margin: 0;
+}
+
+.plan-next-tile-price {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.88rem;
+    color: #0f5ea8;
+    margin: 0;
+}
+
+.plan-next-tile-blurb {
+    font-size: 0.82rem;
+    color: #667085;
+    margin: 0 0 0.35rem;
+    flex-grow: 1;
 }
 
 .upgrade-price-box {

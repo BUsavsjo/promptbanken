@@ -371,6 +371,9 @@ function renderPlanInfo() {
   const featureList = document.querySelector('[data-plan-feature-list]');
   const maxP = maxPrompts();
 
+  const panel = document.querySelector('.plan-panel');
+  if (panel) panel.dataset.planWorld = isOrg ? 'organization' : 'personal';
+
   if (badge) {
     badge.textContent = planNameLabels[plan] ?? plan;
     badge.dataset.plan = plan;
@@ -384,6 +387,8 @@ function renderPlanInfo() {
   renderPlanExpiry();
   renderUpgradeSection(plan);
   renderPlanLimitsSummary();
+  renderPlanMeters();
+  renderPlanNextSteps();
 
   const features = isOrg
     ? [
@@ -397,7 +402,7 @@ function renderPlanInfo() {
         { label: `${maxP} egna mallar`, ok: true },
         { label: 'MCP-nyckel (egna + publika prompts)', ok: mcpEnabled() },
         { label: 'API-nycklar för externa integrationer', ok: apiEnabled() },
-        { label: '42 premium-mallar (Pro-biblioteket)', ok: isPlanPro() }
+        { label: 'Premium-mallar (Pro-biblioteket)', ok: isPlanPro() }
       ];
 
   if (featureList) {
@@ -580,6 +585,99 @@ function renderAdminMetrics() {
   setText('[data-admin-stat="review"]', review);
   setText('[data-admin-stat="drafts"]', drafts);
   setText('[data-admin-stat="members"]', state.members.length);
+  renderPlanMeters();
+}
+
+function renderPlanMeters() {
+  const container = document.querySelector('[data-plan-meters]');
+  if (!container || !state.workspace) return;
+
+  const isOrg = state.workspace.type === 'organization';
+  const promptLimit = maxPrompts();
+  const isOrgLicense = isOrg && state.planUsage?.has_license;
+  const promptsUsed = isOrgLicense
+    ? (state.planUsage?.used_prompts ?? 0)
+    : state.prompts.filter((item) => (
+        (item.owner_user_id === state.user?.id || item.created_by === state.user?.id) && item.status !== 'archived'
+      )).length;
+
+  const keyLimit = mcpKeyLimit();
+  const keysUsed = state.mcpKeys.filter((key) => !key.revoked_at).length;
+
+  const meters = [
+    { label: isOrg ? 'Delade mallar' : 'Egna mallar', used: promptsUsed, max: promptLimit },
+    { label: 'MCP-nycklar', used: keysUsed, max: keyLimit }
+  ];
+
+  if (isOrg && state.planUsage?.max_members) {
+    meters.push({ label: 'Medlemmar', used: state.members.length, max: state.planUsage.max_members });
+  }
+
+  container.innerHTML = meters.map(({ label, used, max }) => {
+    const pct = max ? Math.min(100, Math.round((used / max) * 100)) : 0;
+    const atLimit = Boolean(max) && used >= max;
+    return `
+      <div class="plan-meter${atLimit ? ' is-at-limit' : ''}">
+        <div class="plan-meter-row">
+          <span class="plan-meter-label">${escapeHtml(label)}</span>
+          <span class="plan-meter-value">${used} / ${max ?? '—'}</span>
+        </div>
+        <div class="plan-meter-track"><div class="plan-meter-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+const nextStepsByPlan = {
+  free: ['pro'],
+  pro: ['start', 'plus'],
+  start: ['plus'],
+  plus: ['enterprise'],
+  enterprise: []
+};
+
+const planNextStepBlurbs = {
+  pro: 'Hela premiumbiblioteket, 100 egna mallar, 3 MCP-nycklar.',
+  start: 'Dela mallar i en gemensam yta. Upp till 5 Pro-användare.',
+  plus: 'Flera arbetsytor under en gemensam licens, upp till 50 medlemmar.',
+  enterprise: 'Central styrning för hela kommunen, 250+ medlemmar.'
+};
+
+function renderPlanNextSteps() {
+  const container = document.querySelector('[data-plan-next-steps]');
+  if (!container || !state.workspace) return;
+
+  const plan = state.workspace.plan ?? 'free';
+  const steps = nextStepsByPlan[plan] || [];
+
+  if (!steps.length) {
+    container.innerHTML = '<p class="plan-locked-note">Ni har redan högsta nivån (Kommun).</p>';
+    return;
+  }
+
+  container.innerHTML = steps.map((stepPlan, index) => {
+    const pricing = planPricing[stepPlan];
+    const selfService = planIsSelfService(stepPlan);
+    return `
+      <article class="plan-next-tile${index === 0 ? ' plan-next-tile--primary' : ''}">
+        <p class="plan-next-tile-name">${escapeHtml(upgradePlanLabels[stepPlan] || stepPlan)}</p>
+        <p class="plan-next-tile-price">${escapeHtml(pricing?.amount || '—')}</p>
+        <p class="plan-next-tile-blurb">${escapeHtml(planNextStepBlurbs[stepPlan] || '')}</p>
+        <button type="button" class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" data-select-plan="${stepPlan}">
+          ${selfService ? 'Lägg till' : 'Kontakta oss'}
+        </button>
+      </article>
+    `;
+  }).join('');
+}
+
+function selectUpgradePlan(plan) {
+  if (!upgradeForm) return;
+  const select = upgradeForm.querySelector('select[name="plan"]');
+  if (select) select.value = plan;
+  syncUpgradeWorkspacesField();
+  document.getElementById('uppgradera')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  upgradeForm.querySelector('input[name="company_name"]')?.focus();
 }
 
 async function ensurePersonalWorkspace() {
@@ -1964,6 +2062,12 @@ if (upgradeForm) {
   });
   syncUpgradeWorkspacesField();
 }
+
+document.querySelector('[data-plan-next-steps]')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-select-plan]');
+  if (!button) return;
+  selectUpgradePlan(button.dataset.selectPlan);
+});
 
 const renameWorkspaceForm = document.querySelector('[data-rename-workspace-form]');
 const toggleRenameButton = document.querySelector('[data-toggle-rename-workspace]');

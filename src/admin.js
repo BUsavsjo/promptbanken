@@ -39,6 +39,8 @@ const state = {
   expandedOrderId: null,
   workspacesList: [],
   expandedWorkspaceId: null,
+  expandedInviteWorkspaceId: null,
+  workspaceInviteStatus: {},
   formIsDirty: false,
   planUsage: null
 };
@@ -1127,7 +1129,10 @@ function renderWorkspaces() {
     return;
   }
 
-  list.innerHTML = state.workspacesList.map((w) => `
+  list.innerHTML = state.workspacesList.map((w) => {
+    const canInvite = w.type === 'organization' && isAdminRole(w.myRole);
+    const inviteStatus = state.workspaceInviteStatus[w.id];
+    return `
       <article class="mp-template">
         <div>
           <h3>${escapeHtml(w.name)}</h3>
@@ -1138,6 +1143,7 @@ function renderWorkspaces() {
             ? `<button type="button" data-switch-workspace="${w.id}">Byt till</button>`
             : '<span class="order-status-chip" data-status="paid">Aktiv yta</span>'}
           <button type="button" data-quick-create-toggle="${w.id}">${state.expandedWorkspaceId === w.id ? 'Stäng' : '+ Snabb prompt'}</button>
+          ${canInvite ? `<button type="button" data-invite-toggle="${w.id}">${state.expandedInviteWorkspaceId === w.id ? 'Stäng' : '+ Bjud in kollega'}</button>` : ''}
         </div>
       </article>
       ${state.expandedWorkspaceId === w.id ? `
@@ -1160,7 +1166,28 @@ function renderWorkspaces() {
           </div>
         </form>
       </div>` : ''}
-    `).join('');
+      ${canInvite && state.expandedInviteWorkspaceId === w.id ? `
+      <div class="mp-quick-create">
+        <form class="workspace-form compact" data-workspace-invite-form data-workspace-id="${w.id}">
+          <label>E-post
+            <input type="email" name="email" required placeholder="kollega@exempel.se">
+          </label>
+          <label>Roll
+            <select name="role">
+              <option value="editor">Redigerare</option>
+              <option value="viewer">Läsare</option>
+              <option value="workspace_admin">Administratör</option>
+            </select>
+          </label>
+          <div class="workspace-form-actions">
+            <button type="submit">Bjud in till ${escapeHtml(w.name)}</button>
+          </div>
+        </form>
+        <p class="mp-hint">Personen måste redan ha ett Promptbanken-konto${w.type === 'organization' && w.plan === 'start' ? ' och en egen aktiv Pro-plan' : ''}.</p>
+        ${inviteStatus ? `<p class="mp-hint${inviteStatus.isError ? ' is-error' : ''}">${escapeHtml(inviteStatus.message)}</p>` : ''}
+      </div>` : ''}
+    `;
+  }).join('');
 }
 
 async function submitQuickCreatePrompt(event) {
@@ -1280,6 +1307,44 @@ async function inviteOrgMember(event) {
   inviteMemberForm.reset();
   setStatus(`${email} har lagts till i workspacet.`);
   await loadMembers();
+}
+
+// Samma invite_org_member-RPC som inviteOrgMember, men riktad mot en
+// specifik arbetsyta i Arbetsytor-listan istället för den just nu
+// aktiva ytan -- så man slipper byta yta först för att bjuda in någon
+// till en annan yta man administrerar.
+async function submitWorkspaceInvite(event) {
+  event.preventDefault();
+  const form = event.target;
+  const workspaceId = form.dataset.workspaceId;
+  const formData = new FormData(form);
+  const email = formData.get('email')?.toString().trim();
+  const role = formData.get('role')?.toString() || 'editor';
+
+  if (!email) {
+    state.workspaceInviteStatus[workspaceId] = { message: 'E-post krävs.', isError: true };
+    renderWorkspaces();
+    return;
+  }
+
+  const { error } = await supabase.rpc('invite_org_member', {
+    p_workspace_id: workspaceId,
+    p_email: email,
+    p_role: role
+  });
+
+  if (error) {
+    state.workspaceInviteStatus[workspaceId] = { message: error.message || 'Kunde inte bjuda in medlem.', isError: true };
+    renderWorkspaces();
+    return;
+  }
+
+  state.workspaceInviteStatus[workspaceId] = { message: `${email} har lagts till.`, isError: false };
+  renderWorkspaces();
+
+  if (workspaceId === state.workspace.id) {
+    await loadMembers();
+  }
 }
 
 async function generateJoinCode() {
@@ -2290,6 +2355,9 @@ document.addEventListener('submit', (event) => {
   if (event.target.matches('[data-quick-create-form]')) {
     submitQuickCreatePrompt(event);
   }
+  if (event.target.matches('[data-workspace-invite-form]')) {
+    submitWorkspaceInvite(event);
+  }
 });
 
 document.addEventListener('click', (event) => {
@@ -2309,6 +2377,7 @@ document.addEventListener('click', (event) => {
   const downgradeOrderButton = event.target.closest('[data-downgrade-order]');
   const switchWorkspaceButton = event.target.closest('[data-switch-workspace]');
   const quickCreateToggleButton = event.target.closest('[data-quick-create-toggle]');
+  const inviteToggleButton = event.target.closest('[data-invite-toggle]');
   const copySecretButton = event.target.closest('[data-copy-secret]');
 
   if (publishButton) {
@@ -2418,6 +2487,12 @@ document.addEventListener('click', (event) => {
   if (quickCreateToggleButton) {
     const workspaceId = quickCreateToggleButton.dataset.quickCreateToggle;
     state.expandedWorkspaceId = state.expandedWorkspaceId === workspaceId ? null : workspaceId;
+    renderWorkspaces();
+  }
+
+  if (inviteToggleButton) {
+    const workspaceId = inviteToggleButton.dataset.inviteToggle;
+    state.expandedInviteWorkspaceId = state.expandedInviteWorkspaceId === workspaceId ? null : workspaceId;
     renderWorkspaces();
   }
 

@@ -304,6 +304,18 @@ function renderPlanLimitsSummary() {
   }
 }
 
+function updateOrgOnlyVisibility() {
+  // Visa [data-org-only] (t.ex. "Arbetsytor"-fliken) även när man tittar på
+  // en personlig yta men är medlem i fler än en arbetsyta -- annars finns
+  // ingen väg att växla till t.ex. en delad arbetsyta man gått med i efter
+  // en omladdning som lagt en tillbaka på den personliga ytan.
+  document.querySelectorAll('[data-org-only]').forEach((element) => {
+    element.hidden = state.workspace.type !== 'organization'
+      && !isPlatformOwner()
+      && state.workspacesList.length <= 1;
+  });
+}
+
 function renderCapabilityState() {
   document.querySelectorAll('[data-can-edit]').forEach((element) => {
     element.hidden = !canEdit(state.profile.role);
@@ -312,9 +324,7 @@ function renderCapabilityState() {
     element.hidden = !isAdminRole(state.profile.role);
   });
 
-  document.querySelectorAll('[data-org-only]').forEach((element) => {
-    element.hidden = state.workspace.type !== 'organization' && !isPlatformOwner();
-  });
+  updateOrgOnlyVisibility();
 
   document.querySelectorAll('[data-platform-only]').forEach((element) => {
     element.hidden = !isPlatformOwner();
@@ -1039,7 +1049,16 @@ async function loadWorkspaces() {
   const list = document.querySelector('[data-workspaces-list]');
   if (!list) return;
 
-  if (state.workspace?.type !== 'organization' && !isPlatformOwner()) {
+  const { data: myProfiles } = await supabase
+    .from('profiles')
+    .select('workspace_id, role')
+    .eq('user_id', state.user.id);
+
+  const roleByWorkspace = new Map((myProfiles || []).map((p) => [p.workspace_id, p.role]));
+  const myWorkspaceIds = (myProfiles || []).map((p) => p.workspace_id);
+
+  // Bara en yta och ingen organisationskontext: ingen switcher att visa.
+  if (state.workspace?.type !== 'organization' && !isPlatformOwner() && myWorkspaceIds.length <= 1) {
     state.workspacesList = [];
     renderWorkspaces();
     return;
@@ -1052,7 +1071,12 @@ async function loadWorkspaces() {
   } else if (state.workspace?.license_id) {
     query = query.eq('license_id', state.workspace.license_id);
   } else {
-    query = query.eq('id', state.workspace.id);
+    // Ingen delad licens: visa alla arbetsytor användaren själv är medlem
+    // i (t.ex. personlig Pro-yta + en delad arbetsyta), inte bara den just
+    // nu visade ytan -- annars finns ingen väg tillbaka till t.ex. sin
+    // personliga yta och dess egna MCP-nycklar efter att ha skapat eller
+    // gått med i en delad arbetsyta.
+    query = query.in('id', myWorkspaceIds.length ? myWorkspaceIds : [state.workspace.id]);
   }
 
   const { data, error } = await query.order('name', { ascending: true });
@@ -1061,26 +1085,23 @@ async function loadWorkspaces() {
     return;
   }
 
-  const { data: myProfiles } = await supabase
-    .from('profiles')
-    .select('workspace_id, role')
-    .eq('user_id', state.user.id);
-
-  const roleByWorkspace = new Map((myProfiles || []).map((p) => [p.workspace_id, p.role]));
-
   state.workspacesList = (data || []).map((w) => ({ ...w, myRole: roleByWorkspace.get(w.id) || null }));
 
   const scopeNote = document.querySelector('[data-workspaces-scope-note]');
   if (scopeNote) {
     scopeNote.textContent = isPlatformOwner()
       ? 'Alla arbetsytor i systemet (plattformsadmin-vy).'
-      : 'Arbetsytorna under er licens.';
+      : state.workspace?.license_id
+        ? 'Arbetsytorna under er licens.'
+        : 'Dina arbetsytor.';
   }
 
   renderWorkspaces();
 }
 
 function renderWorkspaces() {
+  updateOrgOnlyVisibility();
+
   const list = document.querySelector('[data-workspaces-list]');
   if (!list) return;
 

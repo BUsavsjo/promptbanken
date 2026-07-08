@@ -1131,6 +1131,7 @@ function renderWorkspaces() {
 
   list.innerHTML = state.workspacesList.map((w) => {
     const canInvite = w.type === 'organization' && isAdminRole(w.myRole);
+    const canDelete = w.type === 'organization' && w.myRole === 'workspace_owner';
     const inviteStatus = state.workspaceInviteStatus[w.id];
     return `
       <article class="mp-template">
@@ -1144,6 +1145,7 @@ function renderWorkspaces() {
             : '<span class="order-status-chip" data-status="paid">Aktiv yta</span>'}
           <button type="button" data-quick-create-toggle="${w.id}">${state.expandedWorkspaceId === w.id ? 'Stäng' : '+ Snabb prompt'}</button>
           ${canInvite ? `<button type="button" data-invite-toggle="${w.id}">${state.expandedInviteWorkspaceId === w.id ? 'Stäng' : '+ Bjud in kollega'}</button>` : ''}
+          ${canDelete ? `<button type="button" class="danger-btn" data-delete-workspace="${w.id}" data-delete-workspace-name="${escapeHtml(w.name)}">Radera arbetsyta</button>` : ''}
         </div>
       </article>
       ${state.expandedWorkspaceId === w.id ? `
@@ -1345,6 +1347,49 @@ async function submitWorkspaceInvite(event) {
   if (workspaceId === state.workspace.id) {
     await loadMembers();
   }
+}
+
+// Raderar en arbetsyta permanent (organisationsytor bara, ägare/platform_owner
+// bara -- se delete_workspace-RPC:n). content_items/profiles/api_keys/
+// org_join_codes/shared_workspace_addons cascadas bort automatiskt via
+// workspace_id-foreign keys i schemat.
+async function deleteWorkspaceFromList(workspaceId, workspaceName) {
+  const { count } = await supabase
+    .from('content_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', workspaceId)
+    .eq('type', 'prompt')
+    .neq('status', 'archived');
+
+  const promptWarning = count
+    ? `Arbetsytan innehåller ${count} sparad${count === 1 ? '' : 'e'} prompt${count === 1 ? '' : 'ar'} som tas bort permanent tillsammans med ytan. `
+    : '';
+
+  const confirmed = window.confirm(
+    `Radera arbetsytan "${workspaceName}" permanent? ${promptWarning}` +
+    'Alla medlemmar, nycklar och delade mallar i arbetsytan tas bort och går inte att återfå.'
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } = await supabase.rpc('delete_workspace', { p_workspace_id: workspaceId });
+  if (error) {
+    setStatus(error.message || 'Kunde inte radera arbetsytan.', true);
+    return;
+  }
+
+  setStatus(`"${workspaceName}" raderades.`);
+
+  if (workspaceId === state.workspace.id) {
+    // Vi raderade ytan vi just nu står i -- ladda om för att landa på en
+    // yta som fortfarande finns (loadProfile väljer äldsta kvarvarande profil).
+    window.location.reload();
+    return;
+  }
+
+  state.workspacesList = state.workspacesList.filter((w) => w.id !== workspaceId);
+  renderWorkspaces();
 }
 
 async function generateJoinCode() {
@@ -2378,6 +2423,7 @@ document.addEventListener('click', (event) => {
   const switchWorkspaceButton = event.target.closest('[data-switch-workspace]');
   const quickCreateToggleButton = event.target.closest('[data-quick-create-toggle]');
   const inviteToggleButton = event.target.closest('[data-invite-toggle]');
+  const deleteWorkspaceButton = event.target.closest('[data-delete-workspace]');
   const copySecretButton = event.target.closest('[data-copy-secret]');
 
   if (publishButton) {
@@ -2494,6 +2540,15 @@ document.addEventListener('click', (event) => {
     const workspaceId = inviteToggleButton.dataset.inviteToggle;
     state.expandedInviteWorkspaceId = state.expandedInviteWorkspaceId === workspaceId ? null : workspaceId;
     renderWorkspaces();
+  }
+
+  if (deleteWorkspaceButton) {
+    deleteWorkspaceFromList(
+      deleteWorkspaceButton.dataset.deleteWorkspace,
+      deleteWorkspaceButton.dataset.deleteWorkspaceName
+    ).catch((error) => {
+      setStatus(error.message || 'Kunde inte radera arbetsytan.', true);
+    });
   }
 
   if (copySecretButton) {

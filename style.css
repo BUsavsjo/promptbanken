@@ -2272,7 +2272,7 @@ body.local-chat-enabled .card-actions .local-chat-btn {
     background: #fecaca;
 }
 
-.workspace-section button:not(.integration-tab),
+.workspace-section button:not(.integration-tab):not(.danger-btn),
 .workspace-form button,
 .workspace-table button {
     border: 0;

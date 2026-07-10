@@ -188,6 +188,38 @@ function setStatus(message, isError = false) {
   statusElement.classList.toggle('is-error', isError);
 }
 
+const RAW_DB_ERROR_PATTERNS = [
+  'row-level security',
+  'permission denied',
+  'violates foreign key constraint',
+  'violates unique constraint',
+  'violates check constraint',
+  'duplicate key value',
+  'jwt',
+  'pgrst',
+  'failed to fetch',
+  'networkerror',
+  'relation "',
+  'column "'
+];
+
+function isRawDatabaseError(message) {
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  return RAW_DB_ERROR_PATTERNS.some((pattern) => lower.includes(pattern));
+}
+
+function getErrorMessage(error, fallbackMessage) {
+  const raw = error?.message || '';
+  if (!raw) return fallbackMessage;
+  return isRawDatabaseError(raw) ? fallbackMessage : raw;
+}
+
+function setErrorStatus(error, fallbackMessage, statusFn = setStatus) {
+  statusFn(getErrorMessage(error, fallbackMessage), true);
+}
+
+
 function setText(selector, value) {
   const text = value === undefined || value === null || value === '' ? '-' : value;
   document.querySelectorAll(selector).forEach((element) => {
@@ -931,7 +963,7 @@ async function createMcpKey(event) {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte skapa MCP-nyckel.', true);
+    setErrorStatus(error, 'Kunde inte skapa MCP-nyckel.');
     return;
   }
 
@@ -949,7 +981,7 @@ async function revokeMcpKey(keyId) {
     .eq('workspace_id', state.workspace.id);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte återkalla MCP-nyckel.', true);
+    setErrorStatus(error, 'Kunde inte återkalla MCP-nyckel.');
     return;
   }
 
@@ -1083,7 +1115,7 @@ async function loadWorkspaces() {
 
   const { data, error } = await query.order('name', { ascending: true });
   if (error) {
-    setStatus(error.message || 'Kunde inte ladda arbetsytor.', true);
+    setErrorStatus(error, 'Kunde inte ladda arbetsytor.');
     return;
   }
 
@@ -1218,7 +1250,7 @@ async function submitQuickCreatePrompt(event) {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte skapa prompten.', true);
+    setErrorStatus(error, 'Kunde inte skapa prompten.');
     return;
   }
 
@@ -1302,7 +1334,7 @@ async function inviteOrgMember(event) {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte bjuda in medlem.', true);
+    setErrorStatus(error, 'Kunde inte bjuda in medlem.');
     return;
   }
 
@@ -1336,7 +1368,7 @@ async function submitWorkspaceInvite(event) {
   });
 
   if (error) {
-    state.workspaceInviteStatus[workspaceId] = { message: error.message || 'Kunde inte bjuda in medlem.', isError: true };
+    state.workspaceInviteStatus[workspaceId] = { message: getErrorMessage(error, 'Kunde inte bjuda in medlem.'), isError: true };
     renderWorkspaces();
     return;
   }
@@ -1375,7 +1407,7 @@ async function deleteWorkspaceFromList(workspaceId, workspaceName) {
 
   const { error } = await supabase.rpc('delete_workspace', { p_workspace_id: workspaceId });
   if (error) {
-    setStatus(error.message || 'Kunde inte radera arbetsytan.', true);
+    setErrorStatus(error, 'Kunde inte radera arbetsytan.');
     return;
   }
 
@@ -1408,7 +1440,7 @@ async function generateJoinCode() {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte skapa join-länk.', true);
+    setErrorStatus(error, 'Kunde inte skapa join-länk.');
     return;
   }
 
@@ -1430,7 +1462,7 @@ async function revokeJoinCode(codeId) {
     .eq('workspace_id', state.workspace.id);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte återkalla join-länken.', true);
+    setErrorStatus(error, 'Kunde inte återkalla join-länken.');
     return;
   }
 
@@ -1628,7 +1660,7 @@ async function confirmUpgradeOrder() {
   });
 
   if (error) {
-    setUpgradeStatus(error.message || 'Kunde inte skapa beställningen.', true);
+    setErrorStatus(error, 'Kunde inte skapa beställningen.', setUpgradeStatus);
     return;
   }
 
@@ -1671,7 +1703,7 @@ async function renameWorkspace(event) {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte byta namn.', true);
+    setErrorStatus(error, 'Kunde inte byta namn.');
     return;
   }
 
@@ -1816,7 +1848,7 @@ async function savePromptUnsafe() {
       });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte spara prompt.', true);
+    setErrorStatus(error, 'Kunde inte spara prompt.');
     return;
   }
 
@@ -1874,7 +1906,7 @@ async function deletePrompt(promptId) {
     .eq('workspace_id', state.workspace.id);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte ta bort prompt.', true);
+    setErrorStatus(error, 'Kunde inte ta bort prompt.');
     return;
   }
 
@@ -1899,7 +1931,7 @@ async function unpublishPrompt(promptId) {
     .eq('workspace_id', state.workspace.id);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte avpublicera prompt.', true);
+    setErrorStatus(error, 'Kunde inte avpublicera prompt.');
     return;
   }
 
@@ -1920,7 +1952,7 @@ async function publishPrompt(promptId) {
     .eq('workspace_id', state.workspace.id);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte publicera prompt.', true);
+    setErrorStatus(error, 'Kunde inte publicera prompt.');
     return;
   }
 
@@ -1969,7 +2001,7 @@ async function createApiKey(event) {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte skapa API-nyckel.', true);
+    setErrorStatus(error, 'Kunde inte skapa API-nyckel.');
     return;
   }
 
@@ -2023,7 +2055,7 @@ async function markOrderInvoiced(orderId) {
     .eq('id', orderId);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte markera som fakturerad.', true);
+    setErrorStatus(error, 'Kunde inte markera som fakturerad.');
     return;
   }
 
@@ -2038,7 +2070,7 @@ async function markOrderPaid(orderId) {
     .eq('id', orderId);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte markera som betald.', true);
+    setErrorStatus(error, 'Kunde inte markera som betald.');
     return;
   }
 
@@ -2050,7 +2082,7 @@ async function activateProOrder(orderId) {
   const { error } = await supabase.rpc('admin_activate_pro_order', { p_order_id: orderId });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte aktivera beställningen.', true);
+    setErrorStatus(error, 'Kunde inte aktivera beställningen.');
     return;
   }
 
@@ -2062,7 +2094,7 @@ async function downgradeProOrder(orderId) {
   const { error } = await supabase.rpc('admin_downgrade_pro_order', { p_order_id: orderId });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte nedgradera beställningen.', true);
+    setErrorStatus(error, 'Kunde inte nedgradera beställningen.');
     return;
   }
 
@@ -2090,7 +2122,7 @@ async function createProInvite(event) {
   });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte skapa inbjudan.', true);
+    setErrorStatus(error, 'Kunde inte skapa inbjudan.');
     return;
   }
 
@@ -2118,7 +2150,7 @@ async function promoteAdmin(event) {
   const { error } = await supabase.rpc('promote_user_to_platform_owner', { p_email: email });
 
   if (error) {
-    setStatus(error.message || 'Kunde inte göra användaren till admin.', true);
+    setErrorStatus(error, 'Kunde inte göra användaren till admin.');
     return;
   }
 
@@ -2149,7 +2181,7 @@ async function deleteAccount() {
   });
 
   if (error) {
-    const message = data?.error || error.message || 'Kunde inte radera kontot.';
+    const message = data?.error || getErrorMessage(error, 'Kunde inte radera kontot.');
     setStatus(message, true);
     return;
   }
@@ -2171,7 +2203,7 @@ async function revokeApiKey(keyId) {
     .eq('workspace_id', state.workspace.id);
 
   if (error) {
-    setStatus(error.message || 'Kunde inte återkalla API-nyckel.', true);
+    setErrorStatus(error, 'Kunde inte återkalla API-nyckel.');
     return;
   }
 
@@ -2183,7 +2215,7 @@ async function logout() {
   setStatus('Loggar ut...');
   const { error } = await supabase.auth.signOut();
   if (error && error.name !== 'AuthSessionMissingError') {
-    setStatus(error.message || 'Kunde inte logga ut.', true);
+    setErrorStatus(error, 'Kunde inte logga ut.');
   }
 
   // signOut() can bail out before clearing the local token (e.g. when it
@@ -2221,7 +2253,7 @@ const workspaceSwitchSelect = document.querySelector('[data-workspace-switch]');
 if (workspaceSwitchSelect) {
   workspaceSwitchSelect.addEventListener('change', () => {
     switchToWorkspace(workspaceSwitchSelect.value).catch((error) => {
-      setStatus(error.message || 'Kunde inte byta arbetsyta.', true);
+      setErrorStatus(error, 'Kunde inte byta arbetsyta.');
     });
   });
 }
@@ -2273,7 +2305,7 @@ if (upgradeForm) {
   upgradeForm.addEventListener('submit', reviewUpgradeOrder);
   upgradeForm.querySelector('select[name="plan"]')?.addEventListener('change', syncUpgradeWorkspacesField);
   document.querySelector('[data-upgrade-confirm]')?.addEventListener('click', () => {
-    confirmUpgradeOrder().catch((error) => setUpgradeStatus(error.message || 'Kunde inte skapa beställningen.', true));
+    confirmUpgradeOrder().catch((error) => setErrorStatus(error, 'Kunde inte skapa beställningen.', setUpgradeStatus));
   });
   document.querySelector('[data-upgrade-cancel]')?.addEventListener('click', () => {
     hideUpgradeConfirm();
@@ -2392,7 +2424,7 @@ if (deleteAccountButton) {
 
 refreshButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    refreshWorkspaceData().catch((error) => setStatus(error.message || 'Kunde inte uppdatera.', true));
+    refreshWorkspaceData().catch((error) => setErrorStatus(error, 'Kunde inte uppdatera.'));
   });
 });
 
@@ -2526,7 +2558,7 @@ document.addEventListener('click', (event) => {
 
   if (switchWorkspaceButton) {
     switchToWorkspace(switchWorkspaceButton.dataset.switchWorkspace).catch((error) => {
-      setStatus(error.message || 'Kunde inte byta arbetsyta.', true);
+      setErrorStatus(error, 'Kunde inte byta arbetsyta.');
     });
   }
 
@@ -2547,7 +2579,7 @@ document.addEventListener('click', (event) => {
       deleteWorkspaceButton.dataset.deleteWorkspace,
       deleteWorkspaceButton.dataset.deleteWorkspaceName
     ).catch((error) => {
-      setStatus(error.message || 'Kunde inte radera arbetsytan.', true);
+      setErrorStatus(error, 'Kunde inte radera arbetsytan.');
     });
   }
 
@@ -2572,5 +2604,5 @@ document.addEventListener('click', (event) => {
 });
 
 init().catch((error) => {
-  setStatus(error.message || 'Kunde inte ladda adminytan.', true);
+  setErrorStatus(error, 'Kunde inte ladda adminytan.');
 });

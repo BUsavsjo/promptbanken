@@ -1022,28 +1022,35 @@ async function testMcpConnection(rawKey) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${rawKey}`
+        'X-MCP-Key': rawKey
       },
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
-        method: 'initialize',
-        params: {
-          protocolVersion: '2024-11-05',
-          capabilities: {},
-          clientInfo: { name: 'promptbanken-admin-test', version: '1.0' }
-        }
+        method: 'tools/call',
+        params: { name: 'list_my_prompts', arguments: {} }
       })
     });
 
-    if (response.ok) {
-      statusEl.textContent = 'Anslutningen fungerar. Nyckeln accepterades av servern.';
-    } else if (response.status === 401 || response.status === 403) {
-      statusEl.textContent = 'Servern avvisade nyckeln (obehörig). Kontrollera att du kopierade hela nyckeln.';
-      statusEl.classList.add('is-error');
-    } else {
+    if (!response.ok) {
       statusEl.textContent = `Servern svarade med ett oväntat fel (status ${response.status}).`;
       statusEl.classList.add('is-error');
+      return;
+    }
+
+    const body = await response.json();
+    const resultText = body?.result?.content?.[0]?.text;
+    const parsed = resultText ? JSON.parse(resultText) : null;
+    const workspaceStatus = parsed?.workspace_status;
+
+    if (workspaceStatus === 'invalid_key' || workspaceStatus === 'no_key') {
+      statusEl.textContent = 'Servern avvisade nyckeln. Kontrollera att du kopierade hela nyckeln.';
+      statusEl.classList.add('is-error');
+    } else if (body?.error) {
+      statusEl.textContent = `Servern svarade med ett oväntat fel (${body.error.message || body.error.code}).`;
+      statusEl.classList.add('is-error');
+    } else {
+      statusEl.textContent = 'Anslutningen fungerar. Nyckeln accepterades av servern.';
     }
   } catch {
     statusEl.textContent = 'Kunde inte nå servern. Kontrollera din internetanslutning och försök igen.';

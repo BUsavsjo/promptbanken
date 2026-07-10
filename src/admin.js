@@ -1010,6 +1010,47 @@ async function createMcpKey(event) {
   await loadMcpKeys();
 }
 
+async function testMcpConnection(rawKey) {
+  const statusEl = document.querySelector('[data-test-mcp-connection-status]');
+  if (!statusEl) return;
+
+  statusEl.textContent = 'Testar anslutning...';
+  statusEl.classList.remove('is-error');
+
+  try {
+    const response = await fetch('https://mcp.promptbanken.se/mcp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${rawKey}`
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'promptbanken-admin-test', version: '1.0' }
+        }
+      })
+    });
+
+    if (response.ok) {
+      statusEl.textContent = 'Anslutningen fungerar. Nyckeln accepterades av servern.';
+    } else if (response.status === 401 || response.status === 403) {
+      statusEl.textContent = 'Servern avvisade nyckeln (obehörig). Kontrollera att du kopierade hela nyckeln.';
+      statusEl.classList.add('is-error');
+    } else {
+      statusEl.textContent = `Servern svarade med ett oväntat fel (status ${response.status}).`;
+      statusEl.classList.add('is-error');
+    }
+  } catch {
+    statusEl.textContent = 'Kunde inte nå servern. Kontrollera din internetanslutning och försök igen.';
+    statusEl.classList.add('is-error');
+  }
+}
+
 async function revokeMcpKey(keyId) {
   const { error } = await supabase
     .from('api_keys')
@@ -2495,6 +2536,7 @@ document.addEventListener('click', (event) => {
   const inviteToggleButton = event.target.closest('[data-invite-toggle]');
   const deleteWorkspaceButton = event.target.closest('[data-delete-workspace]');
   const copySecretButton = event.target.closest('[data-copy-secret]');
+  const testMcpConnectionButton = event.target.closest('[data-test-mcp-connection]');
 
   if (publishButton) {
     publishPrompt(publishButton.dataset.publishPrompt);
@@ -2637,6 +2679,13 @@ document.addEventListener('click', (event) => {
           }, 2000);
         })
         .catch(() => setStatus('Kunde inte kopiera, markera och kopiera manuellt.', true));
+    }
+  }
+
+  if (testMcpConnectionButton) {
+    const rawKey = document.querySelector('[data-new-mcp-key]')?.textContent;
+    if (rawKey) {
+      testMcpConnection(rawKey);
     }
   }
 });

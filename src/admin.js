@@ -1295,6 +1295,9 @@ function renderWorkspaces() {
           <label>Titel
             <input name="title" required minlength="2">
           </label>
+          <label>Kort beskrivning
+            <input name="summary" maxlength="140" placeholder="En rad om vad prompten gör">
+          </label>
           <label>Synlighet
             <select name="visibility">
               <option value="private">Privat</option>
@@ -1339,6 +1342,7 @@ async function submitQuickCreatePrompt(event) {
   const workspaceId = form.dataset.workspaceId;
   const formData = new FormData(form);
   const title = formData.get('title')?.toString().trim();
+  const summary = formData.get('summary')?.toString().trim() || null;
   const content = formData.get('content')?.toString().trim();
   const visibility = formData.get('visibility')?.toString() || 'private';
 
@@ -1352,6 +1356,7 @@ async function submitQuickCreatePrompt(event) {
     type: 'prompt',
     title,
     slug: slugify(title),
+    summary,
     content,
     visibility,
     status: 'draft',

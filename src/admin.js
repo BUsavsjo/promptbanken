@@ -623,7 +623,7 @@ function renderPrompts() {
   const reviewList = document.querySelector('[data-review-prompts]');
   const allOwnPrompts = state.prompts.filter((item) => item.owner_user_id === state.user.id || item.created_by === state.user.id);
   const publishedPrompts = state.prompts.filter((item) => item.status === 'published');
-  const reviewPrompts = state.prompts.filter((item) => item.status !== 'published').slice(0, 6);
+  const reviewPrompts = state.prompts.filter((item) => item.status === 'review').slice(0, 6);
   const ownActivePrompts = allOwnPrompts.filter((item) => item.status !== 'archived').length;
 
   renderPromptCounter(ownActivePrompts);
@@ -701,11 +701,14 @@ function renderPrompts() {
             </div>
             <div class="admin-review-actions">
               <small>${escapeHtml(item.updated_at ? new Date(item.updated_at).toLocaleDateString('sv-SE') : '')}</small>
-              ${isAdminRole(state.profile.role) && item.status !== 'published'
-                ? `<button type="button" data-publish-prompt="${item.id}">Publicera</button>`
+              <button type="button" data-preview-prompt="${item.id}">${state.expandedPromptId === item.id ? 'Dölj' : 'Visa'}</button>
+              ${isAdminRole(state.profile.role)
+                ? `<button type="button" data-publish-prompt="${item.id}">Godkänn &amp; publicera</button>
+                   <button type="button" data-send-back-prompt="${item.id}">Skicka tillbaka</button>`
                 : ''}
             </div>
           </article>
+          ${state.expandedPromptId === item.id ? `<div class="mp-template-preview">${escapeHtml(item.content)}</div>` : ''}
         `).join('')
       : '<p>Inga förslag väntar på granskning.</p>';
   }
@@ -2083,6 +2086,30 @@ async function submitPromptForReview(promptId) {
   await loadPrompts();
 }
 
+async function sendPromptBackToDraft(promptId) {
+  if (!isAdminRole(state.profile.role)) {
+    setStatus('Din roll får inte skicka tillbaka förslag.', true);
+    return;
+  }
+
+  const note = window.prompt('Kommentar till redaktören (valfritt):') || '';
+  const reviewNote = note.trim() || 'Behöver justeras innan publicering.';
+
+  const { error } = await supabase
+    .from('content_items')
+    .update({ status: 'draft', review_note: reviewNote })
+    .eq('id', promptId)
+    .eq('workspace_id', state.workspace.id);
+
+  if (error) {
+    setErrorStatus(error, 'Kunde inte skicka tillbaka prompten.');
+    return;
+  }
+
+  setStatus('Prompten skickades tillbaka till utkast.');
+  await loadPrompts();
+}
+
 async function sha256Hex(value) {
   const data = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest('SHA-256', data);
@@ -2582,6 +2609,7 @@ document.addEventListener('click', (event) => {
   const copySecretButton = event.target.closest('[data-copy-secret]');
   const testMcpConnectionButton = event.target.closest('[data-test-mcp-connection]');
   const submitReviewButton = event.target.closest('[data-submit-review-prompt]');
+  const sendBackButton = event.target.closest('[data-send-back-prompt]');
 
   if (publishButton) {
     publishPrompt(publishButton.dataset.publishPrompt);
@@ -2589,6 +2617,10 @@ document.addEventListener('click', (event) => {
 
   if (submitReviewButton) {
     submitPromptForReview(submitReviewButton.dataset.submitReviewPrompt);
+  }
+
+  if (sendBackButton) {
+    sendPromptBackToDraft(sendBackButton.dataset.sendBackPrompt);
   }
 
   if (unpublishButton) {

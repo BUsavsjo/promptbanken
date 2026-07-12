@@ -200,7 +200,10 @@ const RAW_DB_ERROR_PATTERNS = [
   'failed to fetch',
   'networkerror',
   'relation "',
-  'column "'
+  'column "',
+  'column reference',
+  'is ambiguous',
+  'invalid input syntax'
 ];
 
 function isRawDatabaseError(message) {
@@ -1008,6 +1011,66 @@ async function createMcpKey(event) {
   showSecret('mcp-key', rawKey);
   setStatus('MCP-nyckeln skapades. Kopiera den nu, den visas bara en gång.');
   await loadMcpKeys();
+}
+
+async function testMcpConnection(rawKey) {
+  const statusEl = document.querySelector('[data-test-mcp-connection-status]');
+  if (!statusEl) return;
+
+  statusEl.textContent = 'Testar anslutning...';
+  statusEl.classList.remove('is-error');
+
+  try {
+    const response = await fetch('https://mcp.promptbanken.se/mcp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-MCP-Key': rawKey
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'list_my_prompts', arguments: {} }
+      })
+    });
+
+    if (!response.ok) {
+      statusEl.textContent = `Servern svarade med ett oväntat fel (status ${response.status}).`;
+      statusEl.classList.add('is-error');
+      return;
+    }
+
+    const body = await response.json();
+
+    if (body?.error) {
+      statusEl.textContent = `Servern svarade med ett oväntat fel (${body.error.message || body.error.code}).`;
+      statusEl.classList.add('is-error');
+      return;
+    }
+
+    const resultText = body?.result?.content?.[0]?.text;
+    let parsed = null;
+    try {
+      parsed = resultText ? JSON.parse(resultText) : null;
+    } catch {
+      parsed = null;
+    }
+    const workspaceStatus = parsed?.workspace_status;
+
+    if (workspaceStatus === 'invalid_key' || workspaceStatus === 'no_key') {
+      statusEl.textContent = 'Servern avvisade nyckeln. Kontrollera att du kopierade hela nyckeln.';
+      statusEl.classList.add('is-error');
+    } else if (body?.result?.isError || !parsed || !Array.isArray(parsed.prompts)) {
+      statusEl.textContent = 'Kunde inte tolka svaret från servern. Försök igen om en stund.';
+      statusEl.classList.add('is-error');
+    } else {
+      statusEl.textContent = 'Anslutningen fungerar. Nyckeln accepterades av servern.';
+    }
+  } catch {
+    statusEl.textContent = 'Kunde inte nå servern. Kontrollera din internetanslutning och försök igen.';
+    statusEl.classList.add('is-error');
+  }
 }
 
 async function revokeMcpKey(keyId) {
@@ -2495,6 +2558,7 @@ document.addEventListener('click', (event) => {
   const inviteToggleButton = event.target.closest('[data-invite-toggle]');
   const deleteWorkspaceButton = event.target.closest('[data-delete-workspace]');
   const copySecretButton = event.target.closest('[data-copy-secret]');
+  const testMcpConnectionButton = event.target.closest('[data-test-mcp-connection]');
 
   if (publishButton) {
     publishPrompt(publishButton.dataset.publishPrompt);
@@ -2637,6 +2701,13 @@ document.addEventListener('click', (event) => {
           }, 2000);
         })
         .catch(() => setStatus('Kunde inte kopiera, markera och kopiera manuellt.', true));
+    }
+  }
+
+  if (testMcpConnectionButton) {
+    const rawKey = document.querySelector('[data-new-mcp-key]')?.textContent;
+    if (rawKey) {
+      testMcpConnection(rawKey);
     }
   }
 });

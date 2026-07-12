@@ -1,5 +1,12 @@
 # MCP write: "Spara detta som mall" (save_workspace_prompt)
 
+> **FLYTTAD 2026-07-12.** Målservern ändrades från lokala `promptbanken/mcp-server/` till den
+> **hostade** `mcp_promptbanken`-servern (VPS/Docker, `mcp.promptbanken.se`). Aktuell spec:
+> `mcp_promptbanken/docs/superpowers/specs/2026-07-12-mcp-save-as-template-write-design.md`
+> (RPC-designen i Supabase-migrationen nedan gäller fortfarande — den ligger kvar i det här
+> repot eftersom databasen ägs här — men Kodändringar/verktygslagret pekar fel, se det andra
+> repot för korrekt version).
+
 ## Syfte
 
 Låta en användare i en pågående AI-chatt (Claude, ChatGPT, Copilot eller annan MCP-klient) be modellen "spara det här som en mall" och få en generaliserad, GDPR-kontrollerad prompt sparad i sin egen personliga Pro-arbetsyta i Promptbanken — utan att lämna chatten. Detta är den lokala MCP-serverns (`promptbanken/mcp-server/server/`) första write-funktion; servern har hittills bara varit läsning.

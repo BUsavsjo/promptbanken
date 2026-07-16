@@ -623,7 +623,7 @@ function renderPrompts() {
   const reviewList = document.querySelector('[data-review-prompts]');
   const allOwnPrompts = state.prompts.filter((item) => item.owner_user_id === state.user.id || item.created_by === state.user.id);
   const publishedPrompts = state.prompts.filter((item) => item.status === 'published');
-  const reviewPrompts = state.prompts.filter((item) => item.status !== 'published').slice(0, 6);
+  const reviewPrompts = state.prompts.filter((item) => item.status === 'review').slice(0, 6);
   const ownActivePrompts = allOwnPrompts.filter((item) => item.status !== 'archived').length;
 
   renderPromptCounter(ownActivePrompts);
@@ -643,6 +643,9 @@ function renderPrompts() {
     mineBody.innerHTML = `<div class="mp-empty">Inga prompts matchar "${escapeHtml(state.myPromptsSearch)}".</div>`;
   } else {
     mineBody.innerHTML = ownPrompts.map((item) => `
+        ${item.status === 'draft' && item.review_note
+          ? `<p class="mp-hint is-error">Skickades tillbaka: ${escapeHtml(item.review_note)}</p>`
+          : ''}
         <article class="mp-template">
           <div>
             <h3>${escapeHtml(item.title)}</h3>
@@ -653,8 +656,11 @@ function renderPrompts() {
           <div><span class="mp-pill mp-risk-${escapeHtml(item.risk_level)}">${escapeHtml(riskLabels[item.risk_level] || riskLabels.low)}</span></div>
           <div class="mp-menu">
             <button type="button" data-preview-prompt="${item.id}">${state.expandedPromptId === item.id ? 'Dölj' : 'Visa'}</button>
-            ${item.status !== 'published'
+            ${item.status === 'draft'
               ? `<button type="button" data-edit-prompt="${item.id}">Redigera</button>`
+              : ''}
+            ${item.status === 'draft'
+              ? `<button type="button" data-submit-review-prompt="${item.id}">Skicka för granskning</button>`
               : ''}
             ${isAdminRole(state.profile.role) && item.status !== 'published'
               ? `<button type="button" data-publish-prompt="${item.id}">Publicera</button>`
@@ -695,11 +701,14 @@ function renderPrompts() {
             </div>
             <div class="admin-review-actions">
               <small>${escapeHtml(item.updated_at ? new Date(item.updated_at).toLocaleDateString('sv-SE') : '')}</small>
-              ${isAdminRole(state.profile.role) && item.status !== 'published'
-                ? `<button type="button" data-publish-prompt="${item.id}">Publicera</button>`
+              <button type="button" data-preview-prompt="${item.id}">${state.expandedPromptId === item.id ? 'Dölj' : 'Visa'}</button>
+              ${isAdminRole(state.profile.role)
+                ? `<button type="button" data-publish-prompt="${item.id}">Godkänn &amp; publicera</button>
+                   <button type="button" data-send-back-prompt="${item.id}">Skicka tillbaka</button>`
                 : ''}
             </div>
           </article>
+          ${state.expandedPromptId === item.id ? `<div class="mp-template-preview">${escapeHtml(item.content)}</div>` : ''}
         `).join('')
       : '<p>Inga förslag väntar på granskning.</p>';
   }
@@ -1286,6 +1295,9 @@ function renderWorkspaces() {
           <label>Titel
             <input name="title" required minlength="2">
           </label>
+          <label>Kort beskrivning
+            <input name="summary" maxlength="140" placeholder="En rad om vad prompten gör">
+          </label>
           <label>Synlighet
             <select name="visibility">
               <option value="private">Privat</option>
@@ -1307,12 +1319,13 @@ function renderWorkspaces() {
             <input type="email" name="email" required placeholder="kollega@exempel.se">
           </label>
           <label>Roll
-            <select name="role">
+            <select name="role" data-invite-role-select>
               <option value="editor">Redigerare</option>
               <option value="viewer">Läsare</option>
               <option value="workspace_admin">Administratör</option>
             </select>
           </label>
+          <p class="mp-hint" data-invite-role-hint>${escapeHtml(roleLabels.editor)}</p>
           <div class="workspace-form-actions">
             <button type="submit">Bjud in till ${escapeHtml(w.name)}</button>
           </div>
@@ -1322,6 +1335,14 @@ function renderWorkspaces() {
       </div>` : ''}
     `;
   }).join('');
+
+  list.querySelectorAll('[data-invite-role-select]').forEach((select) => {
+    const hint = select.closest('form')?.querySelector('[data-invite-role-hint]');
+    if (!hint) return;
+    select.addEventListener('change', () => {
+      hint.textContent = roleLabels[select.value] || '';
+    });
+  });
 }
 
 async function submitQuickCreatePrompt(event) {
@@ -1330,6 +1351,7 @@ async function submitQuickCreatePrompt(event) {
   const workspaceId = form.dataset.workspaceId;
   const formData = new FormData(form);
   const title = formData.get('title')?.toString().trim();
+  const summary = formData.get('summary')?.toString().trim() || null;
   const content = formData.get('content')?.toString().trim();
   const visibility = formData.get('visibility')?.toString() || 'private';
 
@@ -1343,6 +1365,7 @@ async function submitQuickCreatePrompt(event) {
     type: 'prompt',
     title,
     slug: slugify(title),
+    summary,
     content,
     visibility,
     status: 'draft',
@@ -1366,7 +1389,7 @@ async function submitQuickCreatePrompt(event) {
 async function loadPrompts() {
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, title, slug, summary, content, status, visibility, category, audience, risk_level, owner_user_id, created_by, published_at, updated_at')
+    .select('id, title, slug, summary, content, status, visibility, category, audience, risk_level, owner_user_id, created_by, published_at, updated_at, review_note')
     .eq('workspace_id', state.workspace.id)
     .order('updated_at', { ascending: false });
 
@@ -2027,7 +2050,7 @@ async function unpublishPrompt(promptId) {
 
   const { error } = await supabase
     .from('content_items')
-    .update({ status: 'draft' })
+    .update({ status: 'draft', review_note: null })
     .eq('id', promptId)
     .eq('workspace_id', state.workspace.id);
 
@@ -2048,7 +2071,7 @@ async function publishPrompt(promptId) {
 
   const { error } = await supabase
     .from('content_items')
-    .update({ status: 'published' })
+    .update({ status: 'published', review_note: null })
     .eq('id', promptId)
     .eq('workspace_id', state.workspace.id);
 
@@ -2058,6 +2081,46 @@ async function publishPrompt(promptId) {
   }
 
   setStatus('Prompten publicerades.');
+  await loadPrompts();
+}
+
+async function submitPromptForReview(promptId) {
+  const { error } = await supabase
+    .from('content_items')
+    .update({ status: 'review', review_note: null })
+    .eq('id', promptId)
+    .eq('workspace_id', state.workspace.id);
+
+  if (error) {
+    setErrorStatus(error, 'Kunde inte skicka prompten för granskning.');
+    return;
+  }
+
+  setStatus('Prompten skickades för granskning.');
+  await loadPrompts();
+}
+
+async function sendPromptBackToDraft(promptId) {
+  if (!isAdminRole(state.profile.role)) {
+    setStatus('Din roll får inte skicka tillbaka förslag.', true);
+    return;
+  }
+
+  const note = window.prompt('Kommentar till redaktören (valfritt):') || '';
+  const reviewNote = note.trim() || 'Behöver justeras innan publicering.';
+
+  const { error } = await supabase
+    .from('content_items')
+    .update({ status: 'draft', review_note: reviewNote })
+    .eq('id', promptId)
+    .eq('workspace_id', state.workspace.id);
+
+  if (error) {
+    setErrorStatus(error, 'Kunde inte skicka tillbaka prompten.');
+    return;
+  }
+
+  setStatus('Prompten skickades tillbaka till utkast.');
   await loadPrompts();
 }
 
@@ -2559,9 +2622,19 @@ document.addEventListener('click', (event) => {
   const deleteWorkspaceButton = event.target.closest('[data-delete-workspace]');
   const copySecretButton = event.target.closest('[data-copy-secret]');
   const testMcpConnectionButton = event.target.closest('[data-test-mcp-connection]');
+  const submitReviewButton = event.target.closest('[data-submit-review-prompt]');
+  const sendBackButton = event.target.closest('[data-send-back-prompt]');
 
   if (publishButton) {
     publishPrompt(publishButton.dataset.publishPrompt);
+  }
+
+  if (submitReviewButton) {
+    submitPromptForReview(submitReviewButton.dataset.submitReviewPrompt);
+  }
+
+  if (sendBackButton) {
+    sendPromptBackToDraft(sendBackButton.dataset.sendBackPrompt);
   }
 
   if (unpublishButton) {

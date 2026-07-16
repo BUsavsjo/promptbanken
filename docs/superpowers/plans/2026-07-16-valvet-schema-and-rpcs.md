@@ -35,11 +35,14 @@
 
 ### Task 1: Modul-tagg, låsning, skriv-loggtabell
 
+**⚠️ Reviderad 2026-07-16 efter merge med `origin/main`:** en tidigare, aldrig lokalt pullad session hade redan byggt och applicerat `content_items.idempotency_key`/`content_items.source` och `app_private.mcp_write_attempts` (migrationerna `20260712100000`–`20260712120000`, del av `save_workspace_prompt`-funktionen). Se `docs/superpowers/specs/2026-07-12-mcp-save-as-template-write-design.md` för den fulla bakgrunden. Denna task **ALTER:ar det befintliga**, skapar INTE om det.
+
 **Files:**
 - Create: `supabase/migrations/20260716100000_valvet_module_and_write_log.sql`
 
 **Interfaces:**
-- Produces: kolumn `content_items.module text not null default 'kommun' check (module in ('kommun','valvet'))`, kolumn `content_items.idempotency_key uuid`, unikt partiellt index `content_items_idempotency_key_idx` på `(workspace_id, idempotency_key) where idempotency_key is not null`, enum-värdet `'assistant'` i `content_item_type`, tabellen `app_private.mcp_write_attempts(id, key_hash, workspace_id, tool, outcome, created_at)`, trigger `lock_content_item_module` (alltid på, används av Task 3 och Plan C/B indirekt).
+- Consumes: befintlig tabell `app_private.mcp_write_attempts(id, key_hash, workspace_id, outcome, risk_check_passed, created_at)`, befintlig kolumn `content_items.idempotency_key uuid` + befintligt unikt index `content_items_idempotency_key_per_workspace` (alla från `20260712100000_save_prompt_for_key.sql`, redan i produktion).
+- Produces: kolumn `content_items.module text not null default 'kommun' check (module in ('kommun','valvet'))`, enum-värdet `'assistant'` i `content_item_type`, **ny kolumn** `app_private.mcp_write_attempts.tool text not null default 'save_workspace_prompt'` (backfyllar befintliga loggrader från `save_prompt_for_key` korrekt — det var det enda write-verktyget som fanns innan denna task), trigger `lock_content_item_module` (alltid på, används av Task 3 och Plan C/B indirekt).
 
 - [ ] **Step 1: Skriv migrationen**
 
@@ -70,12 +73,9 @@ exception
     when duplicate_object then null;
 end $$;
 
-alter table public.content_items
-    add column if not exists idempotency_key uuid;
-
-create unique index if not exists content_items_idempotency_key_idx
-    on public.content_items (workspace_id, idempotency_key)
-    where idempotency_key is not null;
+-- content_items.idempotency_key och dess unika index
+-- (content_items_idempotency_key_per_workspace) finns redan sedan
+-- 20260712100000_save_prompt_for_key.sql -- inget att göra här.
 
 -- Modul-låsning: gäller ALLA UPDATE på content_items, oavsett riktning
 -- (kommun->valvet och valvet->kommun), så en post inte kan omklassas för
@@ -101,17 +101,14 @@ create trigger lock_content_item_module
 before update on public.content_items
 for each row execute function app_private.lock_content_item_module();
 
-create table if not exists app_private.mcp_write_attempts (
-    id bigint generated always as identity primary key,
-    key_hash text not null,
-    workspace_id uuid,
-    tool text not null,
-    outcome text not null,
-    created_at timestamptz not null default now()
-);
+-- app_private.mcp_write_attempts(id, key_hash, workspace_id, outcome,
+-- risk_check_passed, created_at) finns redan (20260712100000). Lägger bara
+-- till en tool-kolumn så flera write-verktyg kan dela loggen utan att
+-- blanda ihop sina kvoter/rate limits. Default matchar det enda
+-- write-verktyg som fanns innan denna migration.
+alter table app_private.mcp_write_attempts
+    add column if not exists tool text not null default 'save_workspace_prompt';
 
-create index if not exists mcp_write_attempts_key_hash_created_at_idx
-    on app_private.mcp_write_attempts (key_hash, created_at desc);
 create index if not exists mcp_write_attempts_workspace_tool_created_at_idx
     on app_private.mcp_write_attempts (workspace_id, tool, created_at desc);
 ```
@@ -128,15 +125,20 @@ köra migrationen via dess `execute_sql`-verktyg.
 ```sql
 select column_name, data_type, column_default
   from information_schema.columns
- where table_name = 'content_items' and column_name in ('module', 'idempotency_key');
+ where table_name = 'content_items' and column_name = 'module';
+
+select column_name, data_type, column_default
+  from information_schema.columns
+ where table_schema = 'app_private' and table_name = 'mcp_write_attempts' and column_name = 'tool';
 
 select enumlabel from pg_enum e
   join pg_type t on t.oid = e.enumtypid
  where t.typname = 'content_item_type' order by e.enumsortorder;
 ```
 
-Förväntat: `module` finns (`text`, default `'kommun'::text`),
-`idempotency_key` finns (`uuid`), och enum-listan innehåller `assistant`.
+Förväntat: `module` finns (`text`, default `'kommun'::text`), `tool` finns på
+`app_private.mcp_write_attempts` (`text`, default `'save_workspace_prompt'::text`),
+och enum-listan innehåller `assistant`.
 
 - [ ] **Step 4: Commit**
 
@@ -149,10 +151,11 @@ git commit -m "feat(db): add content_items.module tag, assistant type, mcp_write
 ```sql
 drop trigger if exists lock_content_item_module on public.content_items;
 drop function if exists app_private.lock_content_item_module();
-drop table if exists app_private.mcp_write_attempts;
+alter table app_private.mcp_write_attempts drop column if exists tool;
 alter table public.content_items drop constraint if exists content_items_module_check;
-alter table public.content_items drop column if exists idempotency_key;
 alter table public.content_items drop column if exists module;
+-- content_items.idempotency_key och app_private.mcp_write_attempts fanns
+-- innan denna migration (save_workspace_prompt) -- rör dem INTE vid rollback.
 -- Enum-värden kan inte tas bort i Postgres utan att återskapa typen — lämna 'assistant' kvar, oskadligt om oanvänt.
 ```
 
@@ -705,9 +708,11 @@ drop function if exists app_private.list_my_items_for_key(text, text, text, text
 **Files:**
 - Create: `supabase/migrations/20260716102000_valvet_save_rpc.sql`
 
+**⚠️ Reviderad 2026-07-16 efter merge med `origin/main`:** `app_private.log_write_attempt(p_key_hash, p_outcome, p_risk_check_passed)` + dess publika wrapper finns redan (byggda för `save_workspace_prompt`, se `20260712110000_log_write_attempt.sql`/`20260712120000_public_wrappers_for_save_prompt.sql`). Denna task **breddar den befintliga funktionen** med en valfri `p_tool`-parameter istället för att skapa en ny, nästan identisk `log_vault_write_attempt`.
+
 **Interfaces:**
-- Consumes: `app_private.mcp_write_attempts` (Task 1), `enforce_vault_item_limit`-triggern (Task 3, körs automatiskt vid INSERT), `app_private.slugify_candidate` (befintlig helper, se `20260703120000_create_pro_order.sql`).
-- Produces: `public.save_my_item_for_key(p_key_hash text, p_idempotency_key uuid, p_type text, p_title text, p_content text, p_category text default null) returns public.content_items`, `public.log_vault_write_attempt(p_key_hash text, p_tool text, p_outcome text) returns void` — den senare anropas av Python-lagret (Plan B) EFTER ett fångat fel, av exakt samma skäl som `log_write_attempt` redan är designad för (en `raise exception` rullar tillbaka HELA transaktionen, så ett `insert` av loggraden inuti samma anrop som avvisar skulle aldrig persisteras). Loggar alltid `workspace_id = null` — den behövs bara för månadskvoten, som bara räknar `outcome='success'`-rader, och de loggas alltid INIFRÅN samma RPC (där `workspace_id` redan är känt), aldrig via denna separata Python-anropade funktion.
+- Consumes: `app_private.mcp_write_attempts` (Task 1, nu med `tool`-kolumn), `enforce_vault_item_limit`-triggern (Task 3, körs automatiskt vid INSERT), `app_private.slugify_candidate` (befintlig helper, se `20260703120000_create_pro_order.sql`), befintlig `app_private.log_write_attempt`/`public.log_write_attempt` (breddas, se ovan).
+- Produces: `public.save_my_item_for_key(p_key_hash text, p_idempotency_key uuid, p_type text, p_title text, p_content text, p_category text default null) returns public.content_items`. `app_private.log_write_attempt`/`public.log_write_attempt` får en 4:e parameter `p_tool text default 'save_workspace_prompt'` (bakåtkompatibel — PostgREST matchar på namngivna nycklar, så befintliga 3-parameters-anrop från `mcp_promptbanken`-repots `pro_templates.py` fortsätter fungera oförändrat och loggar automatiskt med `tool='save_workspace_prompt'`). Anropas av Python-lagret (Plan B) EFTER ett fångat fel, av exakt samma skäl som funktionen redan är designad för (en `raise exception` rullar tillbaka HELA transaktionen, så ett `insert` av loggraden inuti samma anrop som avvisar skulle aldrig persisteras — se kommentaren i `20260712110000_log_write_attempt.sql`). Loggar alltid `workspace_id = null` — den behövs bara för månadskvoten, som bara räknar `outcome='success'`-rader, och de loggas alltid INIFRÅN `save_my_item_for_key` (där `workspace_id` redan är känt), aldrig via denna separata Python-anropade funktion.
 
 Fel-klassificering (för Plan B:s Python-lager att matcha på textsträng i felmeddelandet, samma mönster som `_classify_write_error`):
 | Fellmeddelande innehåller | outcome |
@@ -724,22 +729,45 @@ Fel-klassificering (för Plan B:s Python-lager att matcha på textsträng i felm
 ```sql
 -- 20260716102000_valvet_save_rpc.sql
 
-create or replace function public.log_vault_write_attempt(
-    p_key_hash text,
-    p_tool     text,
-    p_outcome  text
+-- Bredda den befintliga log_write_attempt (byggd för save_workspace_prompt,
+-- 20260712110000) med en valfri p_tool-parameter. create or replace på en
+-- funktion med ENDAST tillagda parametrar med default-värden är
+-- bakåtkompatibelt -- befintliga 3-parameters-anrop matchar fortfarande
+-- och får tool='save_workspace_prompt' automatiskt.
+create or replace function app_private.log_write_attempt(
+    p_key_hash           text,
+    p_outcome            text,
+    p_risk_check_passed  boolean default null,
+    p_tool               text default 'save_workspace_prompt'
 )
 returns void
 language sql
 security definer
-set search_path = ''
+set search_path = public, app_private, pg_temp
 as $$
-    insert into app_private.mcp_write_attempts (key_hash, workspace_id, tool, outcome)
-    values (p_key_hash, null, p_tool, p_outcome);
+    insert into app_private.mcp_write_attempts (key_hash, outcome, risk_check_passed, tool)
+    values (p_key_hash, p_outcome, p_risk_check_passed, p_tool);
 $$;
 
-revoke all on function public.log_vault_write_attempt(text, text, text) from public;
-grant execute on function public.log_vault_write_attempt(text, text, text) to anon, authenticated;
+revoke all on function app_private.log_write_attempt(text, text, boolean, text) from public;
+grant execute on function app_private.log_write_attempt(text, text, boolean, text) to anon;
+
+create or replace function public.log_write_attempt(
+    p_key_hash           text,
+    p_outcome            text,
+    p_risk_check_passed  boolean default null,
+    p_tool               text default 'save_workspace_prompt'
+)
+returns void
+language sql
+security definer
+set search_path = public, app_private, pg_temp
+as $$
+    select app_private.log_write_attempt(p_key_hash, p_outcome, p_risk_check_passed, p_tool);
+$$;
+
+revoke all on function public.log_write_attempt(text, text, boolean, text) from public;
+grant execute on function public.log_write_attempt(text, text, boolean, text) to anon;
 
 
 create or replace function app_private.save_my_item_for_key(
@@ -889,7 +917,11 @@ git commit -m "feat(db): add save_my_item_for_key with idempotency and monthly q
 ```sql
 drop function if exists public.save_my_item_for_key(text, uuid, text, text, text, text);
 drop function if exists app_private.save_my_item_for_key(text, uuid, text, text, text, text);
-drop function if exists public.log_vault_write_attempt(text, text, text);
+-- log_write_attempt: INTE säkert att bara droppa -- save_workspace_prompt
+-- (befintlig, i produktion) beror på den. Om p_tool-breddningen måste
+-- rullas tillbaka, återskapa 3-parameters-versionen explicit istället för
+-- att droppa funktionen (se 20260712110000_log_write_attempt.sql för den
+-- ursprungliga definitionen).
 ```
 
 ---

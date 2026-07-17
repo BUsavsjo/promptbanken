@@ -200,10 +200,7 @@ const RAW_DB_ERROR_PATTERNS = [
   'failed to fetch',
   'networkerror',
   'relation "',
-  'column "',
-  'column reference',
-  'is ambiguous',
-  'invalid input syntax'
+  'column "'
 ];
 
 function isRawDatabaseError(message) {

@@ -19,9 +19,20 @@ select * from public.search_my_items_for_key('<free-hash>', 'första');
 select * from public.get_my_item_for_key('<free-hash>', (select id from public.list_my_items_for_key('<free-hash>') limit 1));
 -- Förväntat: 1 rad.
 
--- 4. Free kan INTE uppdatera/arkivera via MCP.
-select * from public.update_my_item_for_key('<free-hash>', (select id from public.list_my_items_for_key('<free-hash>') limit 1), now());
--- Förväntat: ERROR 'Uppgradera till Pro för att uppdatera via MCP.'
+-- 4. Free kan uppdatera/arkivera via MCP (sedan 20260718090000 -- detta är
+-- numera en hygienfunktion, inte Pro-värde).
+select * from public.update_my_item_for_key(
+    '<free-hash>',
+    (select id from public.list_my_items_for_key('<free-hash>') where title = 'Mitt första test'),
+    (select updated_at from public.list_my_items_for_key('<free-hash>') where title = 'Mitt första test'),
+    'Mitt första test (redigerad)'
+);
+select * from public.archive_my_item_for_key(
+    '<free-hash>',
+    (select id from public.list_my_items_for_key('<free-hash>') where title = 'Mitt första test (redigerad)'),
+    true, false
+);
+-- Förväntat: båda lyckas, ingen ERROR.
 
 -- 5. Pro: fullständig CRUD.
 select * from public.save_my_item_for_key('<pro-hash>', gen_random_uuid(), 'prompt', 'Pro-test', 'Innehåll', null);

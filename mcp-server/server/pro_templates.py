@@ -10,7 +10,7 @@ from typing import Any
 
 
 class ProTemplatesNotConfigured(Exception):
-    """Raised when SUPABASE_URL/SUPABASE_ANON_KEY/PROMPTBANKEN_MCP_KEY are missing."""
+    """Raised when SUPABASE_URL/SUPABASE_ANON_KEY are missing."""
 
 
 @dataclass(frozen=True)
@@ -25,11 +25,11 @@ class ProTemplatesClient:
         supabase_anon_key = os.getenv("SUPABASE_ANON_KEY", "")
         mcp_key = os.getenv("PROMPTBANKEN_MCP_KEY", "")
 
-        if not supabase_url or not supabase_anon_key or not mcp_key:
+        if not supabase_url or not supabase_anon_key:
             raise ProTemplatesNotConfigured(
-                "SUPABASE_URL, SUPABASE_ANON_KEY och PROMPTBANKEN_MCP_KEY måste vara satta "
-                "som miljövariabler för att hämta Promptbanken Pro-mallar. Skapa en MCP-nyckel "
-                "under admin.html och lägg in den i din MCP-klients konfiguration."
+                "SUPABASE_URL och SUPABASE_ANON_KEY måste vara satta som miljövariabler. "
+                "Katalogen är öppen sedan 2026-07-19 och kräver ingen MCP-nyckel; "
+                "PROMPTBANKEN_MCP_KEY behövs bara för dina egna sparade mallar."
             )
 
         return cls(supabase_url=supabase_url, supabase_anon_key=supabase_anon_key, mcp_key=mcp_key)

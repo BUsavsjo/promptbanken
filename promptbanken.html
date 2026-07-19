@@ -236,7 +236,6 @@
 
             <nav class="sidebar-nav">
                 <button class="sidebar-link active" type="button" data-category-filter="all"><span class="app-icon" aria-hidden="true" data-icon="library"></span>Alla prompter</button>
-                <a class="sidebar-link" href="pro.html"><span class="app-icon" aria-hidden="true" data-icon="shield"></span>Promptbanken Pro</a>
                 <a class="sidebar-link" href="planer.html"><span class="app-icon" aria-hidden="true" data-icon="library"></span>Planer och priser</a>
                 <a class="sidebar-link mcp-feature-link" href="mcp.html"><span class="app-icon" aria-hidden="true" data-icon="network"></span>MCP och användning</a>
                 <button class="sidebar-link" type="button" data-category-filter="Beslut och rutiner"><span class="app-icon" aria-hidden="true" data-icon="clipboard"></span>Beslut och rutiner</button>
@@ -657,7 +656,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="script.js?v=mobile-ux-panel" defer></script>
+    <script src="script.js?v=open-catalog-merge" defer></script>
     <script type="module">
       import { supabase, hasSupabaseConfig } from '/src/supabaseClient.js';
 
@@ -804,8 +803,28 @@
         window.registerOwnPrompts?.(mappedItems);
       }
 
+      async function loadProTemplates() {
+        const { data: templates, error } = await supabase.rpc('list_pro_templates');
+        if (error || !Array.isArray(templates)) {
+          console.error('Kunde inte hämta promptbibliotekets fördjupningsmallar', error);
+          return;
+        }
+
+        const mappedItems = templates.map((template) => ({
+          id: template.id,
+          title: template.title,
+          description: template.syfte || '',
+          content: template.prompt_text || '',
+          category: template.area_label,
+          risk: riskLabels[template.risk_level] || riskLabels.low
+        }));
+
+        window.registerProTemplates?.(mappedItems);
+      }
+
       if (hasSupabaseConfig) {
         loadMyPrompts();
+        loadProTemplates();
       }
     </script>
     <script>

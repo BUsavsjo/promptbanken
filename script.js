@@ -753,7 +753,49 @@
             applyPromptFilters();
         }
 
+        async function registerProTemplates(items) {
+            await window.promptbankenReady;
+
+            if (!Array.isArray(items) || !items.length) {
+                return;
+            }
+
+            items.forEach((item) => {
+                if (allPrompts.some((existing) => existing.id === item.id)) {
+                    return;
+                }
+
+                promptUiMeta[item.id] = {
+                    icon: '▤',
+                    category: item.category || 'Alla kategorier',
+                    audience: 'Intern & extern',
+                    role: 'Alla roller',
+                    risk: item.risk || 'Låg risk',
+                    example: item.description || '',
+                    phrase: 'Anpassa efter ditt ärende.'
+                };
+
+                const promptEntry = {
+                    id: item.id,
+                    title: item.title,
+                    description: item.description || ''
+                };
+
+                allPrompts.push(promptEntry);
+
+                const card = createPromptCard(promptEntry, item.content || '', allPrompts.length);
+                grid.appendChild(card);
+            });
+
+            populateFilterOptions(allPrompts);
+            updateLibraryStats(allPrompts);
+            loadFavoriteStates();
+            applyPromptSort();
+            applyPromptFilters();
+        }
+
         window.registerOwnPrompts = registerOwnPrompts;
+        window.registerProTemplates = registerProTemplates;
 
         function setupEventDelegation() {
             // Toggle examples - event delegation

@@ -1628,18 +1628,22 @@ function renderUpgradePrice() {
   if (amountEl) amountEl.textContent = pricing?.amount || '—';
   if (noteEl) noteEl.textContent = pricing?.note || '';
   if (submitBtn) {
-    submitBtn.textContent = planIsSelfService(plan) ? 'Granska beställning' : 'Skicka förfrågan';
+    submitBtn.textContent = 'Kontakta oss om uppgradering';
   }
 
-  const selfService = planIsSelfService(plan);
   const badgeEl = document.querySelector('[data-order-mode-badge]');
   if (badgeEl) {
-    badgeEl.textContent = selfService ? 'Aktiveras direkt' : 'Förfrågan — ej bindande';
-    badgeEl.classList.toggle('is-request', !selfService);
+    badgeEl.textContent = 'Förfrågan — ej bindande';
+    badgeEl.classList.add('is-request');
   }
 
   const blurbEl = document.querySelector('[data-order-blurb]');
   if (blurbEl) blurbEl.textContent = planNextStepBlurbs[plan] || '';
+}
+
+function contactForUpgrade(event) {
+  event.preventDefault();
+  setUpgradeStatus('Kontakta oss på info@promptbanken.se för att uppgradera. Ange vilken nivå ni är intresserade av (Arbetsyta, Förvaltning eller Kommun) samt antal medlemmar.');
 }
 
 function setUpgradeStatus(message, isError = false) {
@@ -2480,15 +2484,8 @@ if (generateJoinCodeButton) {
 }
 
 if (upgradeForm) {
-  upgradeForm.addEventListener('submit', reviewUpgradeOrder);
+  upgradeForm.addEventListener('submit', contactForUpgrade);
   upgradeForm.querySelector('select[name="plan"]')?.addEventListener('change', syncUpgradeWorkspacesField);
-  document.querySelector('[data-upgrade-confirm]')?.addEventListener('click', () => {
-    confirmUpgradeOrder().catch((error) => setErrorStatus(error, 'Kunde inte skapa beställningen.', setUpgradeStatus));
-  });
-  document.querySelector('[data-upgrade-cancel]')?.addEventListener('click', () => {
-    hideUpgradeConfirm();
-    setUpgradeStatus('Beställningen avbröts.');
-  });
   syncUpgradeWorkspacesField();
 }
 

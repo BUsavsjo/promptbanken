@@ -1,6 +1,6 @@
 # Plan-/kvotsynk Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Synka plan-/kvotinformation mellan DB, MCP-server och Valvet-UI: utöka `get_plan_usage` med Valvet-fält, låt `vault.js` läsa RPC:n i stället för hårdkodade konstanter, och rätta stale "Pro-only"-texter för `update_my_item`/`archive_my_item`.
 
@@ -34,7 +34,7 @@
 - Consumes: befintliga `public.get_plan_usage(uuid)` (definierad i `20260707120000_fix_plan_usage_addon_workspaces.sql`), `app_private.has_active_pro_entitlement(uuid)`, tabellerna `content_items`, `api_keys`, `app_private.mcp_write_attempts`, `app_private.valvet_catalog_copies`.
 - Produces: `public.get_plan_usage(p_workspace_id uuid)` med 15 kolumner — de befintliga nio plus `valvet_items_used integer, valvet_items_max integer, monthly_saves_used integer, monthly_saves_max integer, catalog_copies_used integer, catalog_copies_max integer`. `null` i en `*_max`-kolumn betyder obegränsat. Task 2 (vault.js) läser dessa fältnamn exakt.
 
-- [ ] **Step 1: Skriv verify-skriptet (testet först)**
+- [x] **Step 1: Skriv verify-skriptet (testet först)**
 
 Skapa `promptbanken/supabase/tests/verify_plan_usage_valvet_fields.sql`:
 
@@ -83,7 +83,7 @@ select * from public.get_plan_usage('<addon-workspace-id>');
 -- kontrollera att planpanelen (Din plan/användning) renderar som förut.
 ```
 
-- [ ] **Step 2: Kör steg 1-anropet FÖRE migrationen — verifiera 9 kolumner**
+- [x] **Step 2: Kör steg 1-anropet FÖRE migrationen — verifiera 9 kolumner**
 
 Kör via Supabase MCP-verktyget `execute_sql` (eller SQL-editorn):
 ```sql
@@ -93,7 +93,7 @@ select * from public.get_plan_usage('<id-från-raden-ovan>');
 (Anropet måste ske som en autentiserad medlem av workspacet eller platform_owner — se verify-skriptets impersonation-notis.)
 Expected: resultatet har exakt 9 kolumner (`has_license` … `used_workspaces`), inga `valvet_`-kolumner. Detta är "failing test"-läget.
 
-- [ ] **Step 3: Skriv migrationen**
+- [x] **Step 3: Skriv migrationen**
 
 Skapa `promptbanken/supabase/migrations/20260718120000_plan_usage_valvet_fields.sql`:
 
@@ -239,12 +239,12 @@ revoke all on function public.get_plan_usage(uuid) from public;
 grant execute on function public.get_plan_usage(uuid) to authenticated;
 ```
 
-- [ ] **Step 4: Applicera migrationen**
+- [x] **Step 4: Applicera migrationen**
 
 Applicera via Supabase MCP-verktyget `apply_migration` med namnet `plan_usage_valvet_fields` och filens innehåll.
 Expected: OK utan fel. (Vid fel om beroende objekt: inget vy-/funktionsberoende på `get_plan_usage` finns — felet är då något annat och ska utredas, inte kringgås.)
 
-- [ ] **Step 5: Kör verify-skriptets steg 1-4 — verifiera 15 kolumner**
+- [x] **Step 5: Kör verify-skriptets steg 1-4 — verifiera 15 kolumner**
 
 Kör samma anrop som Step 2 igen via `execute_sql`.
 Expected: 15 kolumner; för ett Free-workspace `valvet_items_max=50`, `monthly_saves_max=5`, `catalog_copies_max=5`; used-värden stämmer mot manuell räkning:
@@ -253,7 +253,7 @@ select count(*) from public.content_items where workspace_id='<id>' and module='
 ```
 Kör också korsreferensen (verify-steg 3) och addon-fallet (verify-steg 4) om addon-yta finns.
 
-- [ ] **Step 6: Commit (promptbanken-repot)**
+- [x] **Step 6: Commit (promptbanken-repot)**
 
 ```bash
 git add supabase/migrations/20260718120000_plan_usage_valvet_fields.sql supabase/tests/verify_plan_usage_valvet_fields.sql
@@ -272,7 +272,7 @@ git commit -m "feat: expose Valvet usage/limits in get_plan_usage"
 - Consumes: `public.get_plan_usage(p_workspace_id uuid)` från Task 1 — fälten `valvet_items_used`, `valvet_items_max`, `monthly_saves_used`, `monthly_saves_max`, `used_mcp_keys`, `max_mcp_keys`; `null` max = obegränsat. supabase-js returnerar `returns table` som array av radobjekt.
 - Produces: `state.usage` (radobjekt eller `null`), `refreshUsage()` (exporterad). Katalogflikens kvotvisning (`valvet_catalog_copy_quota`) lämnas orörd — den har redan egen RPC.
 
-- [ ] **Step 1: Utöka state och bootstrap**
+- [x] **Step 1: Utöka state och bootstrap**
 
 I `valvet_promptbanken/src/vault.js`, ändra state-objektet (rad 4-10):
 
@@ -293,7 +293,7 @@ I `bootstrap()` (efter att `state.workspace = workspace;` satts, rad 103), lägg
   await refreshUsage();
 ```
 
-- [ ] **Step 2: Lägg till refreshUsage/renderUsage**
+- [x] **Step 2: Lägg till refreshUsage/renderUsage**
 
 Lägg in direkt efter `bootstrap()`-funktionen:
 
@@ -330,7 +330,7 @@ function renderUsage() {
 }
 ```
 
-- [ ] **Step 3: Ersätt konstanterna med RPC-värden (med fallback)**
+- [x] **Step 3: Ersätt konstanterna med RPC-värden (med fallback)**
 
 Ändra `vaultItemLimit()` (rad 52-54) till:
 
@@ -358,7 +358,7 @@ Uppdatera räknarbadgen i `renderItems()` (rad 186-189) till att föredra RPC-v�
   counter.classList.toggle('is-limit', used >= limit);
 ```
 
-- [ ] **Step 4: Uppdatera användningen efter mutationer**
+- [x] **Step 4: Uppdatera användningen efter mutationer**
 
 Lägg till `refreshUsage()` efter lyckade mutationer (värden får inte visas fel efter en åtgärd):
 
@@ -369,7 +369,7 @@ Lägg till `refreshUsage()` efter lyckade mutationer (värden får inte visas fe
 - I revoke-hanteraren i `loadMcpKeys` (rad 583): ändra `await loadMcpKeys();` till `await Promise.all([loadMcpKeys(), refreshUsage()]);`
 - I `copyToValvet` (rad 372): ändra `await Promise.all([loadItems(), updateCatalogQuota()]);` till `await Promise.all([loadItems(), updateCatalogQuota(), refreshUsage()]);`
 
-- [ ] **Step 5: Lägg till användningselementet i vault.html**
+- [x] **Step 5: Lägg till användningselementet i vault.html**
 
 I `valvet_promptbanken/vault.html`, MCP-vyn: direkt efter `<div data-mcp-key-list style="margin-top:1rem;"></div>` (rad 156), lägg till:
 
@@ -377,7 +377,7 @@ I `valvet_promptbanken/vault.html`, MCP-vyn: direkt efter `<div data-mcp-key-lis
         <p class="status-message" data-mcp-usage></p>
 ```
 
-- [ ] **Step 6: Manuell verifiering i browser**
+- [x] **Step 6: Manuell verifiering i browser**
 
 Kör `npm run web:dev` i `valvet_promptbanken` (kräver `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` i miljön). Logga in som Free-testanvändare:
 1. Mina insättningar: räknaren visar `<n> av 50 insättningar` och stämmer mot faktiskt antal.
@@ -388,7 +388,7 @@ Kör `npm run web:dev` i `valvet_promptbanken` (kräver `VITE_SUPABASE_URL`/`VIT
 
 Expected: samtliga fem punkter gröna.
 
-- [ ] **Step 7: Commit (valvet_promptbanken-repot)**
+- [x] **Step 7: Commit (valvet_promptbanken-repot)**
 
 ```bash
 git add src/vault.js vault.html
@@ -406,7 +406,7 @@ git commit -m "feat: read plan limits/usage from get_plan_usage instead of const
 - Consumes: faktaunderlaget i Global Constraints (Free får update/archive; save 5/mån Free).
 - Produces: inga kodgränssnitt — endast copy.
 
-- [ ] **Step 1: Rätta guide-introt**
+- [x] **Step 1: Rätta guide-introt**
 
 I `valvet_promptbanken/vault.html`, ändra stycket (rad 169-173):
 
@@ -420,7 +420,7 @@ I `valvet_promptbanken/vault.html`, ändra stycket (rad 169-173):
 
 (Ändringen: "läsa och (om du har Pro) skriva" → "läsa och skriva".)
 
-- [ ] **Step 2: Rätta guide-noten**
+- [x] **Step 2: Rätta guide-noten**
 
 Ändra stycket (rad 227-231) till:
 
@@ -433,7 +433,7 @@ I `valvet_promptbanken/vault.html`, ändra stycket (rad 169-173):
         </p>
 ```
 
-- [ ] **Step 3: Verifiera att inga Pro-only-påståenden finns kvar**
+- [x] **Step 3: Verifiera att inga Pro-only-påståenden finns kvar**
 
 Kör i `valvet_promptbanken`:
 ```bash
@@ -441,7 +441,7 @@ grep -rn "kräver Pro" vault.html login.html planer.html
 ```
 Expected: inga träffar som handlar om `update_my_item`/`archive_my_item`. (Träffar om andra Pro-funktioner, t.ex. promptpaket, är korrekta och lämnas.)
 
-- [ ] **Step 4: Commit (valvet_promptbanken-repot)**
+- [x] **Step 4: Commit (valvet_promptbanken-repot)**
 
 ```bash
 git add vault.html
@@ -460,7 +460,7 @@ git commit -m "fix: MCP guide no longer claims update/archive require Pro"
 - Consumes: faktaunderlaget i Global Constraints; migration `20260718090000` i promptbanken-repot som referens.
 - Produces: inga kodgränssnitt — verktygsbeskrivningar och beslutslogg. Ingen logikändring: gating ligger i RPC:erna, och `_classify_vault_write_error`-mappningarna (`"Uppgradera till Pro"` → `not_pro`) behålls oförändrade som skydd om DB-sidan skulle ändras igen.
 
-- [ ] **Step 1: Lägg tillägg i DECISIONS.md**
+- [x] **Step 1: Lägg tillägg i DECISIONS.md**
 
 Överst i `mcp_promptbanken/DECISIONS.md`, direkt efter rubriken `# Beslut` (rad 1), infoga:
 
@@ -486,7 +486,7 @@ update/archive. Felklassificeringen `not_pro` i `_classify_vault_write_error`
 behålls som skydd ifall RPC-sidan ändras igen.
 ```
 
-- [ ] **Step 2: Rätta `_tool_definitions()`**
+- [x] **Step 2: Rätta `_tool_definitions()`**
 
 I `mcp_promptbanken/mcp-server/server/mcp_server.py`, ändra beskrivningen för `update_my_item` (rad 1345-1348):
 
@@ -506,7 +506,7 @@ och för `archive_my_item` (rad 1364-1367):
             ),
 ```
 
-- [ ] **Step 3: Rätta `@mcp.tool()`-docstrings**
+- [x] **Step 3: Rätta `@mcp.tool()`-docstrings**
 
 Ändra `update_my_item`-docstringen (rad 1823-1825):
 
@@ -526,21 +526,21 @@ och `archive_my_item`-docstringen (rad 1832-1836):
     one) is a safe no-op."""
 ```
 
-- [ ] **Step 4: Verifiera att inga Pro-only-påståenden finns kvar för update/archive**
+- [x] **Step 4: Verifiera att inga Pro-only-påståenden finns kvar för update/archive**
 
 ```bash
 grep -n "Pro-only" mcp-server/server/mcp_server.py
 ```
 Expected: inga träffar för `update_my_item`/`archive_my_item`. (`save_workspace_prompt` är fortsatt Pro-only — träffar där är korrekta.)
 
-- [ ] **Step 5: Commit (mcp_promptbanken-repot)**
+- [x] **Step 5: Commit (mcp_promptbanken-repot)**
 
 ```bash
 git add DECISIONS.md mcp-server/server/mcp_server.py
 git commit -m "docs: update/archive tool descriptions no longer claim Pro-only"
 ```
 
-- [ ] **Step 6: Notera driftsättning**
+- [x] **Step 6: Notera driftsättning**
 
 Beskrivningsändringarna når klienterna först vid nästa deploy av servern (manuell `docker compose up -d --build` på VPS:en). Ingen brådska — texterna är kosmetiska; RPC-beteendet är redan rätt i prod. Flagga i sluppsummeringen att deploy återstår.
 
@@ -555,7 +555,7 @@ Beskrivningsändringarna når klienterna först vid nästa deploy av servern (ma
 - Consumes: faktaunderlaget i Global Constraints.
 - Produces: ingen kod — historisk spec markeras ersatt, skrivs inte om.
 
-- [ ] **Step 1: Uppdatera tabellraderna och lägg ersättningsnotis**
+- [x] **Step 1: Uppdatera tabellraderna och lägg ersättningsnotis**
 
 I `promptbanken/docs/superpowers/specs/2026-07-16-valvet-design.md`, ändra raderna 77-78 i tabellen:
 
@@ -573,7 +573,7 @@ och infoga direkt efter tabellen (efter raden `| Export | ... |`, rad 80):
 > `docs/superpowers/specs/2026-07-18-plan-usage-sync-design.md`.
 ```
 
-- [ ] **Step 2: Commit (promptbanken-repot)**
+- [x] **Step 2: Commit (promptbanken-repot)**
 
 ```bash
 git add docs/superpowers/specs/2026-07-16-valvet-design.md

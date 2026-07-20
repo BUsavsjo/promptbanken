@@ -509,14 +509,24 @@ function renderPromptFormRules() {
     return;
   }
 
-  visibilitySelect.innerHTML = allowedVisibilityOptions()
-    .map(([value, label]) => `<option value="${value}">${label}</option>`)
-    .join('');
+  const visibilityField = document.querySelector('[data-visibility-field]');
+  const hideVisibilityChoice = state.workspace.type === 'organization' && !isPlatformOwner();
+
+  if (hideVisibilityChoice) {
+    if (visibilityField) visibilityField.hidden = true;
+    visibilitySelect.innerHTML = '<option value="workspace">Workspace</option>';
+    visibilitySelect.value = 'workspace';
+  } else {
+    if (visibilityField) visibilityField.hidden = false;
+    visibilitySelect.innerHTML = allowedVisibilityOptions()
+      .map(([value, label]) => `<option value="${value}">${label}</option>`)
+      .join('');
+  }
 
   if (isPersonalFreeWorkspace()) {
     setText('[data-prompt-limit-note]', 'Free-läge: du kan skapa upp till 3 privata prompts.');
   } else if (state.workspace.type === 'organization') {
-    setText('[data-prompt-limit-note]', 'Organisationsläge: prompts sparas för den här organisationen.');
+    setText('[data-prompt-limit-note]', 'Organisationsläge: prompts sparas för hela organisationen.');
   } else {
     setText('[data-prompt-limit-note]', 'Platform-läge: du kan även skapa publika prompts till Promptbanken.');
   }

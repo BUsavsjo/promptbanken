@@ -1296,7 +1296,7 @@ function renderWorkspaces() {
           <label>Kort beskrivning
             <input name="summary" maxlength="140" placeholder="En rad om vad prompten gör">
           </label>
-          ${isPlatformOwner() ? `
+          ${(w.type !== 'organization' || isPlatformOwner()) ? `
           <label>Synlighet
             <select name="visibility">
               <option value="private">Privat</option>
@@ -1352,7 +1352,10 @@ async function submitQuickCreatePrompt(event) {
   const title = formData.get('title')?.toString().trim();
   const summary = formData.get('summary')?.toString().trim() || null;
   const content = formData.get('content')?.toString().trim();
-  const visibility = formData.get('visibility')?.toString() || 'workspace';
+  const workspaceRow = state.workspacesList.find((item) => item.id === workspaceId)
+    || (state.workspace.id === workspaceId ? state.workspace : undefined);
+  const isOrgRow = workspaceRow?.type === 'organization';
+  const visibility = formData.get('visibility')?.toString() || (isOrgRow ? 'workspace' : 'private');
 
   if (!title || !content) {
     setStatus('Titel och prompttext krävs.', true);
